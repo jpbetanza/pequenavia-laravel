@@ -19,10 +19,12 @@ O produto continua o mesmo. A paróquia sobe a imagem de um modelo de certidão 
 
 | Tema | Decisão |
 |---|---|
-| Interface | Inertia v2 + React 19 + TypeScript, reaproveitando os componentes atuais (HeroUI v2 + Tailwind v4). |
+| Criação do projeto | Starter kit oficial React via `laravel new --react --pest --database=pgsql --npm --boost` (Laravel Boost instalado). |
+| Interface | Inertia 3 + React 19 + TypeScript + Tailwind 4 + **shadcn/ui** (padrão do kit). Componentes do PequenaVia portados de HeroUI para shadcn. |
+| Ambiente local | PHP 8.5 + Composer + instalador via `php.new`; Postgres e MinIO num `docker-compose` local; testes do Imagick em container com a imagem de produção. |
 | Object storage | MinIO na VPS, com bucket privado, acessado pelo disco `s3` do Laravel. |
 | Dados existentes | **Não migrar.** O sistema novo começa vazio. |
-| Login | Google (Socialite) + email/senha (Fortify), com verificação de email e reset de senha por SMTP. |
+| Login | Google (Socialite) + email/senha (Fortify do kit), com verificação de email, reset de senha por SMTP e 2FA (ativo por padrão no kit). |
 | Geração da imagem | Imagick no PHP, dentro do próprio monolito. |
 | Tamanho máximo do modelo | 50 MB por imagem. |
 
@@ -39,9 +41,10 @@ O produto continua o mesmo. A paróquia sobe a imagem de um modelo de certidão 
 
 ### Aplicação
 
-- Laravel 13, PHP 8.4, extensão `imagick`.
-- Inertia v2 + React 19 + TypeScript, HeroUI v2 + Tailwind v4, com build pelo Vite.
-- Os componentes do projeto Next vão para `resources/js/`. O que muda neles é só a camada de dados: as chamadas `supabase.from(...)`, `supabase.storage` e `fetch('/api/...')` são substituídas por:
+- Laravel 13, PHP 8.5, extensão `imagick`.
+- Projeto criado pelo starter kit oficial React: Inertia 3 + React 19 + TypeScript + Tailwind 4 + shadcn/ui, Vite e **Wayfinder** (rotas tipadas geradas no build).
+- O layout, as telas de auth e as telas de configurações do kit são mantidos e recebem a identidade visual do PequenaVia.
+- Os componentes do projeto Next vão para `resources/js/` e são **portados de HeroUI para shadcn/ui**. HeroUI não entra no projeto. Além da troca de componentes, muda a camada de dados: as chamadas `supabase.from(...)`, `supabase.storage` e `fetch('/api/...')` são substituídas por:
   - props do Inertia, entregues pelos controllers;
   - `router.post/put/patch/delete` ou `useForm` para as mutações;
   - `fetch` apenas no endpoint de geração, que devolve binário.
@@ -168,7 +171,8 @@ Regras:
 
 ## 5. Autenticação
 
-- **Fortify** (backend sem telas) cuida de login, registro, verificação de email, "esqueci minha senha" e reset. As telas são páginas Inertia/React derivadas do `auth-form.tsx`.
+- **Fortify**, já configurado pelo starter kit com as telas React, cuida de login, registro, verificação de email, "esqueci minha senha", reset e 2FA. O `User` passa a implementar `MustVerifyEmail`. As telas de login e registro ganham o botão "Entrar com Google".
+- Se alguma feature do Fortify for desligada, as referências a ela no frontend precisam ser removidas, porque as rotas do Wayfinder são geradas no build.
 - **Socialite / Google**:
   - `GET /auth/google` redireciona para o Google.
   - `GET /auth/google/callback` trata a volta:
