@@ -106,7 +106,7 @@ IDs são `uuid` (`HasUuids`), para as URLs continuarem no formato `/meus-certifi
 | `image_path` | string | Chave do objeto no MinIO, no formato `modelos/{user_id}/{uuid}.{ext}`. |
 | timestamps | | |
 
-Não existe `image_url`. A URL é gerada sob demanda com `Storage::disk('s3')->temporaryUrl($path, now()->addMinutes(30))`.
+Não existe `image_url`. O navegador carrega a imagem pela rota `GET /modelos/{modelo}/imagem` (seção 6).
 
 ### `campos_certificado`
 
@@ -115,7 +115,7 @@ Não existe `image_url`. A URL é gerada sob demanda com `Storage::disk('s3')->t
 | `id` | uuid PK | |
 | `modelo_id` | FK → modelos_certificado, cascade | |
 | `nome` | string | Chave usada nos valores e no cabeçalho do Excel. |
-| `label` | string | |
+| `label` | string, nullable | Quando vazio, a interface mostra o `nome`. |
 | `x`, `y` | integer | Pixels na resolução original da imagem. |
 | `cor` | string | Hex, por exemplo `#1a1a1a`. |
 | `tamanho_fonte` | integer | |
@@ -125,7 +125,7 @@ Não existe `image_url`. A URL é gerada sob demanda com `Storage::disk('s3')->t
 | `centralizado` | boolean | false |
 | timestamps | | |
 
-Unique: (`modelo_id`, `nome`).
+Unique: (`modelo_id`, `nome`). Um campo novo recebe do servidor o primeiro nome livre na sequência `Campo 1`, `Campo 2`…, e renomear valida a unicidade dentro do modelo. Hoje todo campo novo nasce como "Novo campo", e nomes duplicados fariam dois campos receberem o mesmo valor na geração.
 
 ### `geracoes_certificado`
 
@@ -172,6 +172,7 @@ Regras:
 ## 5. Autenticação
 
 - **Fortify**, já configurado pelo starter kit com as telas React, cuida de login, registro, verificação de email, "esqueci minha senha", reset e 2FA. O `User` passa a implementar `MustVerifyEmail`. As telas de login e registro ganham o botão "Entrar com Google".
+- O login pelo Google não passa pelo desafio de 2FA do Fortify. O próprio Google é o segundo fator nesse caminho.
 - Se alguma feature do Fortify for desligada, as referências a ela no frontend precisam ser removidas, porque as rotas do Wayfinder são geradas no build.
 - **Socialite / Google**:
   - `GET /auth/google` redireciona para o Google.
@@ -198,7 +199,7 @@ Regras:
   - Traefik: sem middleware de buffering limitando o corpo.
 - Para trocar a imagem, o arquivo novo é enviado primeiro, e o antigo só é removido depois que o registro foi atualizado.
 - Ao excluir um modelo, o evento `deleted` do model despacha um job que remove o objeto do MinIO. Na exclusão de conta, o mesmo acontece para cada modelo do usuário.
-- O navegador recebe apenas URLs assinadas temporárias (30 min) dentro das props do Inertia.
+- O navegador acessa a imagem só pela rota `GET /modelos/{modelo}/imagem`. Ela passa pela Policy (`view`) e faz streaming do MinIO com `Cache-Control: private, max-age=3600`. O MinIO **não fica exposto publicamente**: uma URL S3 assinada para o host interno (`http://minio:9000`) não abriria no navegador, e o host faz parte da assinatura. Mesma origem também elimina CORS no canvas do editor.
 
 ## 7. Geração do certificado
 
@@ -258,7 +259,7 @@ Stack Swarm `pequenavia`:
 |---|---|---|---|
 | `app` | `jpbetanza/pequenavia-laravel:latest` (php-fpm + nginx, multi-stage com build do Vite) | `interna`, `network_swarm_public` | — |
 | `postgres` | `postgres:17` | `interna` | `pequenavia_pg` |
-| `minio` | `minio/minio` | `interna` (+ `network_swarm_public` se o console for exposto) | `pequenavia_minio` |
+| `minio` | `minio/minio` | `interna` (+ `network_swarm_public` só se o console for exposto; a API S3 nunca) | `pequenavia_minio` |
 | `minio-init` | `minio/mc` (roda uma vez) | `interna` | — |
 
 - `app` em `certificados.pequenavia.app.br` pelo Traefik (`websecure`, `letsencryptresolver`), com o mesmo esquema de labels da stack atual.
