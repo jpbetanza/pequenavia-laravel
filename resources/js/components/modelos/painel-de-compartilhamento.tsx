@@ -1,14 +1,16 @@
 import { router, useForm } from '@inertiajs/react';
 import { Plus, Trash2 } from 'lucide-react';
-import type { FormEvent } from 'react';
+import { type FormEvent, useState } from 'react';
 import {
     destroy,
     store,
     update,
 } from '@/actions/App/Http/Controllers/CompartilhamentoController';
 import InputError from '@/components/input-error';
+import { tratamentoDeErro } from '@/components/modelos/erro-de-acao';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Spinner } from '@/components/ui/spinner';
 import { Switch } from '@/components/ui/switch';
 import type { ModeloResumo } from '@/types/certificados';
@@ -19,7 +21,14 @@ type Props = {
 
 export default function PainelDeCompartilhamento({ modelo }: Props) {
     const formulario = useForm({ email: '' });
+    const [processando, setProcessando] = useState(false);
     const opcoes = { preserveScroll: true, preserveState: true } as const;
+    const controlesDeAcao = {
+        ...opcoes,
+        onStart: () => setProcessando(true),
+        onFinish: () => setProcessando(false),
+        ...tratamentoDeErro,
+    };
 
     const adicionar = (evento: FormEvent) => {
         evento.preventDefault();
@@ -40,7 +49,14 @@ export default function PainelDeCompartilhamento({ modelo }: Props) {
 
             <form onSubmit={adicionar} className="grid gap-2">
                 <div className="flex gap-2">
+                    <Label
+                        htmlFor="email-do-compartilhamento"
+                        className="sr-only"
+                    >
+                        E-mail da pessoa
+                    </Label>
                     <Input
+                        id="email-do-compartilhamento"
                         type="email"
                         placeholder="E-mail do destinatário"
                         value={formulario.data.email}
@@ -82,6 +98,7 @@ export default function PainelDeCompartilhamento({ modelo }: Props) {
                                 Pode editar
                                 <Switch
                                     checked={compartilhamento.pode_editar}
+                                    disabled={processando}
                                     onCheckedChange={(marcado) =>
                                         router.patch(
                                             update.url({
@@ -90,7 +107,7 @@ export default function PainelDeCompartilhamento({ modelo }: Props) {
                                                     compartilhamento.id,
                                             }),
                                             { pode_editar: marcado },
-                                            opcoes,
+                                            controlesDeAcao,
                                         )
                                     }
                                 />
@@ -100,6 +117,7 @@ export default function PainelDeCompartilhamento({ modelo }: Props) {
                                 size="icon"
                                 className="size-7 text-destructive"
                                 aria-label={`Remover ${compartilhamento.email}`}
+                                disabled={processando}
                                 onClick={() =>
                                     router.delete(
                                         destroy.url({
@@ -107,7 +125,7 @@ export default function PainelDeCompartilhamento({ modelo }: Props) {
                                             compartilhamento:
                                                 compartilhamento.id,
                                         }),
-                                        opcoes,
+                                        controlesDeAcao,
                                     )
                                 }
                             >

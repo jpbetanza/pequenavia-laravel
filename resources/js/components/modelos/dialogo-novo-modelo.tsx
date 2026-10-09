@@ -48,7 +48,12 @@ export default function DialogoNovoModelo({ aberto, aoFechar }: Props) {
     };
 
     return (
-        <Dialog open={aberto} onOpenChange={(abrir) => !abrir && fechar()}>
+        <Dialog
+            open={aberto}
+            onOpenChange={(abrir) =>
+                !abrir && !formulario.processing && fechar()
+            }
+        >
             <DialogContent>
                 <form onSubmit={enviar} className="space-y-4">
                     <DialogHeader>

@@ -2,6 +2,7 @@ import { router } from '@inertiajs/react';
 import { FileText, Pencil, Settings, Share2, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { destroy } from '@/actions/App/Http/Controllers/ModeloCertificadoController';
+import { tratamentoDeErro } from '@/components/modelos/erro-de-acao';
 import PainelDeCompartilhamento from '@/components/modelos/painel-de-compartilhamento';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
@@ -18,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
+    DialogDescription,
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
@@ -47,6 +49,7 @@ function Conteudo({
     aoAlterar,
 }: PropsDoConteudo) {
     const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
+    const [excluindo, setExcluindo] = useState(false);
     const semCampos = modelo.campos_count === 0;
 
     const ir = (url: string) => {
@@ -57,10 +60,13 @@ function Conteudo({
     const excluir = () => {
         router.delete(destroy.url({ modelo: modelo.id }), {
             preserveScroll: true,
+            onStart: () => setExcluindo(true),
+            onFinish: () => setExcluindo(false),
             onSuccess: () => {
                 setConfirmandoExclusao(false);
                 aoFechar();
             },
+            ...tratamentoDeErro,
         });
     };
 
@@ -68,6 +74,10 @@ function Conteudo({
         <>
             <DialogHeader>
                 <DialogTitle>{modelo.title}</DialogTitle>
+                <DialogDescription className="sr-only">
+                    Opções do modelo: gerar certificados, configurar campos,
+                    compartilhar, alterar ou excluir.
+                </DialogDescription>
             </DialogHeader>
 
             <div className={cn('flex', compartilhando && 'gap-6')}>
@@ -80,14 +90,15 @@ function Conteudo({
                     {semCampos && (
                         <Alert>
                             <AlertDescription>
-                                Este modelo não tem campos configurados.
-                                Configure os campos antes de gerar certificados.
+                                {modelo.pode_editar
+                                    ? 'Este modelo não tem campos configurados. Configure os campos antes de gerar certificados.'
+                                    : 'Este modelo ainda não tem campos configurados.'}
                             </AlertDescription>
                         </Alert>
                     )}
 
                     <Button
-                        disabled={semCampos}
+                        disabled={semCampos || excluindo}
                         onClick={() => ir(gerar.url({ modelo: modelo.id }))}
                     >
                         <FileText />
@@ -107,6 +118,7 @@ function Conteudo({
                     {modelo.eh_dono && (
                         <Button
                             variant={compartilhando ? 'default' : 'secondary'}
+                            aria-pressed={compartilhando}
                             onClick={aoAlternarCompartilhamento}
                         >
                             <Share2 />
@@ -119,6 +131,7 @@ function Conteudo({
                             <Button
                                 variant="secondary"
                                 className="flex-1"
+                                disabled={excluindo}
                                 onClick={() => {
                                     aoFechar();
                                     aoAlterar(modelo.id);
@@ -132,6 +145,7 @@ function Conteudo({
                             <Button
                                 variant="destructive"
                                 className="flex-1"
+                                disabled={excluindo}
                                 onClick={() => setConfirmandoExclusao(true)}
                             >
                                 <Trash2 />
@@ -163,7 +177,13 @@ function Conteudo({
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={excluir}>
+                        <AlertDialogAction
+                            disabled={excluindo}
+                            onClick={(evento) => {
+                                evento.preventDefault();
+                                excluir();
+                            }}
+                        >
                             Excluir
                         </AlertDialogAction>
                     </AlertDialogFooter>
