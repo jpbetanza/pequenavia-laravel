@@ -2395,6 +2395,16 @@ it('traduz as frases dos e-mails do Laravel', function () {
         ->and(__('Regards,'))->toBe('Atenciosamente,');
 });
 
+it('traduz as mensagens de validação dos formulários do app (sem texto em inglês)', function () {
+    $erros = Validator::make(['label' => str_repeat('a', 200), 'tamanho_fonte' => 'x'], [
+        'label' => 'max:150',
+        'tamanho_fonte' => 'integer',
+    ])->errors();
+
+    expect($erros->first('label'))->not->toMatch('/\\bmay not\\b|\\bmust\\b|\\bcharacters\\b/')
+        ->and($erros->first('tamanho_fonte'))->not->toMatch('/\\bmust\\b/');
+});
+
 it('mostra em português o erro de login com credenciais erradas', function () {
     $user = User::factory()->create();
 
@@ -2481,6 +2491,8 @@ grep -rhoE "(Lang::get|trans|__|@lang)\(('[^']*'|\"[^\"]*\")" vendor/laravel/fra
     "Passkey verification session expired. Please try again.": "A sessão de verificação da chave de acesso expirou. Tente novamente.",
     "Profile updated.": "Perfil atualizado.",
     "Password updated.": "Senha atualizada.",
+    "(and :count more error)": "(e mais :count erro)",
+    "(and :count more errors)": "(e mais :count erros)",
     "The :attribute must be at least :length characters.": "O campo :attribute deve ter pelo menos :length caracteres.",
     "The :attribute must be at least :length characters and contain at least one uppercase character.": "O campo :attribute deve ter pelo menos :length caracteres e conter ao menos uma letra maiúscula.",
     "The :attribute must be at least :length characters and contain at least one number.": "O campo :attribute deve ter pelo menos :length caracteres e conter ao menos um número.",
