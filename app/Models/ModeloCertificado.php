@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Jobs\RemoverImagemModelo;
 use Database\Factories\ModeloCertificadoFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
@@ -28,6 +29,11 @@ class ModeloCertificado extends Model
 {
     /** @use HasFactory<ModeloCertificadoFactory> */
     use HasFactory, HasUuids;
+
+    protected static function booted(): void
+    {
+        static::deleted(fn (ModeloCertificado $modelo) => RemoverImagemModelo::dispatch($modelo->image_path));
+    }
 
     /**
      * Modelos que o usuário pode ver: os próprios e os compartilhados com o email dele.
