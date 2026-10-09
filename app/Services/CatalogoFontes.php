@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Exceptions\FonteNaoEncontradaException;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 
 class CatalogoFontes
@@ -48,10 +49,15 @@ class CatalogoFontes
      */
     public static function pesosDisponiveis(string $pasta): array
     {
-        $arquivos = glob(config('fontes.diretorio')."/{$pasta}/*.ttf") ?: [];
+        $arquivos = File::glob(config('fontes.diretorio')."/{$pasta}/*.ttf") ?: [];
 
-        $pesos = array_map(fn (string $arquivo) => (int) basename($arquivo, '.ttf'), $arquivos);
-        sort($pesos);
+        $pesos = collect($arquivos)
+            ->map(fn (string $arquivo) => basename($arquivo, '.ttf'))
+            ->filter(fn (string $nome) => preg_match('/^\d+$/', $nome) === 1)
+            ->map(fn (string $nome) => (int) $nome)
+            ->sort()
+            ->values()
+            ->all();
 
         return $pesos;
     }

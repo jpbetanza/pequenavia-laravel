@@ -82,3 +82,11 @@ it('lista os pesos disponíveis de cada pasta em ordem crescente', function () {
     expect($pesos['lora'])->toBe([400, 700])
         ->and($pesos['cinzel'])->toBe([]);
 });
+
+it('ignora arquivos cujo nome não é um peso numérico', function () {
+    $diretorio = fontesTemporarias(['lora' => [400, 700]]);
+    File::put("{$diretorio}/lora/Lora-Regular.ttf", 'ttf');
+
+    expect(CatalogoFontes::pesosPorPasta()['lora'])->toBe([400, 700])
+        ->and(CatalogoFontes::arquivo('Lora', 400))->toBe("{$diretorio}/lora/400.ttf");
+});
