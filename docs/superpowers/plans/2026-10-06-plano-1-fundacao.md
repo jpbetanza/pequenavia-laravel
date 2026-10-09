@@ -12,12 +12,12 @@
 
 ## Roteiro dos planos
 
-| Plano | Entrega | Depende de |
-|---|---|---|
-| **1 — Fundação** (este) | Scaffold, ambiente local, schema, Policy, Google, modelos/campos/compartilhamentos/histórico/conta | — |
-| 2 — Geração | `config/fontes.php` completo, `fontes:baixar`, `CatalogoFontes::arquivo()`, `GeradorCertificado` (Imagick), endpoint de geração, testes visuais | 1 |
-| 3 — Frontend | Porte do editor, gerador (manual/Excel), modais, histórico e configurações de HeroUI para shadcn/ui, landing e navegação | 1, 2 |
-| 4 — Deploy | Dockerfile multi-stage (php-fpm + nginx + imagick), stack Swarm com Postgres e RustFS, entrypoint, limites de 50 MB | 1–3 |
+| Plano                   | Entrega                                                                                                                                         | Depende de |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| **1 — Fundação** (este) | Scaffold, ambiente local, schema, Policy, Google, modelos/campos/compartilhamentos/histórico/conta                                              | —          |
+| 2 — Geração             | `config/fontes.php` completo, `fontes:baixar`, `CatalogoFontes::arquivo()`, `GeradorCertificado` (Imagick), endpoint de geração, testes visuais | 1          |
+| 3 — Frontend            | Porte do editor, gerador (manual/Excel), modais, histórico e configurações de HeroUI para shadcn/ui, landing e navegação                        | 1, 2       |
+| 4 — Deploy              | Dockerfile multi-stage (php-fpm + nginx + imagick), stack Swarm com Postgres e RustFS, entrypoint, limites de 50 MB                             | 1–3        |
 
 ## Global Constraints
 
@@ -69,10 +69,12 @@ tests/Feature/{Modelos,Campos,Compartilhamentos,Historico,Conta,Auth/Google,Poli
 > **Nota de execução (2026-10-08):** o MinIO deixou de ter imagem pública (Docker Hub inexistente, Quay com 401), então o object storage local e de produção passa a ser o **RustFS** (`rustfs/rustfs:1.0.1`), escolhido pelo usuário. O código não muda, pois o disco `s3` fala S3. O bucket é criado pelo AWS CLI (`s3-init`). Também: o kit traz uma migration de passkeys (conferir na Task 2) e `Route::redirect` foi trocado por `Route::get` em `routes/settings.php`, porque o Wayfinder gera o método `query` que ele mesmo não tipa.
 
 **Files:**
+
 - Create: projeto inteiro via `laravel new`, `compose.yaml`, `docker/postgres/init.sql`
 - Modify: `.env`, `.env.example`, `phpunit.xml`
 
 **Interfaces:**
+
 - Produces: projeto Laravel na raiz do repo; Postgres local em `127.0.0.1:54320` (bancos `pequenavia` e `pequenavia_test`, usuário `pequenavia`/`secret`); RustFS em `127.0.0.1:9010` (console `9011`, usuário `pequenavia`/`pequenavia-secret`, bucket privado `modelos-certificado`); `php artisan test` rodando em Postgres.
 
 - [ ] **Step 1: Criar a branch de trabalho**
@@ -125,64 +127,64 @@ CREATE DATABASE pequenavia_test OWNER pequenavia;
 
 ```yaml
 services:
-  postgres:
-    image: postgres:17
-    environment:
-      POSTGRES_DB: pequenavia
-      POSTGRES_USER: pequenavia
-      POSTGRES_PASSWORD: secret
-    ports:
-      - "54320:5432"
-    volumes:
-      - pequenavia_pg:/var/lib/postgresql/data
-      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U pequenavia"]
-      interval: 5s
-      retries: 10
+    postgres:
+        image: postgres:17
+        environment:
+            POSTGRES_DB: pequenavia
+            POSTGRES_USER: pequenavia
+            POSTGRES_PASSWORD: secret
+        ports:
+            - '54320:5432'
+        volumes:
+            - pequenavia_pg:/var/lib/postgresql/data
+            - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+        healthcheck:
+            test: ['CMD-SHELL', 'pg_isready -U pequenavia']
+            interval: 5s
+            retries: 10
 
-  rustfs-perms:
-    image: alpine:3
-    user: root
-    command: chown -R 10001:10001 /data
-    volumes:
-      - pequenavia_s3:/data
+    rustfs-perms:
+        image: alpine:3
+        user: root
+        command: chown -R 10001:10001 /data
+        volumes:
+            - pequenavia_s3:/data
 
-  rustfs:
-    image: rustfs/rustfs:1.0.1
-    depends_on:
-      rustfs-perms:
-        condition: service_completed_successfully
-    environment:
-      RUSTFS_ACCESS_KEY: pequenavia
-      RUSTFS_SECRET_KEY: pequenavia-secret
-      RUSTFS_ADDRESS: ":9000"
-      RUSTFS_CONSOLE_ADDRESS: ":9001"
-      RUSTFS_CONSOLE_ENABLE: "true"
-    ports:
-      - "9010:9000"
-      - "9011:9001"
-    volumes:
-      - pequenavia_s3:/data
+    rustfs:
+        image: rustfs/rustfs:1.0.1
+        depends_on:
+            rustfs-perms:
+                condition: service_completed_successfully
+        environment:
+            RUSTFS_ACCESS_KEY: pequenavia
+            RUSTFS_SECRET_KEY: pequenavia-secret
+            RUSTFS_ADDRESS: ':9000'
+            RUSTFS_CONSOLE_ADDRESS: ':9001'
+            RUSTFS_CONSOLE_ENABLE: 'true'
+        ports:
+            - '9010:9000'
+            - '9011:9001'
+        volumes:
+            - pequenavia_s3:/data
 
-  s3-init:
-    image: amazon/aws-cli:latest
-    depends_on:
-      - rustfs
-    environment:
-      AWS_ACCESS_KEY_ID: pequenavia
-      AWS_SECRET_ACCESS_KEY: pequenavia-secret
-      AWS_DEFAULT_REGION: us-east-1
-    entrypoint: >
-      /bin/sh -c "
-      until aws --endpoint-url http://rustfs:9000 s3api list-buckets; do sleep 2; done;
-      aws --endpoint-url http://rustfs:9000 s3api head-bucket --bucket modelos-certificado
-      || aws --endpoint-url http://rustfs:9000 s3api create-bucket --bucket modelos-certificado;
-      "
+    s3-init:
+        image: amazon/aws-cli:latest
+        depends_on:
+            - rustfs
+        environment:
+            AWS_ACCESS_KEY_ID: pequenavia
+            AWS_SECRET_ACCESS_KEY: pequenavia-secret
+            AWS_DEFAULT_REGION: us-east-1
+        entrypoint: >
+            /bin/sh -c "
+            until aws --endpoint-url http://rustfs:9000 s3api list-buckets; do sleep 2; done;
+            aws --endpoint-url http://rustfs:9000 s3api head-bucket --bucket modelos-certificado
+            || aws --endpoint-url http://rustfs:9000 s3api create-bucket --bucket modelos-certificado;
+            "
 
 volumes:
-  pequenavia_pg:
-  pequenavia_s3:
+    pequenavia_pg:
+    pequenavia_s3:
 ```
 
 Run: `docker compose up -d && docker compose ps`
@@ -258,17 +260,19 @@ Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
 ### Task 2: Schema, models e factories
 
 **Files:**
+
 - Modify: `database/migrations/0001_01_01_000000_create_users_table.php`, `app/Models/User.php`, `database/factories/UserFactory.php`
 - Create: as 4 migrations `2026_10_06_00000{1..4}_*.php`, os models `ModeloCertificado`, `CampoCertificado`, `CompartilhamentoModelo`, `GeracaoCertificado` e suas factories
 - Test: `tests/Feature/Models/SchemaTest.php`
 
 **Interfaces:**
+
 - Produces:
-  - `User`: `uuid id`, `email` sempre em minúsculas, `tem_senha` (bool, appended), `modelos(): HasMany<ModeloCertificado>`, `geracoes(): HasMany<GeracaoCertificado>`, implementa `MustVerifyEmail`; `UserFactory::google()`.
-  - `ModeloCertificado` (tabela `modelos_certificado`): `user()`, `campos()` (ordenados por `created_at`, `id`), `compartilhamentos()`, `geracoes()`; `$fillable = ['title','description','image_path']`.
-  - `CampoCertificado` (tabela `campos_certificado`): `modelo()`; casts `x`, `y`, `tamanho_fonte`, `peso_fonte` → int; `espacamento_letras` → float; `centralizado` → bool.
-  - `CompartilhamentoModelo` (tabela `compartilhamentos_modelo`): `modelo()`; `email` em minúsculas; `pode_editar` → bool; `CompartilhamentoModeloFactory::editor()`.
-  - `GeracaoCertificado` (tabela `geracoes_certificado`): `UPDATED_AT = null`; `campos_valores` → array; `user()`, `modelo()`.
+    - `User`: `uuid id`, `email` sempre em minúsculas, `tem_senha` (bool, appended), `modelos(): HasMany<ModeloCertificado>`, `geracoes(): HasMany<GeracaoCertificado>`, implementa `MustVerifyEmail`; `UserFactory::google()`.
+    - `ModeloCertificado` (tabela `modelos_certificado`): `user()`, `campos()` (ordenados por `created_at`, `id`), `compartilhamentos()`, `geracoes()`; `$fillable = ['title','description','image_path']`.
+    - `CampoCertificado` (tabela `campos_certificado`): `modelo()`; casts `x`, `y`, `tamanho_fonte`, `peso_fonte` → int; `espacamento_letras` → float; `centralizado` → bool.
+    - `CompartilhamentoModelo` (tabela `compartilhamentos_modelo`): `modelo()`; `email` em minúsculas; `pode_editar` → bool; `CompartilhamentoModeloFactory::editor()`.
+    - `GeracaoCertificado` (tabela `geracoes_certificado`): `UPDATED_AT = null`; `campos_valores` → array; `user()`, `modelo()`.
 
 - [ ] **Step 1: Escrever o teste que falha**
 
@@ -934,15 +938,17 @@ Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
 ### Task 3: Permissões (Policy + scope)
 
 **Files:**
+
 - Create: `app/Policies/ModeloCertificadoPolicy.php`
 - Modify: `app/Models/ModeloCertificado.php` (scope `acessiveisPor`)
 - Test: `tests/Feature/Policies/ModeloCertificadoPolicyTest.php`
 
 **Interfaces:**
+
 - Consumes: models da Task 2.
 - Produces:
-  - Policy (auto-descoberta) com `view`, `gerar`, `update`, `editarCampos`, `gerenciarCompartilhamentos` e `delete`, todos `(User $user, ModeloCertificado $modelo): bool`.
-  - Scope `ModeloCertificado::query()->acessiveisPor(User $user)`.
+    - Policy (auto-descoberta) com `view`, `gerar`, `update`, `editarCampos`, `gerenciarCompartilhamentos` e `delete`, todos `(User $user, ModeloCertificado $modelo): bool`.
+    - Scope `ModeloCertificado::query()->acessiveisPor(User $user)`.
 
 - [ ] **Step 1: Escrever o teste que falha**
 
@@ -1128,11 +1134,13 @@ Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
 ### Task 4: Login com Google, verificação de email e mensagens flash
 
 **Files:**
+
 - Create: `app/Http/Controllers/Auth/GoogleController.php`
 - Modify: `config/services.php`, `routes/web.php`, `app/Http/Middleware/HandleInertiaRequests.php`, `resources/js/pages/auth/login.tsx`, `resources/js/pages/auth/register.tsx`
 - Test: `tests/Feature/Auth/GoogleLoginTest.php`
 
 **Interfaces:**
+
 - Consumes: `User` (Task 2) com `google_id`, `avatar_url` e `MustVerifyEmail`.
 - Produces: rotas `auth.google` (`GET /auth/google`) e `auth.google.callback` (`GET /auth/google/callback`); prop compartilhada `flash: { success?: string, error?: string }` em todas as páginas Inertia.
 
@@ -1376,7 +1384,9 @@ function ErroFlash() {
 
     if (!flash?.error) return null;
 
-    return <p className="text-center text-sm text-destructive">{flash.error}</p>;
+    return (
+        <p className="text-center text-sm text-destructive">{flash.error}</p>
+    );
 }
 ```
 
@@ -1402,16 +1412,18 @@ Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
 ### Task 5: Modelos de certificado com imagem no RustFS
 
 **Files:**
+
 - Create: `app/Http/Controllers/ModeloCertificadoController.php`, `app/Http/Requests/StoreModeloCertificadoRequest.php`, `app/Http/Requests/UpdateModeloCertificadoRequest.php`, `app/Jobs/RemoverImagemModelo.php`, `resources/js/pages/meus-certificados/index.tsx`
 - Modify: `app/Models/ModeloCertificado.php` (evento `deleted`), `routes/web.php`
 - Test: `tests/Feature/Modelos/ModeloCertificadoTest.php`
 
 **Interfaces:**
+
 - Consumes: Policy e scope da Task 3.
 - Produces:
-  - Rotas (grupo `auth` + `verified`): `meus-certificados.index` (`GET /meus-certificados`), `modelos.store` (`POST /modelos`), `modelos.update` (`PUT /modelos/{modelo}`, multipart via `_method`), `modelos.destroy` (`DELETE /modelos/{modelo}`) e `modelos.imagem` (`GET /modelos/{modelo}/imagem`).
-  - Job `RemoverImagemModelo(string $path)`.
-  - Formato de cada item das props `modelos`/`compartilhados`: `{ id, title, description, imagem_url, dono_nome, pode_editar: bool, eh_dono: bool, compartilhamentos: {id,email,pode_editar}[] }` (lista vazia quando não é dono).
+    - Rotas (grupo `auth` + `verified`): `meus-certificados.index` (`GET /meus-certificados`), `modelos.store` (`POST /modelos`), `modelos.update` (`PUT /modelos/{modelo}`, multipart via `_method`), `modelos.destroy` (`DELETE /modelos/{modelo}`) e `modelos.imagem` (`GET /modelos/{modelo}/imagem`).
+    - Job `RemoverImagemModelo(string $path)`.
+    - Formato de cada item das props `modelos`/`compartilhados`: `{ id, title, description, imagem_url, dono_nome, pode_editar: bool, eh_dono: bool, compartilhamentos: {id,email,pode_editar}[] }` (lista vazia quando não é dono).
 
 - [ ] **Step 1: Instalar o driver S3 e conferir o RustFS**
 
@@ -1817,7 +1829,11 @@ Adicione o import `use App\Http\Controllers\ModeloCertificadoController;` e, den
 import { Head } from '@inertiajs/react';
 import AppLayout from '@/layouts/app-layout';
 
-export type CompartilhamentoResumo = { id: string; email: string; pode_editar: boolean };
+export type CompartilhamentoResumo = {
+    id: string;
+    email: string;
+    pode_editar: boolean;
+};
 
 export type ModeloResumo = {
     id: string;
@@ -1839,11 +1855,23 @@ export default function MeusCertificados({ modelos, compartilhados }: Props) {
             <div className="space-y-6 p-4">
                 <section>
                     <h1 className="text-xl font-semibold">Meus modelos</h1>
-                    <ul>{modelos.map((m) => <li key={m.id}>{m.title}</li>)}</ul>
+                    <ul>
+                        {modelos.map((m) => (
+                            <li key={m.id}>{m.title}</li>
+                        ))}
+                    </ul>
                 </section>
                 <section>
-                    <h2 className="text-lg font-semibold">Compartilhados comigo</h2>
-                    <ul>{compartilhados.map((m) => <li key={m.id}>{m.title} — {m.dono_nome}</li>)}</ul>
+                    <h2 className="text-lg font-semibold">
+                        Compartilhados comigo
+                    </h2>
+                    <ul>
+                        {compartilhados.map((m) => (
+                            <li key={m.id}>
+                                {m.title} — {m.dono_nome}
+                            </li>
+                        ))}
+                    </ul>
                 </section>
             </div>
         </AppLayout>
@@ -1873,17 +1901,19 @@ Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
 ### Task 6: Campos do certificado
 
 **Files:**
+
 - Create: `config/fontes.php`, `app/Services/CatalogoFontes.php`, `app/Http/Controllers/CampoCertificadoController.php`, `resources/js/pages/meus-certificados/campos.tsx`
 - Modify: `routes/web.php`
 - Test: `tests/Feature/Campos/CampoCertificadoTest.php`
 
 **Interfaces:**
+
 - Consumes: Policy (`view`, `editarCampos`), `ModeloResumo` não é usado aqui.
 - Produces:
-  - `config('fontes.grupos')`: `array<string grupo, array<string familia, string slug>>`. O slug é a pasta das fontes que o Plano 2 usa.
-  - `CatalogoFontes::familias(): list<string>` e `CatalogoFontes::grupos(): array`. O Plano 2 acrescenta `arquivo()`.
-  - Rotas: `meus-certificados.campos` (`GET /meus-certificados/{modelo}/campos`), `campos.store` (`POST /modelos/{modelo}/campos`), `campos.update` (`PATCH /modelos/{modelo}/campos/{campo}`) e `campos.destroy` (`DELETE /modelos/{modelo}/campos/{campo}`).
-  - Props da página: `modelo { id, title, imagem_url }`, `campos: CampoCertificado[]` (todas as colunas), `pode_editar: bool` e `fontes: config('fontes.grupos')`.
+    - `config('fontes.grupos')`: `array<string grupo, array<string familia, string slug>>`. O slug é a pasta das fontes que o Plano 2 usa.
+    - `CatalogoFontes::familias(): list<string>` e `CatalogoFontes::grupos(): array`. O Plano 2 acrescenta `arquivo()`.
+    - Rotas: `meus-certificados.campos` (`GET /meus-certificados/{modelo}/campos`), `campos.store` (`POST /modelos/{modelo}/campos`), `campos.update` (`PATCH /modelos/{modelo}/campos/{campo}`) e `campos.destroy` (`DELETE /modelos/{modelo}/campos/{campo}`).
+    - Props da página: `modelo { id, title, imagem_url }`, `campos: CampoCertificado[]` (todas as colunas), `pode_editar: bool` e `fontes: config('fontes.grupos')`.
 
 - [ ] **Step 1: Escrever o teste que falha**
 
@@ -2253,9 +2283,21 @@ export default function Campos({ modelo, campos, pode_editar }: Props) {
             <Head title={`Campos — ${modelo.title}`} />
             <div className="space-y-4 p-4">
                 <h1 className="text-xl font-semibold">{modelo.title}</h1>
-                <img src={modelo.imagem_url} alt={modelo.title} className="max-w-full" />
-                <p>{pode_editar ? 'Você pode editar os campos.' : 'Somente leitura.'}</p>
-                <ul>{campos.map((c) => <li key={c.id}>{c.label || c.nome}</li>)}</ul>
+                <img
+                    src={modelo.imagem_url}
+                    alt={modelo.title}
+                    className="max-w-full"
+                />
+                <p>
+                    {pode_editar
+                        ? 'Você pode editar os campos.'
+                        : 'Somente leitura.'}
+                </p>
+                <ul>
+                    {campos.map((c) => (
+                        <li key={c.id}>{c.label || c.nome}</li>
+                    ))}
+                </ul>
             </div>
         </AppLayout>
     );
@@ -2284,11 +2326,13 @@ Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
 ### Task 7: Compartilhamentos
 
 **Files:**
+
 - Create: `app/Http/Controllers/CompartilhamentoController.php`
 - Modify: `routes/web.php`
 - Test: `tests/Feature/Compartilhamentos/CompartilhamentoTest.php`
 
 **Interfaces:**
+
 - Consumes: Policy (`gerenciarCompartilhamentos`) e o model `CompartilhamentoModelo` (email em minúsculas).
 - Produces: rotas `compartilhamentos.store` (`POST /modelos/{modelo}/compartilhamentos`, corpo `{ email, pode_editar? }`), `compartilhamentos.update` (`PATCH /modelos/{modelo}/compartilhamentos/{compartilhamento}`, corpo `{ pode_editar }`) e `compartilhamentos.destroy` (`DELETE`). A lista de compartilhamentos chega pela prop `modelos[].compartilhamentos` da Task 5.
 
@@ -2465,15 +2509,17 @@ Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
 ### Task 8: Histórico e exclusão de conta
 
 **Files:**
+
 - Create: `app/Http/Controllers/HistoricoController.php`, `resources/js/pages/historico/index.tsx`
 - Modify: `routes/web.php`, `app/Http/Controllers/Settings/ProfileController.php` (método `destroy`), `resources/js/components/delete-user.tsx`
 - Test: `tests/Feature/Historico/HistoricoTest.php`, `tests/Feature/Conta/ExcluirContaTest.php`
 
 **Interfaces:**
+
 - Consumes: `User::geracoes()`, `User::modelos()`, `User->tem_senha`, job `RemoverImagemModelo`.
 - Produces:
-  - Rota `historico.index` (`GET /historico`) com a prop `geracoes: { id, modelo_id, modelo_title, campos_valores, created_at }[]` (no máximo 50, mais recentes primeiro).
-  - `DELETE` de conta do kit aceitando `password` (usuários com senha) ou `confirmacao` igual ao email (usuários só-Google).
+    - Rota `historico.index` (`GET /historico`) com a prop `geracoes: { id, modelo_id, modelo_title, campos_valores, created_at }[]` (no máximo 50, mais recentes primeiro).
+    - `DELETE` de conta do kit aceitando `password` (usuários com senha) ou `confirmacao` igual ao email (usuários só-Google).
 
 - [ ] **Step 1: Descobrir a rota de exclusão de conta do kit**
 
@@ -2619,7 +2665,8 @@ export default function Historico({ geracoes }: { geracoes: Geracao[] }) {
                 <ul>
                     {geracoes.map((g) => (
                         <li key={g.id}>
-                            {g.modelo_title} — {new Date(g.created_at).toLocaleString('pt-BR')}
+                            {g.modelo_title} —{' '}
+                            {new Date(g.created_at).toLocaleString('pt-BR')}
                         </li>
                     ))}
                 </ul>
@@ -2668,23 +2715,27 @@ Em `resources/js/components/delete-user.tsx`, leia o usuário compartilhado:
 ```tsx
 import { usePage } from '@inertiajs/react';
 // ...
-const { auth } = usePage<{ auth: { user: { email: string; tem_senha: boolean } } }>().props;
+const { auth } = usePage<{
+    auth: { user: { email: string; tem_senha: boolean } };
+}>().props;
 ```
 
 No diálogo, troque o bloco do campo de senha por:
 
 ```tsx
-{auth.user.tem_senha ? (
-    <>
-        {/* bloco original do campo "password" do kit, sem alterações */}
-    </>
-) : (
-    <div className="grid gap-2">
-        <Label htmlFor="confirmacao">Digite {auth.user.email} para confirmar</Label>
-        <Input id="confirmacao" name="confirmacao" autoComplete="off" />
-        <InputError message={errors.confirmacao} />
-    </div>
-)}
+{
+    auth.user.tem_senha ? (
+        <>{/* bloco original do campo "password" do kit, sem alterações */}</>
+    ) : (
+        <div className="grid gap-2">
+            <Label htmlFor="confirmacao">
+                Digite {auth.user.email} para confirmar
+            </Label>
+            <Input id="confirmacao" name="confirmacao" autoComplete="off" />
+            <InputError message={errors.confirmacao} />
+        </div>
+    );
+}
 ```
 
 Mantenha o bloco original do campo `password` **literalmente** dentro do primeiro ramo. `Label`, `Input` e `InputError` já são importados pelo componente do kit. Se o kit usa `useForm`, adicione `confirmacao: ''` ao estado inicial. Se usa o componente `<Form>`, o atributo `name` basta.
