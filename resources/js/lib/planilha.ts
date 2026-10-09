@@ -51,16 +51,18 @@ export function lerPlanilha(
 
     for (let linha = intervalo.s.r + 1; linha <= intervalo.e.r; linha++) {
         const valores: Record<string, string> = {};
-        let temValor = false;
 
         cabecalhos.forEach((nome, indice) => {
-            const texto = textoDaCelula(celula(linha, intervalo.s.c + indice));
-
-            valores[nome] = texto;
-            temValor ||= texto !== '';
+            valores[nome] = textoDaCelula(
+                celula(linha, intervalo.s.c + indice),
+            );
         });
 
-        if (temValor) {
+        const temValorNosCampos = campos.some(
+            (campo) => (valores[campo.nome] ?? '').trim() !== '',
+        );
+
+        if (temValorNosCampos) {
             linhas.push(
                 Object.fromEntries(
                     campos.map((campo) => [

@@ -85,6 +85,30 @@ describe('lerPlanilha', () => {
         ]);
     });
 
+    it('ignora linhas com valor só em colunas que não são campos do modelo', () => {
+        const conteudo = planilha([
+            ['Nome', 'Data', 'Outra'],
+            ['', '', 'x'],
+            ['Maria', 'y', 'z'],
+        ]);
+
+        expect(lerPlanilha(conteudo, campos)).toEqual([
+            { Nome: 'Maria', Data: 'y' },
+        ]);
+    });
+
+    it('ignora linhas com só espaços nas colunas dos campos', () => {
+        const conteudo = planilha([
+            ['Nome', 'Data'],
+            ['   ', ' \t '],
+            ['Maria', 'x'],
+        ]);
+
+        expect(lerPlanilha(conteudo, campos)).toEqual([
+            { Nome: 'Maria', Data: 'x' },
+        ]);
+    });
+
     it('devolve lista vazia quando há só o cabeçalho', () => {
         expect(lerPlanilha(planilha([['Nome', 'Data']]), campos)).toEqual([]);
     });
