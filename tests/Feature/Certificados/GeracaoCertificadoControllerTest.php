@@ -5,6 +5,8 @@ use App\Models\CompartilhamentoModelo;
 use App\Models\ModeloCertificado;
 use App\Models\User;
 use App\Services\GeradorCertificado;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -205,6 +207,16 @@ it('limita a geração por minuto a cada usuário', function () {
     $outro = modeloGeravel();
     $this->actingAs($outro->user)->postJson(route('certificados.store', $outro), $dados)->assertOk();
 });
+
+it('usa 60 gerações por minuto quando o limite configurado não é positivo', function (int $configurado) {
+    config(['certificados.geracoes_por_minuto' => $configurado]);
+    $limite = RateLimiter::limiter('gerar-certificado')(Request::create('/', 'POST'));
+
+    expect($limite->maxAttempts)->toBe(60);
+})->with([
+    'zero' => [0],
+    'negativo' => [-5],
+]);
 
 it('aceita campos cujo nome tem ponto', function () {
     Storage::fake('s3');
