@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\File;
 | Imagens de referência em tests/Fixtures/certificados. Para recriá-las depois de uma mudança
 | proposital no desenho, rode `UPDATE_GOLDEN=1 php artisan test --filter=GeradorCertificadoVisualTest`
 | e confira as imagens antes de commitar.
+|
+| As referências valem para ImageMagick 7; a imagem de produção deve usar a mesma versão.
 */
 dataset('certificados de referência', [
     'a: Lora 400 à esquerda' => ['a', [
@@ -36,6 +38,10 @@ dataset('certificados de referência', [
 ]);
 
 it('reproduz a imagem de referência', function (string $id, array $campo, string $texto) {
+    if (Imagick::getVersion()['versionNumber'] < 0x700) {
+        $this->markTestSkipped('As imagens de referência foram geradas com ImageMagick 7.');
+    }
+
     $png = (new GeradorCertificado)->gerar(fundoBranco(), [campoDeTeste($campo)], ['Nome' => $texto]);
     $caminho = base_path("tests/Fixtures/certificados/{$id}.png");
 
