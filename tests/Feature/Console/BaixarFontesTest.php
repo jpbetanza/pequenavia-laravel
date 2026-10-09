@@ -103,3 +103,35 @@ it('falha quando o Google não devolve nenhum arquivo da família', function () 
 
     $this->artisan('fontes:baixar')->assertFailed();
 });
+
+it('falha, sem baixar nada, quando a família pedida não está no catálogo', function () {
+    catalogoParaDownload();
+    Http::fake();
+
+    $this->artisan('fontes:baixar', ['--familia' => ['Lobra']])
+        ->expectsOutputToContain('Família fora do catálogo: Lobra.')
+        ->assertFailed();
+
+    Http::assertNothingSent();
+});
+
+it('falha quando o CSS vem sem arquivo .ttf, mesmo com outros pesos gravados', function () {
+    $diretorio = catalogoParaDownload();
+    Http::preventStrayRequests();
+    Http::fake([
+        'fonts.googleapis.com/css2*' => function (Request $request) {
+            parse_str((string) parse_url($request->url(), PHP_URL_QUERY), $consulta);
+
+            if (str_contains($consulta['family'], ':wght@400')) {
+                return Http::response('/* resposta sem arquivo */', 200);
+            }
+
+            return Http::response("@font-face { src: url(https://fonts.gstatic.com/s/lora/700.ttf) format('truetype'); }");
+        },
+        'fonts.gstatic.com/*' => Http::response('bytes-da-fonte'),
+    ]);
+
+    $this->artisan('fontes:baixar', ['--familia' => ['Lora']])->assertFailed();
+
+    expect(File::exists("{$diretorio}/lora/700.ttf"))->toBeTrue();
+});

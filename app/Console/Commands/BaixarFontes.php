@@ -34,13 +34,22 @@ class BaixarFontes extends Command
         $familias = collect(CatalogoFontes::pastas());
 
         if ($this->option('familia') !== []) {
-            $familias = $familias->only($this->option('familia'));
+            $pedidas = collect($this->option('familia'));
+            $foraDoCatalogo = $pedidas->reject(fn (string $nome) => $familias->has($nome));
+
+            if ($foraDoCatalogo->isNotEmpty()) {
+                $foraDoCatalogo->each(fn (string $nome) => $this->error("Família fora do catálogo: {$nome}."));
+
+                return self::FAILURE;
+            }
+
+            $familias = $familias->only($pedidas->all());
         }
 
         $falhas = 0;
 
         foreach ($familias as $familia => $pasta) {
-            $baixados = $this->baixarFamilia($familia, $pasta);
+            ['baixados' => $baixados, 'semUrl' => $semUrl] = $this->baixarFamilia($familia, $pasta);
 
             if ($baixados === 0) {
                 $this->error("{$familia}: o Google Fonts não devolveu nenhum arquivo.");
@@ -50,18 +59,26 @@ class BaixarFontes extends Command
             }
 
             $this->info("{$familia}: {$baixados} arquivo(s) em {$pasta}/");
+
+            if ($semUrl > 0) {
+                $falhas++;
+            }
         }
 
         return $falhas === 0 ? self::SUCCESS : self::FAILURE;
     }
 
     /**
-     * Baixa um arquivo por peso que a família oferece e devolve quantos baixou.
+     * Baixa um arquivo por peso que a família oferece. Devolve quantos baixou e quantos pesos
+     * responderam sem URL de arquivo .ttf.
+     *
+     * @return array{baixados: int, semUrl: int}
      */
-    private function baixarFamilia(string $familia, string $pasta): int
+    private function baixarFamilia(string $familia, string $pasta): array
     {
         $nomeNoGoogle = config("fontes.google.{$familia}", $familia);
         $baixados = 0;
+        $semUrl = 0;
 
         foreach (CatalogoFontes::PESOS as $peso) {
             $css = Http::withUserAgent(self::USER_AGENT)->get($this->urlDoCss($nomeNoGoogle, $peso));
@@ -75,6 +92,7 @@ class BaixarFontes extends Command
 
             if (! preg_match('/url\(([^)]+\.ttf)\)/', $css->body(), $achado)) {
                 $this->warn("{$familia} {$peso}: a resposta do Google não traz um arquivo .ttf.");
+                $semUrl++;
 
                 continue;
             }
@@ -86,7 +104,7 @@ class BaixarFontes extends Command
             $baixados++;
         }
 
-        return $baixados;
+        return ['baixados' => $baixados, 'semUrl' => $semUrl];
     }
 
     private function urlDoCss(string $familia, int $peso): string
