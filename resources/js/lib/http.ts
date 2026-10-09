@@ -31,7 +31,17 @@ export function lerTokenXsrf(cookies: string): string {
         .split('; ')
         .find((cookie) => cookie.startsWith('XSRF-TOKEN='));
 
-    return par ? decodeURIComponent(par.slice('XSRF-TOKEN='.length)) : '';
+    if (!par) {
+        return '';
+    }
+
+    const bruto = par.slice('XSRF-TOKEN='.length);
+
+    try {
+        return decodeURIComponent(bruto);
+    } catch {
+        return bruto;
+    }
 }
 
 /** Nome do arquivo do `Content-Disposition`: prefere `filename*` (UTF-8) e cai para `filename`. */
@@ -110,13 +120,25 @@ async function erroDaResposta(resposta: Response): Promise<ErroHttp> {
         dados = {};
     }
 
-    const espera = resposta.headers.get('Retry-After');
+    const espera = Number(resposta.headers.get('Retry-After'));
+    const esperarSegundos =
+        resposta.headers.get('Retry-After') !== null &&
+        Number.isFinite(espera) &&
+        espera > 0
+            ? espera
+            : null;
+
+    // O servidor só fala em português nos erros de validação (422); o resto vem em inglês.
+    const mensagem =
+        resposta.status === 422 && dados.message
+            ? dados.message
+            : mensagemPadrao(resposta.status);
 
     return new ErroHttp(
         resposta.status,
-        dados.message ?? mensagemPadrao(resposta.status),
+        mensagem,
         dados.errors ?? {},
-        espera === null ? null : Number(espera),
+        esperarSegundos,
     );
 }
 

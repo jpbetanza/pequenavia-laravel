@@ -32,6 +32,11 @@ describe('lerTokenXsrf', () => {
         expect(lerTokenXsrf('a=1; XSRF-TOKEN=abc%3D%3D; b=2')).toBe('abc==');
     });
 
+    it('devolve o texto cru quando o cookie não decodifica, sem lançar', () => {
+        expect(() => lerTokenXsrf('XSRF-TOKEN=%E0%A4%A')).not.toThrow();
+        expect(lerTokenXsrf('XSRF-TOKEN=%E0%A4%A')).toBe('%E0%A4%A');
+    });
+
     it('devolve texto vazio quando não há cookie do token', () => {
         expect(lerTokenXsrf('a=1; b=2')).toBe('');
     });
@@ -118,6 +123,77 @@ describe('enviarJson', () => {
         const erro = await enviarJson('POST', '/x').catch((e: unknown) => e);
 
         expect(erro).toMatchObject({ status: 429, esperarSegundos: 7 });
+    });
+
+    it('trata Retry-After inválido ou não positivo como ausente', async () => {
+        fingirFetch(
+            respostaJson(
+                { message: 'Too Many Attempts.' },
+                { status: 429, headers: { 'Retry-After': 'abc' } },
+            ),
+        );
+
+        const erro = await enviarJson('POST', '/x').catch((e: unknown) => e);
+
+        expect(erro).toMatchObject({ status: 429, esperarSegundos: null });
+    });
+
+    it('trata Retry-After zero como ausente', async () => {
+        fingirFetch(
+            respostaJson(
+                { message: 'Too Many Attempts.' },
+                { status: 429, headers: { 'Retry-After': '0' } },
+            ),
+        );
+
+        const erro = await enviarJson('POST', '/x').catch((e: unknown) => e);
+
+        expect(erro).toMatchObject({ status: 429, esperarSegundos: null });
+    });
+
+    it('troca a mensagem em inglês do 429 pela mensagem padrão em português', async () => {
+        fingirFetch(
+            respostaJson(
+                { message: 'Too Many Attempts.' },
+                { status: 429, headers: { 'Retry-After': '7' } },
+            ),
+        );
+
+        const erro = await enviarJson('POST', '/x').catch((e: unknown) => e);
+
+        expect(erro).toMatchObject({
+            status: 429,
+            message: 'Muitas tentativas. Aguarde alguns segundos.',
+        });
+    });
+
+    it('troca a mensagem em inglês do 403 pela mensagem padrão em português', async () => {
+        fingirFetch(
+            respostaJson(
+                { message: 'This action is unauthorized.' },
+                { status: 403 },
+            ),
+        );
+
+        const erro = await enviarJson('POST', '/x').catch((e: unknown) => e);
+
+        expect(erro).toMatchObject({
+            status: 403,
+            message: 'Você não tem permissão para isso.',
+        });
+    });
+
+    it('troca a mensagem do 419 pela mensagem padrão em português', async () => {
+        fingirFetch(
+            respostaJson({ message: 'CSRF token mismatch.' }, { status: 419 }),
+        );
+
+        const erro = await enviarJson('POST', '/x').catch((e: unknown) => e);
+
+        expect(erro).toMatchObject({
+            status: 419,
+            message: 'Sua sessão expirou. Recarregue a página.',
+        });
     });
 
     it('usa uma mensagem padrão quando o erro não vem em JSON', async () => {

@@ -34,7 +34,7 @@ export function pastaDaFamilia(
     familia: string,
 ): string | undefined {
     for (const familias of Object.values(fontes)) {
-        if (familia in familias) {
+        if (Object.hasOwn(familias, familia)) {
             return familias[familia];
         }
     }

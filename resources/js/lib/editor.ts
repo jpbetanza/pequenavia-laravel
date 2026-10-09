@@ -30,7 +30,17 @@ export function moverCampo(
 }
 
 /** Atributos de um campo novo: herda o estilo do último campo e começa em 50, 50. */
-export function valoresDoNovoCampo(ultimo: Campo | undefined) {
+export function valoresDoNovoCampo(
+    ultimo: Campo | undefined,
+): Pick<
+    Campo,
+    | 'cor'
+    | 'tamanho_fonte'
+    | 'fonte_familia'
+    | 'peso_fonte'
+    | 'espacamento_letras'
+    | 'centralizado'
+> & { x: number; y: number } {
     return {
         x: 50,
         y: 50,

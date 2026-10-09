@@ -1,29 +1,29 @@
 import * as XLSX from 'xlsx';
 
+/** Datas do Excel não têm fuso: o SheetJS as devolve com o relógio em UTC, então lemos em UTC. */
 function dataBrasileira(data: Date): string {
-    const dia = String(data.getDate()).padStart(2, '0');
-    const mes = String(data.getMonth() + 1).padStart(2, '0');
+    const dia = String(data.getUTCDate()).padStart(2, '0');
+    const mes = String(data.getUTCMonth() + 1).padStart(2, '0');
 
-    return `${dia}/${mes}/${data.getFullYear()}`;
+    return `${dia}/${mes}/${data.getUTCFullYear()}`;
 }
 
-function textoDaCelula(valor: unknown): string {
-    if (valor instanceof Date) {
-        return dataBrasileira(valor);
+function textoDaCelula(celula: XLSX.CellObject | undefined): string {
+    if (!celula) {
+        return '';
     }
 
-    if (typeof valor === 'string') {
-        return valor;
+    if (celula.t === 'd' && celula.v instanceof Date) {
+        return dataBrasileira(celula.v);
     }
 
-    if (typeof valor === 'number' || typeof valor === 'boolean') {
-        return String(valor);
-    }
-
-    return '';
+    return celula.w ?? String(celula.v ?? '');
 }
 
-/** Lê a primeira aba e devolve uma linha por registro, com uma chave por campo do modelo. */
+/**
+ * Lê a primeira aba: a primeira linha traz os cabeçalhos e cada linha seguinte vira um registro.
+ * Lê as células direto (e não `sheet_to_json`) para manter o formato de exibição de cada uma.
+ */
 export function lerPlanilha(
     conteudo: ArrayBuffer,
     campos: { nome: string }[],
@@ -31,23 +31,48 @@ export function lerPlanilha(
     const livro = XLSX.read(conteudo, { type: 'array', cellDates: true });
     const aba = livro.Sheets[livro.SheetNames[0]];
 
-    if (!aba) {
+    if (!aba || !aba['!ref']) {
         return [];
     }
 
-    const linhas = XLSX.utils.sheet_to_json<Record<string, unknown>>(aba, {
-        raw: true,
-        defval: '',
-    });
+    const intervalo = XLSX.utils.decode_range(aba['!ref']);
+    const celula = (linha: number, coluna: number) =>
+        aba[XLSX.utils.encode_cell({ r: linha, c: coluna })] as
+            | XLSX.CellObject
+            | undefined;
 
-    return linhas.map((linha) =>
-        Object.fromEntries(
-            campos.map((campo) => [
-                campo.nome,
-                textoDaCelula(linha[campo.nome]),
-            ]),
-        ),
-    );
+    const cabecalhos: string[] = [];
+
+    for (let coluna = intervalo.s.c; coluna <= intervalo.e.c; coluna++) {
+        cabecalhos.push(textoDaCelula(celula(intervalo.s.r, coluna)).trim());
+    }
+
+    const linhas: Record<string, string>[] = [];
+
+    for (let linha = intervalo.s.r + 1; linha <= intervalo.e.r; linha++) {
+        const valores: Record<string, string> = {};
+        let temValor = false;
+
+        cabecalhos.forEach((nome, indice) => {
+            const texto = textoDaCelula(celula(linha, intervalo.s.c + indice));
+
+            valores[nome] = texto;
+            temValor ||= texto !== '';
+        });
+
+        if (temValor) {
+            linhas.push(
+                Object.fromEntries(
+                    campos.map((campo) => [
+                        campo.nome,
+                        valores[campo.nome] ?? '',
+                    ]),
+                ),
+            );
+        }
+    }
+
+    return linhas;
 }
 
 /** Planilha vazia com os nomes dos campos como cabeçalho, para o usuário preencher. */

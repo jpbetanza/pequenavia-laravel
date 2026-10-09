@@ -4,8 +4,7 @@ import { criarPlanilhaModelo, lerPlanilha } from './planilha';
 
 const campos = [{ nome: 'Nome' }, { nome: 'Data' }];
 
-function planilha(linhas: unknown[][]): ArrayBuffer {
-    const aba = XLSX.utils.aoa_to_sheet(linhas, { cellDates: true });
+function escrever(aba: XLSX.WorkSheet): ArrayBuffer {
     const livro = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(livro, aba, 'Dados');
 
@@ -14,6 +13,10 @@ function planilha(linhas: unknown[][]): ArrayBuffer {
         bookType: 'xlsx',
         cellDates: true,
     }) as ArrayBuffer;
+}
+
+function planilha(linhas: unknown[][]): ArrayBuffer {
+    return escrever(XLSX.utils.aoa_to_sheet(linhas, { cellDates: true }));
 }
 
 describe('lerPlanilha', () => {
@@ -46,6 +49,40 @@ describe('lerPlanilha', () => {
         ]);
 
         expect(lerPlanilha(conteudo, campos)[0].Data).toBe('09/10/2026');
+    });
+
+    it('formata datas à meia-noite local como dd/mm/aaaa', () => {
+        const conteudo = planilha([
+            ['Nome', 'Data'],
+            ['Maria', new Date(2026, 9, 9, 0, 0, 0)],
+        ]);
+
+        expect(lerPlanilha(conteudo, campos)[0].Data).toBe('09/10/2026');
+    });
+
+    it('mantém o formato de exibição da célula, como 0000 para 123 virar 0123', () => {
+        const aba = XLSX.utils.aoa_to_sheet([
+            ['Nome', 'Data'],
+            ['Maria', 123],
+        ]);
+        aba.B2.z = '0000';
+
+        expect(lerPlanilha(escrever(aba), campos)[0].Data).toBe('0123');
+    });
+
+    it('ignora linhas totalmente em branco no meio da planilha', () => {
+        const conteudo = planilha([
+            ['Nome', 'Data'],
+            ['Maria', 'x'],
+            [],
+            ['', ''],
+            ['João', 'y'],
+        ]);
+
+        expect(lerPlanilha(conteudo, campos)).toEqual([
+            { Nome: 'Maria', Data: 'x' },
+            { Nome: 'João', Data: 'y' },
+        ]);
     });
 
     it('devolve lista vazia quando há só o cabeçalho', () => {

@@ -42,6 +42,11 @@ describe('pastaDaFamilia', () => {
     it('devolve undefined para família fora do catálogo', () => {
         expect(pastaDaFamilia(fontes, 'Comic Sans MS')).toBeUndefined();
     });
+
+    it('não confunde propriedades herdadas do objeto com famílias', () => {
+        expect(pastaDaFamilia(fontes, 'constructor')).toBeUndefined();
+        expect(pastaDaFamilia(fontes, 'toString')).toBeUndefined();
+    });
 });
 
 describe('pesosDaFamilia', () => {
