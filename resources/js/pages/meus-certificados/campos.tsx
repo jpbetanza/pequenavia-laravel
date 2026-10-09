@@ -1,54 +1,46 @@
 import { Head } from '@inertiajs/react';
+import CabecalhoDaPagina from '@/components/cabecalho-da-pagina';
+import CamposEditor from '@/components/campos/campos-editor';
 import { index } from '@/routes/meus-certificados';
-
-export type CampoCertificado = {
-    id: string;
-    modelo_id: string;
-    nome: string;
-    label: string | null;
-    x: number;
-    y: number;
-    cor: string;
-    tamanho_fonte: number;
-    fonte_familia: string;
-    peso_fonte: number;
-    espacamento_letras: number;
-    centralizado: boolean;
-};
-
-/** Grupo => (família exibida => pasta dos arquivos de fonte). */
-export type GruposFontes = Record<string, Record<string, string>>;
+import type {
+    Campo,
+    GruposFontes,
+    ModeloBasico,
+    PesosDasFontes,
+} from '@/types/certificados';
 
 type Props = {
-    modelo: { id: string; title: string; imagem_url: string };
-    campos: CampoCertificado[];
+    modelo: ModeloBasico;
+    campos: Campo[];
     pode_editar: boolean;
     fontes: GruposFontes;
-    /** Pasta => pesos que têm arquivo, para declarar só os @font-face que existem. */
-    pesos_das_fontes: Record<string, number[]>;
+    pesos_das_fontes: PesosDasFontes;
 };
 
-export default function Campos({ modelo, campos, pode_editar }: Props) {
+export default function Campos({
+    modelo,
+    campos,
+    pode_editar,
+    fontes,
+    pesos_das_fontes,
+}: Props) {
     return (
         <>
-            <Head title={`Campos — ${modelo.title}`} />
-            <div className="space-y-4 p-4">
-                <h1 className="text-xl font-semibold">{modelo.title}</h1>
-                <img
-                    src={modelo.imagem_url}
-                    alt={modelo.title}
-                    className="max-w-full"
+            <Head title={`Campos: ${modelo.title}`} />
+            <div className="p-4">
+                <CabecalhoDaPagina
+                    modelo={modelo.title}
+                    titulo="Campos do certificado"
+                    subtitulo="Defina onde cada campo de texto aparece sobre a imagem do modelo."
                 />
-                <p>
-                    {pode_editar
-                        ? 'Você pode editar os campos.'
-                        : 'Somente leitura.'}
-                </p>
-                <ul>
-                    {campos.map((campo) => (
-                        <li key={campo.id}>{campo.label || campo.nome}</li>
-                    ))}
-                </ul>
+                <CamposEditor
+                    key={modelo.id}
+                    modelo={modelo}
+                    camposIniciais={campos}
+                    fontes={fontes}
+                    pesos={pesos_das_fontes}
+                    somenteLeitura={!pode_editar}
+                />
             </div>
         </>
     );
