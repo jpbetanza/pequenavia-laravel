@@ -32,8 +32,16 @@ export default function Campos({ modelo, campos, pode_editar }: Props) {
             <Head title={`Campos — ${modelo.title}`} />
             <div className="space-y-4 p-4">
                 <h1 className="text-xl font-semibold">{modelo.title}</h1>
-                <img src={modelo.imagem_url} alt={modelo.title} className="max-w-full" />
-                <p>{pode_editar ? 'Você pode editar os campos.' : 'Somente leitura.'}</p>
+                <img
+                    src={modelo.imagem_url}
+                    alt={modelo.title}
+                    className="max-w-full"
+                />
+                <p>
+                    {pode_editar
+                        ? 'Você pode editar os campos.'
+                        : 'Somente leitura.'}
+                </p>
                 <ul>
                     {campos.map((campo) => (
                         <li key={campo.id}>{campo.label || campo.nome}</li>

@@ -37,7 +37,9 @@ export default function MeusCertificados({ modelos, compartilhados }: Props) {
                     </ul>
                 </section>
                 <section>
-                    <h2 className="text-lg font-semibold">Compartilhados comigo</h2>
+                    <h2 className="text-lg font-semibold">
+                        Compartilhados comigo
+                    </h2>
                     <ul>
                         {compartilhados.map((modelo) => (
                             <li key={modelo.id}>

@@ -1,59 +1,59 @@
 services:
-  postgres:
-    image: postgres:17
-    environment:
-      POSTGRES_DB: pequenavia
-      POSTGRES_USER: pequenavia
-      POSTGRES_PASSWORD: secret
-    ports:
-      - "54320:5432"
-    volumes:
-      - pequenavia_pg:/var/lib/postgresql/data
-      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U pequenavia"]
-      interval: 5s
-      retries: 10
+    postgres:
+        image: postgres:17
+        environment:
+            POSTGRES_DB: pequenavia
+            POSTGRES_USER: pequenavia
+            POSTGRES_PASSWORD: secret
+        ports:
+            - '54320:5432'
+        volumes:
+            - pequenavia_pg:/var/lib/postgresql/data
+            - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+        healthcheck:
+            test: ['CMD-SHELL', 'pg_isready -U pequenavia']
+            interval: 5s
+            retries: 10
 
-  rustfs-perms:
-    image: alpine:3
-    user: root
-    command: chown -R 10001:10001 /data
-    volumes:
-      - pequenavia_s3:/data
+    rustfs-perms:
+        image: alpine:3
+        user: root
+        command: chown -R 10001:10001 /data
+        volumes:
+            - pequenavia_s3:/data
 
-  rustfs:
-    image: rustfs/rustfs:1.0.1
-    depends_on:
-      rustfs-perms:
-        condition: service_completed_successfully
-    environment:
-      RUSTFS_ACCESS_KEY: pequenavia
-      RUSTFS_SECRET_KEY: pequenavia-secret
-      RUSTFS_ADDRESS: ":9000"
-      RUSTFS_CONSOLE_ADDRESS: ":9001"
-      RUSTFS_CONSOLE_ENABLE: "true"
-    ports:
-      - "9010:9000"
-      - "9011:9001"
-    volumes:
-      - pequenavia_s3:/data
+    rustfs:
+        image: rustfs/rustfs:1.0.1
+        depends_on:
+            rustfs-perms:
+                condition: service_completed_successfully
+        environment:
+            RUSTFS_ACCESS_KEY: pequenavia
+            RUSTFS_SECRET_KEY: pequenavia-secret
+            RUSTFS_ADDRESS: ':9000'
+            RUSTFS_CONSOLE_ADDRESS: ':9001'
+            RUSTFS_CONSOLE_ENABLE: 'true'
+        ports:
+            - '9010:9000'
+            - '9011:9001'
+        volumes:
+            - pequenavia_s3:/data
 
-  s3-init:
-    image: amazon/aws-cli:latest
-    depends_on:
-      - rustfs
-    environment:
-      AWS_ACCESS_KEY_ID: pequenavia
-      AWS_SECRET_ACCESS_KEY: pequenavia-secret
-      AWS_DEFAULT_REGION: us-east-1
-    entrypoint: >
-      /bin/sh -c "
-      until aws --endpoint-url http://rustfs:9000 s3api list-buckets; do sleep 2; done;
-      aws --endpoint-url http://rustfs:9000 s3api head-bucket --bucket modelos-certificado
-      || aws --endpoint-url http://rustfs:9000 s3api create-bucket --bucket modelos-certificado;
-      "
+    s3-init:
+        image: amazon/aws-cli:latest
+        depends_on:
+            - rustfs
+        environment:
+            AWS_ACCESS_KEY_ID: pequenavia
+            AWS_SECRET_ACCESS_KEY: pequenavia-secret
+            AWS_DEFAULT_REGION: us-east-1
+        entrypoint: >
+            /bin/sh -c "
+            until aws --endpoint-url http://rustfs:9000 s3api list-buckets; do sleep 2; done;
+            aws --endpoint-url http://rustfs:9000 s3api head-bucket --bucket modelos-certificado
+            || aws --endpoint-url http://rustfs:9000 s3api create-bucket --bucket modelos-certificado;
+            "
 
 volumes:
-  pequenavia_pg:
-  pequenavia_s3:
+    pequenavia_pg:
+    pequenavia_s3:

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Settings;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\ProfileDeleteRequest;
 use App\Http\Requests\Settings\ProfileUpdateRequest;
+use App\Jobs\RemoverImagemModelo;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -50,9 +51,14 @@ class ProfileController extends Controller
     {
         $user = $request->user();
 
+        // O cascade do banco apaga os modelos sem disparar o evento "deleted" deles: as imagens saem daqui.
+        $imagens = $user->modelos()->pluck('image_path');
+
         Auth::logout();
 
         $user->delete();
+
+        $imagens->each(fn (string $path) => RemoverImagemModelo::dispatch($path));
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

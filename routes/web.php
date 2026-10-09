@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\CampoCertificadoController;
 use App\Http\Controllers\CompartilhamentoController;
+use App\Http\Controllers\HistoricoController;
 use App\Http\Controllers\ModeloCertificadoController;
 use Illuminate\Support\Facades\Route;
 
@@ -15,6 +16,8 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'dashboard')->name('dashboard');
+
+    Route::get('historico', [HistoricoController::class, 'index'])->name('historico.index');
 
     Route::get('meus-certificados', [ModeloCertificadoController::class, 'index'])->name('meus-certificados.index');
     Route::post('modelos', [ModeloCertificadoController::class, 'store'])->name('modelos.store');
