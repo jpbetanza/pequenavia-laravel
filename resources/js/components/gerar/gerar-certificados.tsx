@@ -31,7 +31,8 @@ import {
     cabecalhosFaltando,
     criarPlanilhaModelo,
     LIMITE_DE_LINHAS,
-    lerPlanilha,
+    type LeituraDaPlanilha,
+    lerPlanilhaComAviso,
     nomeDaPlanilhaModelo,
 } from '@/lib/planilha';
 import { campos as rotaDeCampos } from '@/routes/meus-certificados';
@@ -81,9 +82,8 @@ export default function GerarCertificados({
     const [importando, setImportando] = useState(false);
     const [lendoPlanilha, setLendoPlanilha] = useState(false);
     // Linhas importadas esperando a confirmação de que podem substituir a tabela atual.
-    const [substituicaoPendente, setSubstituicaoPendente] = useState<
-        Record<string, string>[] | null
-    >(null);
+    const [substituicaoPendente, setSubstituicaoPendente] =
+        useState<LeituraDaPlanilha | null>(null);
 
     // Linhas em geração: impede o duplo clique de disparar a mesma requisição duas vezes.
     const geracoesEmAndamento = useRef(new Set<number>());
@@ -205,7 +205,10 @@ export default function GerarCertificados({
         setLinhas([novaLinha(proximoId.current++, campos)]);
     };
 
-    const aplicarImportacao = (importadas: Record<string, string>[]) => {
+    const aplicarImportacao = (
+        importadas: Record<string, string>[],
+        truncada: boolean,
+    ) => {
         urlsDasLinhas(linhas).forEach((url) => URL.revokeObjectURL(url));
         const primeiro = proximoId.current;
         proximoId.current += importadas.length;
@@ -215,7 +218,7 @@ export default function GerarCertificados({
             `${importadas.length} ${importadas.length === 1 ? 'linha importada' : 'linhas importadas'}.`,
         );
 
-        if (importadas.length === LIMITE_DE_LINHAS) {
+        if (truncada) {
             toast.warning(
                 `Foram importadas apenas as primeiras ${LIMITE_DE_LINHAS} linhas.`,
             );
@@ -242,9 +245,9 @@ export default function GerarCertificados({
                 return;
             }
 
-            const importadas = lerPlanilha(conteudo, campos);
+            const leitura = lerPlanilhaComAviso(conteudo, campos);
 
-            if (importadas.length === 0) {
+            if (leitura.linhas.length === 0) {
                 toast.error('A planilha não tem linhas de dados.');
 
                 return;
@@ -252,12 +255,12 @@ export default function GerarCertificados({
 
             if (tabelaTemDados(linhas)) {
                 setImportando(false);
-                setSubstituicaoPendente(importadas);
+                setSubstituicaoPendente(leitura);
 
                 return;
             }
 
-            aplicarImportacao(importadas);
+            aplicarImportacao(leitura.linhas, leitura.truncada);
             setImportando(false);
         } catch {
             toast.error(
@@ -270,7 +273,10 @@ export default function GerarCertificados({
 
     const confirmarSubstituicao = () => {
         if (substituicaoPendente) {
-            aplicarImportacao(substituicaoPendente);
+            aplicarImportacao(
+                substituicaoPendente.linhas,
+                substituicaoPendente.truncada,
+            );
         }
 
         setSubstituicaoPendente(null);
@@ -371,7 +377,7 @@ export default function GerarCertificados({
 
             <ConfirmacaoDeSubstituicao
                 aberto={substituicaoPendente !== null}
-                quantidadeDeLinhas={substituicaoPendente?.length ?? 0}
+                quantidadeDeLinhas={substituicaoPendente?.linhas.length ?? 0}
                 aoConfirmar={confirmarSubstituicao}
                 aoCancelar={() => setSubstituicaoPendente(null)}
             />
