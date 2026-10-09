@@ -52,3 +52,23 @@ export function valoresDoNovoCampo(
         centralizado: ultimo?.centralizado ?? false,
     };
 }
+
+/**
+ * Volta para o valor confirmado pelo servidor só os campos da falha que ainda estão com o valor
+ * otimista: se outra mudança já tiver sido feita depois, ela é mantida.
+ */
+export function reverterCampo(
+    atual: Campo,
+    mudancas: Partial<Campo>,
+    confirmado: Campo,
+): Campo {
+    const reverso: Partial<Campo> = {};
+
+    for (const chave of Object.keys(mudancas) as (keyof Campo)[]) {
+        if (atual[chave] === mudancas[chave]) {
+            Object.assign(reverso, { [chave]: confirmado[chave] });
+        }
+    }
+
+    return { ...atual, ...reverso };
+}

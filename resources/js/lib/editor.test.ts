@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vite-plus/test';
+import type { Campo } from '@/types/certificados';
 import {
     escalaDoPreview,
     limitarPosicao,
     moverCampo,
+    reverterCampo,
     valoresDoNovoCampo,
 } from './editor';
 
@@ -84,6 +86,41 @@ describe('valoresDoNovoCampo', () => {
             peso_fonte: 600,
             espacamento_letras: 0,
             centralizado: false,
+        });
+    });
+});
+
+describe('reverterCampo', () => {
+    const base: Campo = {
+        id: 'a',
+        modelo_id: 'm',
+        nome: 'Nome',
+        label: null,
+        x: 10,
+        y: 20,
+        cor: '#111111',
+        tamanho_fonte: 24,
+        fonte_familia: 'Georgia',
+        peso_fonte: 600,
+        espacamento_letras: 0,
+        centralizado: false,
+    };
+
+    it('volta só os campos da falha que ainda têm o valor otimista', () => {
+        const atual = { ...base, x: 99, y: 88 };
+
+        expect(reverterCampo(atual, { x: 99 }, base)).toMatchObject({
+            x: 10,
+            y: 88,
+        });
+    });
+
+    it('não sobrescreve um campo alterado depois da chamada que falhou', () => {
+        const atual = { ...base, x: 99, y: 300 };
+
+        expect(reverterCampo(atual, { x: 99, y: 50 }, base)).toMatchObject({
+            x: 10,
+            y: 300,
         });
     });
 });

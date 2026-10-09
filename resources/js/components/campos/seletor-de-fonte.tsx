@@ -1,5 +1,5 @@
 import { Check, ChevronsUpDown } from 'lucide-react';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
     Command,
@@ -22,6 +22,7 @@ type Props = {
     fontes: GruposFontes;
     aoEscolher: (familia: string) => void;
     desabilitado?: boolean;
+    idDoRotulo: string;
 };
 
 export default function SeletorDeFonte({
@@ -29,16 +30,19 @@ export default function SeletorDeFonte({
     fontes,
     aoEscolher,
     desabilitado,
+    idDoRotulo,
 }: Props) {
     const [aberto, setAberto] = useState(false);
+    const idDoBotao = useId();
 
     return (
         <Popover open={aberto} onOpenChange={setAberto}>
             <PopoverTrigger asChild>
                 <Button
+                    id={idDoBotao}
                     variant="outline"
                     role="combobox"
-                    aria-label="Tipografia"
+                    aria-labelledby={`${idDoRotulo} ${idDoBotao}`}
                     aria-expanded={aberto}
                     disabled={desabilitado}
                     className="h-8 w-full justify-between px-2 text-xs font-normal"

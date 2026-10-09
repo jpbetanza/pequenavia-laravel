@@ -25,7 +25,10 @@ type Props = {
     aoExcluir: (id: string) => void;
 };
 
-/** O seletor de cor nativo dispara a cada movimento; só salva depois de uma pausa. */
+/**
+ * O seletor de cor nativo dispara a cada movimento; só salva depois de uma pausa. Se o campo sair da
+ * tela com uma cor ainda pendente, essa cor é salva na hora (uma única vez).
+ */
 function CampoDeCor({
     valor,
     aoConfirmar,
@@ -37,12 +40,26 @@ function CampoDeCor({
 }) {
     const [rascunho, setRascunho] = useState<string | null>(null);
     const temporizador = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const pendente = useRef<string | null>(null);
+    const confirmarRef = useRef(aoConfirmar);
     const id = useId();
+
+    useEffect(() => {
+        confirmarRef.current = aoConfirmar;
+    });
 
     useEffect(
         () => () => {
             if (temporizador.current) {
                 clearTimeout(temporizador.current);
+                temporizador.current = null;
+            }
+
+            const cor = pendente.current;
+            pendente.current = null;
+
+            if (cor !== null) {
+                confirmarRef.current(cor);
             }
         },
         [],
@@ -50,14 +67,22 @@ function CampoDeCor({
 
     const mudar = (cor: string) => {
         setRascunho(cor);
+        pendente.current = cor;
 
         if (temporizador.current) {
             clearTimeout(temporizador.current);
         }
 
         temporizador.current = setTimeout(() => {
-            aoConfirmar(cor);
+            temporizador.current = null;
+
+            const confirmar = pendente.current;
+            pendente.current = null;
             setRascunho(null);
+
+            if (confirmar !== null) {
+                confirmarRef.current(confirmar);
+            }
         }, 400);
     };
 
@@ -100,6 +125,8 @@ export default function CartaoDoCampo({
     const atualizar = (mudancas: Partial<Campo>) =>
         aoAtualizar(campo.id, mudancas);
 
+    const idDoRotuloTipografia = useId();
+
     const escolherFonte = (familia: string) => {
         const doNovo = pesosDaFamilia(fontes, pesos, familia, campo.peso_fonte);
 
@@ -122,6 +149,7 @@ export default function CartaoDoCampo({
                     valor={campo.nome}
                     obrigatorio
                     desabilitado={somenteLeitura}
+                    tamanhoMaximo={100}
                     aoConfirmar={(nome) => atualizar({ nome })}
                 />
                 <CampoDeTexto
@@ -129,6 +157,7 @@ export default function CartaoDoCampo({
                     placeholder={campo.nome || 'Rótulo'}
                     valor={campo.label ?? ''}
                     desabilitado={somenteLeitura}
+                    tamanhoMaximo={150}
                     aoConfirmar={(label) =>
                         atualizar({ label: label === '' ? null : label })
                     }
@@ -205,13 +234,17 @@ export default function CartaoDoCampo({
                     aoConfirmar={(cor) => atualizar({ cor })}
                 />
                 <div className="flex flex-col gap-1">
-                    <Label className="text-[10px] text-muted-foreground">
+                    <Label
+                        id={idDoRotuloTipografia}
+                        className="text-[10px] text-muted-foreground"
+                    >
                         Tipografia
                     </Label>
                     <SeletorDeFonte
                         valor={campo.fonte_familia}
                         fontes={fontes}
                         desabilitado={somenteLeitura}
+                        idDoRotulo={idDoRotuloTipografia}
                         aoEscolher={escolherFonte}
                     />
                 </div>

@@ -8,6 +8,7 @@ type Props = {
     rotulo: string;
     obrigatorio?: boolean;
     desabilitado?: boolean;
+    tamanhoMaximo?: number;
 };
 
 export default function CampoDeTexto({
@@ -17,6 +18,7 @@ export default function CampoDeTexto({
     rotulo,
     obrigatorio,
     desabilitado,
+    tamanhoMaximo,
 }: Props) {
     const [rascunho, setRascunho] = useState<string | null>(null);
 
@@ -42,6 +44,7 @@ export default function CampoDeTexto({
             placeholder={placeholder}
             value={rascunho ?? valor}
             disabled={desabilitado}
+            maxLength={tamanhoMaximo}
             onChange={(evento) => setRascunho(evento.target.value)}
             onBlur={confirmar}
             onKeyDown={(evento) =>

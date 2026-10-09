@@ -36,9 +36,11 @@ export default function CampoNumerico({
             return;
         }
 
+        const passoDaCasa = passo ?? 1;
+        const arredondado = Math.round(digitado / passoDaCasa) * passoDaCasa;
         const limitado = Math.min(
             max ?? Infinity,
-            Math.max(min ?? -Infinity, digitado),
+            Math.max(min ?? -Infinity, arredondado),
         );
 
         if (limitado !== valor) {
