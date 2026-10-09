@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\CampoCertificadoController;
 use App\Http\Controllers\CompartilhamentoController;
+use App\Http\Controllers\GeracaoCertificadoController;
 use App\Http\Controllers\HistoricoController;
 use App\Http\Controllers\ModeloCertificadoController;
 use Illuminate\Support\Facades\Route;
@@ -34,6 +35,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::patch('modelos/{modelo}/compartilhamentos/{compartilhamento}', [CompartilhamentoController::class, 'update'])->name('compartilhamentos.update');
         Route::delete('modelos/{modelo}/compartilhamentos/{compartilhamento}', [CompartilhamentoController::class, 'destroy'])->name('compartilhamentos.destroy');
     });
+
+    Route::post('modelos/{modelo}/certificados', [GeracaoCertificadoController::class, 'store'])
+        ->middleware('throttle:gerar-certificado')
+        ->name('certificados.store');
 
     Route::get('modelos/{modelo}/imagem', [ModeloCertificadoController::class, 'imagem'])->name('modelos.imagem');
 });
