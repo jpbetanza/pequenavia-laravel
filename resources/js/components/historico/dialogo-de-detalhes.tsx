@@ -10,15 +10,17 @@ import type { Geracao } from '@/types/certificados';
 
 type Props = {
     geracao: Geracao | null;
+    aberta: boolean;
     aoFechar: () => void;
 };
 
-export default function DialogoDeDetalhes({ geracao, aoFechar }: Props) {
+export default function DialogoDeDetalhes({
+    geracao,
+    aberta,
+    aoFechar,
+}: Props) {
     return (
-        <Dialog
-            open={geracao !== null}
-            onOpenChange={(abrir) => !abrir && aoFechar()}
-        >
+        <Dialog open={aberta} onOpenChange={(abrir) => !abrir && aoFechar()}>
             <DialogContent>
                 {geracao && (
                     <>
@@ -40,7 +42,9 @@ export default function DialogoDeDetalhes({ geracao, aoFechar }: Props) {
                                     <dt className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
                                         {nome}
                                     </dt>
-                                    <dd className="text-sm">{valor}</dd>
+                                    <dd className="text-sm wrap-break-word">
+                                        {valor}
+                                    </dd>
                                 </div>
                             ))}
                         </dl>

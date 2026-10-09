@@ -39,35 +39,43 @@ export default function TabelaDoHistorico({ geracoes, aoVerDetalhes }: Props) {
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {geracoes.map((geracao) => (
-                    <TableRow key={geracao.id}>
-                        <TableCell className="font-medium whitespace-nowrap">
-                            {geracao.modelo_title}
-                        </TableCell>
-                        <TableCell>
-                            <div className="max-w-sm truncate text-muted-foreground">
-                                {resumoDosValores(
-                                    ordenarValores(
-                                        geracao.campos_valores,
-                                        geracao.ordem_campos,
-                                    ),
-                                )}
-                            </div>
-                        </TableCell>
-                        <TableCell className="whitespace-nowrap text-muted-foreground">
-                            {formatarData(geracao.created_at)}
-                        </TableCell>
-                        <TableCell>
-                            <Button
-                                size="sm"
-                                variant="secondary"
-                                onClick={() => aoVerDetalhes(geracao)}
-                            >
-                                Detalhes
-                            </Button>
-                        </TableCell>
-                    </TableRow>
-                ))}
+                {geracoes.map((geracao) => {
+                    const resumo = resumoDosValores(
+                        ordenarValores(
+                            geracao.campos_valores,
+                            geracao.ordem_campos,
+                        ),
+                    );
+
+                    return (
+                        <TableRow key={geracao.id}>
+                            <TableCell className="font-medium whitespace-nowrap">
+                                {geracao.modelo_title}
+                            </TableCell>
+                            <TableCell>
+                                <div
+                                    className="max-w-sm truncate text-muted-foreground"
+                                    title={resumo}
+                                >
+                                    {resumo}
+                                </div>
+                            </TableCell>
+                            <TableCell className="whitespace-nowrap text-muted-foreground">
+                                {formatarData(geracao.created_at)}
+                            </TableCell>
+                            <TableCell>
+                                <Button
+                                    size="sm"
+                                    variant="secondary"
+                                    aria-label={`Detalhes de ${geracao.modelo_title}`}
+                                    onClick={() => aoVerDetalhes(geracao)}
+                                >
+                                    Detalhes
+                                </Button>
+                            </TableCell>
+                        </TableRow>
+                    );
+                })}
             </TableBody>
         </Table>
     );

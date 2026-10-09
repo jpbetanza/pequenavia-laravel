@@ -12,6 +12,7 @@ type Props = {
 
 export default function Historico({ geracoes }: Props) {
     const [selecionada, setSelecionada] = useState<Geracao | null>(null);
+    const [aberta, setAberta] = useState(false);
 
     return (
         <>
@@ -35,13 +36,17 @@ export default function Historico({ geracoes }: Props) {
                 ) : (
                     <TabelaDoHistorico
                         geracoes={geracoes}
-                        aoVerDetalhes={setSelecionada}
+                        aoVerDetalhes={(geracao) => {
+                            setSelecionada(geracao);
+                            setAberta(true);
+                        }}
                     />
                 )}
 
                 <DialogoDeDetalhes
                     geracao={selecionada}
-                    aoFechar={() => setSelecionada(null)}
+                    aberta={aberta}
+                    aoFechar={() => setAberta(false)}
                 />
             </div>
         </>
