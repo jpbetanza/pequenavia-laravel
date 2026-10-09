@@ -180,3 +180,17 @@ it('limita a geração por minuto a cada usuário', function () {
     $outro = modeloGeravel();
     $this->actingAs($outro->user)->postJson(route('certificados.store', $outro), $dados)->assertOk();
 });
+
+it('aceita campos cujo nome tem ponto', function () {
+    Storage::fake('s3');
+    $modelo = modeloGeravel();
+    $modelo->campos()->update(['nome' => 'Nome.Completo']);
+
+    $resposta = $this->actingAs($modelo->user)
+        ->postJson(route('certificados.store', $modelo), ['valores' => ['Nome.Completo' => 'Maria']]);
+
+    $resposta->assertOk();
+    expect($modelo->geracoes()->sole()->campos_valores)->toBe(['Nome.Completo' => 'Maria']);
+    [, , $direita] = caixaDaTinta($resposta->getContent());
+    expect($direita)->toBeGreaterThan(100);
+});
