@@ -201,3 +201,13 @@ it('exclui o campo do modelo', function () {
 
     $this->assertModelMissing($campo);
 });
+
+it('informa os pesos disponíveis de cada fonte, para o editor carregar só o que existe', function () {
+    $modelo = ModeloCertificado::factory()->create();
+
+    $this->actingAs($modelo->user)->get(route('meus-certificados.campos', $modelo))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->where('pesos_das_fontes.lato', [100, 300, 400, 700, 900])
+            ->where('pesos_das_fontes.roboto', [100, 200, 300, 400, 500, 600, 700, 800, 900]));
+});

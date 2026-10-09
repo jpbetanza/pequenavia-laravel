@@ -30,6 +30,7 @@ class CampoCertificadoController extends Controller
             'campos' => $modelo->campos,
             'pode_editar' => $request->user()->can('editarCampos', $modelo),
             'fontes' => CatalogoFontes::grupos(),
+            'pesos_das_fontes' => CatalogoFontes::pesosPorPasta(),
         ]);
     }
 

@@ -3,12 +3,18 @@
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\CampoCertificadoController;
 use App\Http\Controllers\CompartilhamentoController;
+use App\Http\Controllers\FonteController;
 use App\Http\Controllers\GeracaoCertificadoController;
 use App\Http\Controllers\HistoricoController;
 use App\Http\Controllers\ModeloCertificadoController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
+
+Route::get('fontes/{pasta}/{peso}.ttf', [FonteController::class, 'show'])
+    ->where('pasta', '[a-z0-9-]+')
+    ->where('peso', '[1-9]00')
+    ->name('fontes.show');
 
 Route::middleware('guest')->group(function () {
     Route::get('auth/google', [GoogleController::class, 'redirect'])->name('auth.google');

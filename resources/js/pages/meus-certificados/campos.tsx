@@ -24,6 +24,8 @@ type Props = {
     campos: CampoCertificado[];
     pode_editar: boolean;
     fontes: GruposFontes;
+    /** Pasta => pesos que têm arquivo, para declarar só os @font-face que existem. */
+    pesos_das_fontes: Record<string, number[]>;
 };
 
 export default function Campos({ modelo, campos, pode_editar }: Props) {
