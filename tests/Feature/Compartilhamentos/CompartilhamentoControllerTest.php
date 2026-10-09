@@ -48,10 +48,10 @@ it('recusa o compartilhamento inválido', function (string $email, string $mensa
 
     $this->assertDatabaseCount('compartilhamentos_modelo', 1);
 })->with([
-    'email já compartilhado, ignorando maiúsculas' => ['JOAO@example.com', 'Este modelo já está compartilhado com este email.'],
+    'email já compartilhado, ignorando maiúsculas' => ['JOAO@example.com', 'Este modelo já está compartilhado com este e-mail.'],
     'email do próprio dono' => ['Dono@Example.com', 'Você não precisa compartilhar um modelo com você mesmo.'],
-    'email malformado' => ['nao-e-email', 'Informe um email válido.'],
-    'email vazio' => ['', 'Informe o email.'],
+    'email malformado' => ['nao-e-email', 'Informe um e-mail válido.'],
+    'email vazio' => ['', 'Informe o e-mail.'],
 ]);
 
 it('permite compartilhar o mesmo email em outro modelo', function () {

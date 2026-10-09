@@ -194,3 +194,50 @@ it('aceita campos cujo nome tem ponto', function () {
     [, , $direita] = caixaDaTinta($resposta->getContent());
     expect($direita)->toBeGreaterThan(100);
 });
+
+it('mostra a página de geração com o modelo, os campos em ordem e as fontes', function () {
+    $modelo = ModeloCertificado::factory()->create(['title' => 'Batismo']);
+    [$primeiro, $segundo] = CampoCertificado::factory()
+        ->for($modelo, 'modelo')
+        ->count(2)
+        ->sequence(
+            ['nome' => 'Nome', 'created_at' => now()->subMinute()],
+            ['nome' => 'Data', 'created_at' => now()],
+        )
+        ->create();
+
+    $this->actingAs($modelo->user)->get(route('meus-certificados.gerar', $modelo))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('meus-certificados/gerar')
+            ->where('modelo.id', $modelo->id)
+            ->where('modelo.title', 'Batismo')
+            ->where('modelo.imagem_url', route('modelos.imagem', $modelo))
+            ->has('campos', 2)
+            ->where('campos.0.id', $primeiro->id)
+            ->where('campos.1.id', $segundo->id)
+            ->where('fontes.Sistema.Georgia', 'gelasio')
+            ->where('pesos_das_fontes.lato', [100, 300, 400, 700, 900]));
+});
+
+it('mostra a página de geração ao leitor compartilhado', function () {
+    $modelo = ModeloCertificado::factory()->create();
+    $leitor = User::factory()->create(['email' => 'leitor@example.com']);
+    CompartilhamentoModelo::factory()->for($modelo, 'modelo')->create(['email' => 'leitor@example.com']);
+
+    $this->actingAs($leitor)->get(route('meus-certificados.gerar', $modelo))->assertOk();
+});
+
+it('responde 404 na página de geração a quem não pode ver o modelo', function () {
+    $modelo = ModeloCertificado::factory()->create();
+
+    $this->actingAs(User::factory()->create())
+        ->get(route('meus-certificados.gerar', $modelo))
+        ->assertNotFound();
+});
+
+it('redireciona o visitante da página de geração para o login', function () {
+    $modelo = ModeloCertificado::factory()->create();
+
+    $this->get(route('meus-certificados.gerar', $modelo))->assertRedirect(route('login'));
+});

@@ -1,6 +1,7 @@
 <?php
 
 use App\Jobs\RemoverImagemModelo;
+use App\Models\CampoCertificado;
 use App\Models\CompartilhamentoModelo;
 use App\Models\ModeloCertificado;
 use App\Models\User;
@@ -44,6 +45,7 @@ it('lista os modelos próprios e, à parte, os compartilhados com o usuário', f
                 ->where('dono_nome', $user->name)
                 ->where('eh_dono', true)
                 ->where('pode_editar', true)
+                ->where('campos_count', 0)
                 ->has('compartilhamentos', 1, fn ($c) => $c
                     ->where('id', $compartilhamento->id)
                     ->where('email', 'joao@example.com')
@@ -217,4 +219,19 @@ it('responde 404 quando a imagem do modelo não está no bucket', function () {
     $this->actingAs($modelo->user)
         ->get(route('modelos.imagem', $modelo))
         ->assertNotFound();
+});
+
+it('informa quantos campos cada modelo tem', function () {
+    $user = User::factory()->create(['email' => 'ana@example.com']);
+    $proprio = ModeloCertificado::factory()->for($user)->create();
+    CampoCertificado::factory()->for($proprio, 'modelo')->count(2)->create();
+    $compartilhado = ModeloCertificado::factory()->create();
+    CampoCertificado::factory()->for($compartilhado, 'modelo')->create();
+    CompartilhamentoModelo::factory()->for($compartilhado, 'modelo')->create(['email' => 'ana@example.com']);
+
+    $this->actingAs($user)->get(route('meus-certificados.index'))
+        ->assertInertia(fn ($page) => $page
+            ->where('modelos.0.campos_count', 2)
+            ->where('compartilhados.0.campos_count', 1)
+            ->etc());
 });

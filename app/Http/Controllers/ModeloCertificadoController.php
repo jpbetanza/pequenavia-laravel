@@ -28,7 +28,7 @@ class ModeloCertificadoController extends Controller
 
         $modelos = ModeloCertificado::query()
             ->acessiveisPor($user)
-            ->with(['user:id,name', 'compartilhamentos'])
+            ->with(['user:id,name', 'compartilhamentos'])->withCount('campos')
             ->latest()
             ->get()
             ->map(fn (ModeloCertificado $modelo) => $this->resumo($modelo, $user));
@@ -114,7 +114,7 @@ class ModeloCertificadoController extends Controller
     }
 
     /**
-     * @return array{id: string, title: string, description: string|null, imagem_url: string, dono_nome: string, eh_dono: bool, pode_editar: bool, compartilhamentos: list<array{id: string, email: string, pode_editar: bool}>}
+     * @return array{id: string, title: string, description: string|null, imagem_url: string, dono_nome: string, eh_dono: bool, pode_editar: bool, campos_count: int, compartilhamentos: list<array{id: string, email: string, pode_editar: bool}>}
      */
     private function resumo(ModeloCertificado $modelo, User $user): array
     {
@@ -128,6 +128,7 @@ class ModeloCertificadoController extends Controller
             'dono_nome' => $modelo->user->name,
             'eh_dono' => $ehDono,
             'pode_editar' => $user->can('update', $modelo),
+            'campos_count' => (int) $modelo->campos_count,
             'compartilhamentos' => $ehDono
                 ? $modelo->compartilhamentos->map(fn (CompartilhamentoModelo $compartilhamento) => [
                     'id' => $compartilhamento->id,

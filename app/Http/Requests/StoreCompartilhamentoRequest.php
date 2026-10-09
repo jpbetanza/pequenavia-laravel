@@ -54,10 +54,10 @@ class StoreCompartilhamentoRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'email.required' => 'Informe o email.',
-            'email.email' => 'Informe um email válido.',
+            'email.required' => 'Informe o e-mail.',
+            'email.email' => 'Informe um e-mail válido.',
             'email.not_in' => 'Você não precisa compartilhar um modelo com você mesmo.',
-            'email.unique' => 'Este modelo já está compartilhado com este email.',
+            'email.unique' => 'Este modelo já está compartilhado com este e-mail.',
         ];
     }
 }

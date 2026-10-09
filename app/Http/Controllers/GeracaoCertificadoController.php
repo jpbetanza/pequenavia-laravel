@@ -7,16 +7,39 @@ use App\Exceptions\TextoGrandeDemaisException;
 use App\Http\Requests\GerarCertificadoRequest;
 use App\Models\CampoCertificado;
 use App\Models\ModeloCertificado;
+use App\Services\CatalogoFontes;
 use App\Services\GeradorCertificado;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Inertia\Inertia;
+use Inertia\Response as InertiaResponse;
 use Symfony\Component\HttpFoundation\HeaderUtils;
 
 class GeracaoCertificadoController extends Controller
 {
+    /**
+     * Mostra a página onde se preenchem os dados e se geram os certificados do modelo.
+     */
+    public function create(ModeloCertificado $modelo): InertiaResponse
+    {
+        Gate::authorize('gerar', $modelo);
+
+        return Inertia::render('meus-certificados/gerar', [
+            'modelo' => [
+                'id' => $modelo->id,
+                'title' => $modelo->title,
+                'imagem_url' => route('modelos.imagem', $modelo),
+            ],
+            'campos' => $modelo->campos,
+            'fontes' => CatalogoFontes::grupos(),
+            'pesos_das_fontes' => CatalogoFontes::pesosPorPasta(),
+        ]);
+    }
+
     /**
      * Gera o PNG do certificado e registra a geração no histórico.
      */
