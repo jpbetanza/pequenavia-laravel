@@ -1,4 +1,4 @@
-import { enviarParaArquivo, ErroHttp, type ArquivoBaixado } from './http';
+import { enviarParaArquivo, ErroHttp, type ArquivoBaixado } from '@/lib/http';
 
 export type StatusDaLinha = 'ocioso' | 'gerando' | 'pronto' | 'erro';
 

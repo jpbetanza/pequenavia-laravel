@@ -320,7 +320,7 @@ export default function GerarCertificados({
                     }}
                 >
                     <Eye />
-                    Ver preview
+                    Ver pré-visualização
                 </Button>
                 <div className="flex items-center gap-2">
                     <Button
@@ -381,8 +381,8 @@ export default function GerarCertificados({
                 aoFechar={fecharPreview}
                 titulo={
                     previewDoModelo
-                        ? 'Preview do template'
-                        : 'Preview do certificado'
+                        ? 'Pré-visualização do modelo'
+                        : 'Pré-visualização do certificado'
                 }
                 rodape={
                     !previewDoModelo && linhaEmPreview?.status === 'pronto' ? (
@@ -421,7 +421,7 @@ export default function GerarCertificados({
                     linhaEmPreview.arquivo && (
                         <img
                             src={linhaEmPreview.arquivo.url}
-                            alt="Preview do certificado"
+                            alt="Pré-visualização do certificado"
                             className="max-h-full w-full rounded object-contain"
                         />
                     )}

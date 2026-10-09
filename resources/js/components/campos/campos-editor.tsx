@@ -298,7 +298,7 @@ export default function CamposEditor({
 
             <div className="flex flex-col gap-3">
                 <div>
-                    <h2 className="text-lg font-semibold">Preview</h2>
+                    <h2 className="text-lg font-semibold">Pré-visualização</h2>
                     <p className="text-sm text-muted-foreground">
                         {somenteLeitura
                             ? 'Veja como os campos ficam sobre a imagem.'
