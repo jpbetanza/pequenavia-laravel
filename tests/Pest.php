@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\CampoCertificado;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -47,4 +48,57 @@ expect()->extend('toBeOne', function () {
 function something()
 {
     // ..
+}
+
+/**
+ * PNG branco usado como fundo nos testes de geração de certificado.
+ */
+function fundoBranco(int $largura = 1200, int $altura = 800): string
+{
+    $imagem = new Imagick;
+    $imagem->newImage($largura, $altura, new ImagickPixel('white'));
+    $imagem->setImageFormat('png');
+
+    return $imagem->getImageBlob();
+}
+
+/**
+ * Caixa da tinta (pixels que não são brancos): esquerda, topo, direita e base, com direita e base
+ * exclusivas. Só use em imagens que tenham alguma tinta.
+ *
+ * @return array{0: int, 1: int, 2: int, 3: int}
+ */
+function caixaDaTinta(string $png): array
+{
+    $imagem = new Imagick;
+    $imagem->readImageBlob($png);
+    $imagem->trimImage(0);
+    $pagina = $imagem->getImagePage();
+
+    return [
+        $pagina['x'],
+        $pagina['y'],
+        $pagina['x'] + $imagem->getImageWidth(),
+        $pagina['y'] + $imagem->getImageHeight(),
+    ];
+}
+
+/**
+ * Campo em memória, sem banco: o factory criaria o modelo pai até com make().
+ *
+ * @param  array<string, mixed>  $atributos
+ */
+function campoDeTeste(array $atributos = []): CampoCertificado
+{
+    return new CampoCertificado(array_merge([
+        'nome' => 'Nome',
+        'x' => 100,
+        'y' => 100,
+        'cor' => '#000000',
+        'tamanho_fonte' => 40,
+        'fonte_familia' => 'Roboto',
+        'peso_fonte' => 600,
+        'espacamento_letras' => 0,
+        'centralizado' => false,
+    ], $atributos));
 }
