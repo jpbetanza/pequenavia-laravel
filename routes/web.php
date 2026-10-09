@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\CampoCertificadoController;
+use App\Http\Controllers\CompartilhamentoController;
 use App\Http\Controllers\ModeloCertificadoController;
 use Illuminate\Support\Facades\Route;
 
@@ -25,6 +26,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('modelos/{modelo}/campos', [CampoCertificadoController::class, 'store'])->name('campos.store');
         Route::patch('modelos/{modelo}/campos/{campo}', [CampoCertificadoController::class, 'update'])->name('campos.update');
         Route::delete('modelos/{modelo}/campos/{campo}', [CampoCertificadoController::class, 'destroy'])->name('campos.destroy');
+
+        Route::post('modelos/{modelo}/compartilhamentos', [CompartilhamentoController::class, 'store'])->name('compartilhamentos.store');
+        Route::patch('modelos/{modelo}/compartilhamentos/{compartilhamento}', [CompartilhamentoController::class, 'update'])->name('compartilhamentos.update');
+        Route::delete('modelos/{modelo}/compartilhamentos/{compartilhamento}', [CompartilhamentoController::class, 'destroy'])->name('compartilhamentos.destroy');
     });
 
     Route::get('modelos/{modelo}/imagem', [ModeloCertificadoController::class, 'imagem'])->name('modelos.imagem');
