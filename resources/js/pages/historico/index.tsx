@@ -1,30 +1,48 @@
 import { Head } from '@inertiajs/react';
+import { useState } from 'react';
+import CabecalhoDaPagina from '@/components/cabecalho-da-pagina';
+import DialogoDeDetalhes from '@/components/historico/dialogo-de-detalhes';
+import TabelaDoHistorico from '@/components/historico/tabela-do-historico';
 import { index } from '@/routes/historico';
+import type { Geracao } from '@/types/certificados';
 
-export type Geracao = {
-    id: string;
-    modelo_id: string | null;
-    modelo_title: string;
-    campos_valores: Record<string, string>;
-    created_at: string;
+type Props = {
+    geracoes: Geracao[];
 };
 
-export default function Historico({ geracoes }: { geracoes: Geracao[] }) {
+export default function Historico({ geracoes }: Props) {
+    const [selecionada, setSelecionada] = useState<Geracao | null>(null);
+
     return (
         <>
             <Head title="Histórico" />
             <div className="p-4">
-                <h1 className="text-xl font-semibold">Histórico</h1>
-                <ul>
-                    {geracoes.map((geracao) => (
-                        <li key={geracao.id}>
-                            {geracao.modelo_title} —{' '}
-                            {new Date(geracao.created_at).toLocaleString(
-                                'pt-BR',
-                            )}
-                        </li>
-                    ))}
-                </ul>
+                <CabecalhoDaPagina
+                    titulo="Histórico"
+                    subtitulo="Últimas 50 gerações de certificado"
+                />
+
+                {geracoes.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center gap-3 py-20 text-center">
+                        <p className="text-lg font-medium text-muted-foreground">
+                            Nenhuma geração encontrada
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                            As gerações de certificado aparecerão aqui depois
+                            que você gerar o primeiro certificado.
+                        </p>
+                    </div>
+                ) : (
+                    <TabelaDoHistorico
+                        geracoes={geracoes}
+                        aoVerDetalhes={setSelecionada}
+                    />
+                )}
+
+                <DialogoDeDetalhes
+                    geracao={selecionada}
+                    aoFechar={() => setSelecionada(null)}
+                />
             </div>
         </>
     );
