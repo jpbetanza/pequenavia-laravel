@@ -10,7 +10,7 @@
 Reescrever o PequenaVia como um monolito Laravel que roda na VPS própria, sem Supabase:
 
 - PostgreSQL próprio no lugar do banco do Supabase.
-- MinIO (compatível com S3) no lugar do Supabase Storage.
+- RustFS (compatível com S3) no lugar do Supabase Storage.
 - Login com Google mantido, ao lado do login com email e senha.
 
 O produto continua o mesmo. A paróquia sobe a imagem de um modelo de certidão (Batismo, Crisma…), posiciona campos de texto arrastando no editor, preenche os dados à mão ou importa de Excel, e baixa o certificado gerado como PNG. O modelo pode ser compartilhado com outros usuários por email.
@@ -21,8 +21,8 @@ O produto continua o mesmo. A paróquia sobe a imagem de um modelo de certidão 
 |---|---|
 | Criação do projeto | Starter kit oficial React via `laravel new --react --pest --database=pgsql --npm --boost` (Laravel Boost instalado). |
 | Interface | Inertia 3 + React 19 + TypeScript + Tailwind 4 + **shadcn/ui** (padrão do kit). Componentes do PequenaVia portados de HeroUI para shadcn. |
-| Ambiente local | PHP 8.5 + Composer + instalador via `php.new`; Postgres e MinIO num `docker-compose` local; testes do Imagick em container com a imagem de produção. |
-| Object storage | MinIO na VPS, com bucket privado, acessado pelo disco `s3` do Laravel. |
+| Ambiente local | PHP 8.5 + Composer + instalador via `php.new`; Postgres e RustFS num `docker-compose` local; testes do Imagick em container com a imagem de produção. |
+| Object storage | RustFS na VPS, com bucket privado, acessado pelo disco `s3` do Laravel. O MinIO foi descartado porque não tem mais imagem Docker pública. O RustFS 1.x é um projeto jovem: antes da produção, validar upload de 50 MB e fazer backup do volume. |
 | Dados existentes | **Não migrar.** O sistema novo começa vazio. |
 | Login | Google (Socialite) + email/senha (Fortify do kit), com verificação de email, reset de senha por SMTP e 2FA (ativo por padrão no kit). |
 | Geração da imagem | Imagick no PHP, dentro do próprio monolito. |
@@ -103,7 +103,7 @@ IDs são `uuid` (`HasUuids`), para as URLs continuarem no formato `/meus-certifi
 | `user_id` | FK → users, cascade | Dono do modelo. |
 | `title` | string | |
 | `description` | text, nullable | |
-| `image_path` | string | Chave do objeto no MinIO, no formato `modelos/{user_id}/{uuid}.{ext}`. |
+| `image_path` | string | Chave do objeto no RustFS, no formato `modelos/{user_id}/{uuid}.{ext}`. |
 | timestamps | | |
 
 Não existe `image_url`. O navegador carrega a imagem pela rota `GET /modelos/{modelo}/imagem` (seção 6).
@@ -185,9 +185,9 @@ Regras:
 - A exclusão de conta pede confirmação. Usuários com senha digitam a senha; usuários só-Google digitam o próprio email.
 - SMTP configurado por `MAIL_*` no ambiente.
 
-## 6. Armazenamento de imagens (MinIO)
+## 6. Armazenamento de imagens (RustFS)
 
-- Disco `s3` com `AWS_ENDPOINT` apontando para o MinIO interno, `AWS_USE_PATH_STYLE_ENDPOINT=true`, bucket `modelos-certificado`, **privado**.
+- Disco `s3` com `AWS_ENDPOINT` apontando para o RustFS interno, `AWS_USE_PATH_STYLE_ENDPOINT=true`, bucket `modelos-certificado`, **privado**.
 - Upload de modelo:
   - aceita `image/png`, `image/jpeg` e `image/webp`;
   - **até 50 MB**;
@@ -198,8 +198,8 @@ Regras:
   - nginx: `client_max_body_size 60m`;
   - Traefik: sem middleware de buffering limitando o corpo.
 - Para trocar a imagem, o arquivo novo é enviado primeiro, e o antigo só é removido depois que o registro foi atualizado.
-- Ao excluir um modelo, o evento `deleted` do model despacha um job que remove o objeto do MinIO. Na exclusão de conta, o mesmo acontece para cada modelo do usuário.
-- O navegador acessa a imagem só pela rota `GET /modelos/{modelo}/imagem`. Ela passa pela Policy (`view`) e faz streaming do MinIO com `Cache-Control: private, max-age=3600`. O MinIO **não fica exposto publicamente**: uma URL S3 assinada para o host interno (`http://minio:9000`) não abriria no navegador, e o host faz parte da assinatura. Mesma origem também elimina CORS no canvas do editor.
+- Ao excluir um modelo, o evento `deleted` do model despacha um job que remove o objeto do RustFS. Na exclusão de conta, o mesmo acontece para cada modelo do usuário.
+- O navegador acessa a imagem só pela rota `GET /modelos/{modelo}/imagem`. Ela passa pela Policy (`view`) e faz streaming do RustFS com `Cache-Control: private, max-age=3600`. O RustFS **não fica exposto publicamente**: uma URL S3 assinada para o host interno (`http://rustfs:9000`) não abriria no navegador, e o host faz parte da assinatura. Mesma origem também elimina CORS no canvas do editor.
 
 ## 7. Geração do certificado
 
@@ -259,14 +259,15 @@ Stack Swarm `pequenavia`:
 |---|---|---|---|
 | `app` | `jpbetanza/pequenavia-laravel:latest` (php-fpm + nginx, multi-stage com build do Vite) | `interna`, `network_swarm_public` | — |
 | `postgres` | `postgres:17` | `interna` | `pequenavia_pg` |
-| `minio` | `minio/minio` | `interna` (+ `network_swarm_public` só se o console for exposto; a API S3 nunca) | `pequenavia_minio` |
-| `minio-init` | `minio/mc` (roda uma vez) | `interna` | — |
+| `rustfs` | `rustfs/rustfs:1.0.1` | `interna` (+ `network_swarm_public` só se o console for exposto; a API S3 nunca) | `pequenavia_s3` |
+| `rustfs-perms` | `alpine:3` (roda uma vez; ajusta o dono do volume para o UID 10001 do RustFS) | — | `pequenavia_s3` |
+| `s3-init` | `amazon/aws-cli` (roda uma vez) | `interna` | — |
 
 - `app` em `certificados.pequenavia.app.br` pelo Traefik (`websecure`, `letsencryptresolver`), com o mesmo esquema de labels da stack atual.
 - Healthcheck em `GET /up`.
 - Deploy `start-first` com rollback e Watchtower, como hoje. Consequência: **toda migration precisa ser compatível com a versão anterior do código** (adicionar antes, remover depois).
 - O entrypoint do `app` roda `php artisan migrate --force`, `config:cache`, `route:cache`, `view:cache` e depois sobe o servidor.
-- `minio-init` cria o bucket `modelos-certificado` como privado, se ainda não existir.
+- `s3-init` cria o bucket `modelos-certificado` como privado, se ainda não existir.
 - Segredos (`APP_KEY`, `DB_PASSWORD`, `AWS_ACCESS_KEY_ID/SECRET`, `GOOGLE_CLIENT_ID/SECRET`, `MAIL_PASSWORD`) entram como variáveis da stack no Portainer ou Docker secrets, **nunca** no YAML versionado.
 - O Google Console precisa da URI de redirecionamento `https://certificados.pequenavia.app.br/auth/google/callback`.
 - **Fase 2 (fora deste escopo):** `pg_dump` diário e `mc mirror` do bucket para um destino fora dos volumes principais.
@@ -277,7 +278,7 @@ Stack Swarm `pequenavia`:
 |---|---|
 | Upload inválido (tipo, mais de 50 MB, dimensões) | Erro de validação no formulário Inertia. |
 | Ação não permitida pela Policy | 403. Inertia mostra a página de erro. |
-| Imagem de fundo ausente ou ilegível no MinIO | 422 com "Não foi possível ler a imagem do modelo". |
+| Imagem de fundo ausente ou ilegível no RustFS | 422 com "Não foi possível ler a imagem do modelo". |
 | Fonte ou peso ausente | Fallback para o peso mais próximo, com aviso no log. |
 | Exceção inesperada na geração | 500 com mensagem genérica, exceção no log. `error.message` nunca vai para o cliente. |
 | Falha no OAuth do Google | Redireciona para `/login` com mensagem flash (`toast-listener` lê a flash session). |
@@ -285,7 +286,7 @@ Stack Swarm `pequenavia`:
 
 ## 10. Testes
 
-Pest, com Postgres real num container de teste. `jsonb`, as FKs com cascade/nullOnDelete e os índices unique precisam ser testados no mesmo motor de produção. MinIO via `Storage::fake('s3')`.
+Pest, com Postgres real num container de teste. `jsonb`, as FKs com cascade/nullOnDelete e os índices unique precisam ser testados no mesmo motor de produção. RustFS via `Storage::fake('s3')`.
 
 - **Permissões (feature):** cada rota de modelo, campo, compartilhamento e geração exercitada como dono, compartilhado-editor, compartilhado-leitor, compartilhado com email não verificado e estranho, conferindo a matriz da seção 4. Inclui o scope `acessiveisPor`.
 - **Auth (feature):** registro, verificação, login, reset de senha e os três ramos do callback do Google (Socialite mockado). Inclui a exclusão de conta removendo os objetos do storage.

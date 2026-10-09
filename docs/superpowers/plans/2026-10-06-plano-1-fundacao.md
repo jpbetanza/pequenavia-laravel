@@ -2,11 +2,11 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Criar o projeto Laravel pelo starter kit oficial e entregar todo o backend do PequenaVia, exceto a geração de imagem: schema, permissões, login com Google, modelos com imagem no MinIO, campos, compartilhamentos, histórico e exclusão de conta. Tudo coberto por testes Pest em Postgres.
+**Goal:** Criar o projeto Laravel pelo starter kit oficial e entregar todo o backend do PequenaVia, exceto a geração de imagem: schema, permissões, login com Google, modelos com imagem no RustFS, campos, compartilhamentos, histórico e exclusão de conta. Tudo coberto por testes Pest em Postgres.
 
-**Architecture:** Monolito Laravel 13 + Inertia 3 + React. Controllers finos entregam props ao Inertia. Toda regra de acesso fica em `ModeloCertificadoPolicy` e no scope `acessiveisPor`. Imagens ficam num bucket privado do MinIO e chegam ao navegador por uma rota autenticada. As páginas React deste plano são **placeholders mínimos**. A interface real é o Plano 3.
+**Architecture:** Monolito Laravel 13 + Inertia 3 + React. Controllers finos entregam props ao Inertia. Toda regra de acesso fica em `ModeloCertificadoPolicy` e no scope `acessiveisPor`. Imagens ficam num bucket privado do RustFS e chegam ao navegador por uma rota autenticada. As páginas React deste plano são **placeholders mínimos**. A interface real é o Plano 3.
 
-**Tech Stack:** PHP 8.5 (php.new), Laravel 13, Fortify (do starter kit), Socialite, Pest, PostgreSQL 17, MinIO, `league/flysystem-aws-s3-v3`, Inertia 3, React 19, TypeScript, Wayfinder, Laravel Boost.
+**Tech Stack:** PHP 8.5 (php.new), Laravel 13, Fortify (do starter kit), Socialite, Pest, PostgreSQL 17, RustFS, `league/flysystem-aws-s3-v3`, Inertia 3, React 19, TypeScript, Wayfinder, Laravel Boost.
 
 **Spec:** `docs/superpowers/specs/2026-10-06-migracao-laravel-design.md`
 
@@ -17,7 +17,7 @@
 | **1 — Fundação** (este) | Scaffold, ambiente local, schema, Policy, Google, modelos/campos/compartilhamentos/histórico/conta | — |
 | 2 — Geração | `config/fontes.php` completo, `fontes:baixar`, `CatalogoFontes::arquivo()`, `GeradorCertificado` (Imagick), endpoint de geração, testes visuais | 1 |
 | 3 — Frontend | Porte do editor, gerador (manual/Excel), modais, histórico e configurações de HeroUI para shadcn/ui, landing e navegação | 1, 2 |
-| 4 — Deploy | Dockerfile multi-stage (php-fpm + nginx + imagick), stack Swarm com Postgres e MinIO, entrypoint, limites de 50 MB | 1–3 |
+| 4 — Deploy | Dockerfile multi-stage (php-fpm + nginx + imagick), stack Swarm com Postgres e RustFS, entrypoint, limites de 50 MB | 1–3 |
 
 ## Global Constraints
 
@@ -31,12 +31,12 @@
 - Mensagens ao usuário em português. `error.message` de exceções nunca vai para o cliente.
 - Toda migration nova é compatível com a versão anterior do código (adicionar antes, remover depois).
 - Diretrizes do Laravel Boost (`CLAUDE.md`/`AGENTS.md` gerados) valem para todas as tarefas: leia-as no início de cada tarefa.
-- Commits terminam com `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
+- Commits terminam com `Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>`.
 
 ## Mapa de arquivos
 
 ```
-compose.yaml                                         # Postgres + MinIO locais (Task 1)
+compose.yaml                                         # Postgres + RustFS locais (Task 1)
 docker/postgres/init.sql                             # cria pequenavia_test (Task 1)
 phpunit.xml                                          # testes em pgsql (Task 1)
 database/migrations/0001_01_01_000000_create_users_table.php   # users uuid + google (Task 2)
@@ -66,12 +66,14 @@ tests/Feature/{Modelos,Campos,Compartilhamentos,Historico,Conta,Auth/Google,Poli
 
 ### Task 1: Toolchain, scaffold e ambiente local
 
+> **Nota de execução (2026-10-08):** o MinIO deixou de ter imagem pública (Docker Hub inexistente, Quay com 401), então o object storage local e de produção passa a ser o **RustFS** (`rustfs/rustfs:1.0.1`), escolhido pelo usuário. O código não muda, pois o disco `s3` fala S3. O bucket é criado pelo AWS CLI (`s3-init`). Também: o kit traz uma migration de passkeys (conferir na Task 2) e `Route::redirect` foi trocado por `Route::get` em `routes/settings.php`, porque o Wayfinder gera o método `query` que ele mesmo não tipa.
+
 **Files:**
 - Create: projeto inteiro via `laravel new`, `compose.yaml`, `docker/postgres/init.sql`
 - Modify: `.env`, `.env.example`, `phpunit.xml`
 
 **Interfaces:**
-- Produces: projeto Laravel na raiz do repo; Postgres local em `127.0.0.1:54320` (bancos `pequenavia` e `pequenavia_test`, usuário `pequenavia`/`secret`); MinIO em `127.0.0.1:9010` (console `9011`, usuário `pequenavia`/`pequenavia-secret`, bucket privado `modelos-certificado`); `php artisan test` rodando em Postgres.
+- Produces: projeto Laravel na raiz do repo; Postgres local em `127.0.0.1:54320` (bancos `pequenavia` e `pequenavia_test`, usuário `pequenavia`/`secret`); RustFS em `127.0.0.1:9010` (console `9011`, usuário `pequenavia`/`pequenavia-secret`, bucket privado `modelos-certificado`); `php artisan test` rodando em Postgres.
 
 - [ ] **Step 1: Criar a branch de trabalho**
 
@@ -139,36 +141,52 @@ services:
       interval: 5s
       retries: 10
 
-  minio:
-    image: minio/minio
-    command: server /data --console-address ":9001"
+  rustfs-perms:
+    image: alpine:3
+    user: root
+    command: chown -R 10001:10001 /data
+    volumes:
+      - pequenavia_s3:/data
+
+  rustfs:
+    image: rustfs/rustfs:1.0.1
+    depends_on:
+      rustfs-perms:
+        condition: service_completed_successfully
     environment:
-      MINIO_ROOT_USER: pequenavia
-      MINIO_ROOT_PASSWORD: pequenavia-secret
+      RUSTFS_ACCESS_KEY: pequenavia
+      RUSTFS_SECRET_KEY: pequenavia-secret
+      RUSTFS_ADDRESS: ":9000"
+      RUSTFS_CONSOLE_ADDRESS: ":9001"
+      RUSTFS_CONSOLE_ENABLE: "true"
     ports:
       - "9010:9000"
       - "9011:9001"
     volumes:
-      - pequenavia_minio:/data
+      - pequenavia_s3:/data
 
-  minio-init:
-    image: minio/mc
+  s3-init:
+    image: amazon/aws-cli:latest
     depends_on:
-      - minio
+      - rustfs
+    environment:
+      AWS_ACCESS_KEY_ID: pequenavia
+      AWS_SECRET_ACCESS_KEY: pequenavia-secret
+      AWS_DEFAULT_REGION: us-east-1
     entrypoint: >
       /bin/sh -c "
-      until mc alias set local http://minio:9000 pequenavia pequenavia-secret; do sleep 1; done;
-      mc mb --ignore-existing local/modelos-certificado;
-      mc anonymous set none local/modelos-certificado;
+      until aws --endpoint-url http://rustfs:9000 s3api list-buckets; do sleep 2; done;
+      aws --endpoint-url http://rustfs:9000 s3api head-bucket --bucket modelos-certificado
+      || aws --endpoint-url http://rustfs:9000 s3api create-bucket --bucket modelos-certificado;
       "
 
 volumes:
   pequenavia_pg:
-  pequenavia_minio:
+  pequenavia_s3:
 ```
 
 Run: `docker compose up -d && docker compose ps`
-Esperado: `postgres` healthy, `minio` running, `minio-init` encerrado com código 0.
+Esperado: `postgres` healthy, `rustfs` running, `rustfs-perms` e `s3-init` encerrados com código 0.
 
 - [ ] **Step 6: Configurar `.env` e `.env.example`**
 
@@ -232,7 +250,7 @@ Esperado: os dois terminam sem erros.
 git add -A
 git commit -m "chore: cria projeto pelo starter kit React e ambiente local
 
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
 ```
 
 ---
@@ -908,7 +926,7 @@ Esperado: `SchemaTest` com 7 testes passando e o restante da suíte do kit verde
 git add -A
 git commit -m "feat: schema do PequenaVia com uuids, models e factories
 
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
 ```
 
 ---
@@ -1102,7 +1120,7 @@ Esperado: PASS, com 5 casos da matriz e 2 testes de scope.
 git add -A
 git commit -m "feat: policy e scope de acesso aos modelos
 
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
 ```
 
 ---
@@ -1376,12 +1394,12 @@ Esperado: tudo verde.
 git add -A
 git commit -m "feat: login com Google via Socialite e flash compartilhado
 
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
 ```
 
 ---
 
-### Task 5: Modelos de certificado com imagem no MinIO
+### Task 5: Modelos de certificado com imagem no RustFS
 
 **Files:**
 - Create: `app/Http/Controllers/ModeloCertificadoController.php`, `app/Http/Requests/StoreModeloCertificadoRequest.php`, `app/Http/Requests/UpdateModeloCertificadoRequest.php`, `app/Jobs/RemoverImagemModelo.php`, `resources/js/pages/meus-certificados/index.tsx`
@@ -1395,7 +1413,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
   - Job `RemoverImagemModelo(string $path)`.
   - Formato de cada item das props `modelos`/`compartilhados`: `{ id, title, description, imagem_url, dono_nome, pode_editar: bool, eh_dono: bool, compartilhamentos: {id,email,pode_editar}[] }` (lista vazia quando não é dono).
 
-- [ ] **Step 1: Instalar o driver S3 e conferir o MinIO**
+- [ ] **Step 1: Instalar o driver S3 e conferir o RustFS**
 
 ```bash
 composer require league/flysystem-aws-s3-v3 "^3.0"
@@ -1845,9 +1863,9 @@ Esperado: 12 testes passando (contando os casos do dataset) e build sem erros.
 
 ```bash
 git add -A
-git commit -m "feat: CRUD de modelos com imagem privada no MinIO
+git commit -m "feat: CRUD de modelos com imagem privada no RustFS
 
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
 ```
 
 ---
@@ -2258,7 +2276,7 @@ Esperado: todos os testes passando e build limpo.
 git add -A
 git commit -m "feat: campos do certificado com catálogo de fontes e nomes únicos
 
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
 ```
 
 ---
@@ -2439,7 +2457,7 @@ Esperado: PASS.
 git add -A
 git commit -m "feat: compartilhamento de modelos por email
 
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
 ```
 
 ---
@@ -2685,7 +2703,7 @@ Esperado: tudo verde, incluindo os testes de perfil do kit ("user can delete the
 git add -A
 git commit -m "feat: histórico de gerações e exclusão de conta para usuários Google
 
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>"
 ```
 
 ---
