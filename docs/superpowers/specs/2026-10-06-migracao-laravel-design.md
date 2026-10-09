@@ -166,6 +166,7 @@ Também entram as tabelas padrão do Laravel: `sessions`, `cache`, `jobs`, `pass
 Regras:
 
 - O compartilhamento é casado por `lower(email)` do usuário logado. **Só vale se o email do usuário estiver verificado.** Isso impede que alguém crie uma conta com o email de outra pessoa para ver os modelos compartilhados com ela.
+- Quem não pode ver o modelo recebe **404** em qualquer ação (`Response::denyAsNotFound()` na Policy). Quem pode ver mas não tem a permissão da ação recebe **403**.
 - As listagens usam o scope `ModeloCertificado::acessiveisPor(User $user)`, que retorna os modelos próprios e os compartilhados. Nenhum controller consulta `ModeloCertificado::query()` sem esse scope ou sem `authorize()`.
 - Correção em relação ao sistema atual: hoje `pode_editar` aparece na interface, mas nenhuma regra de RLS dá permissão de escrita a quem recebeu o compartilhamento. No sistema novo, a edição por compartilhado passa a funcionar como a interface promete.
 
@@ -277,7 +278,8 @@ Stack Swarm `pequenavia`:
 | Situação | Resposta |
 |---|---|
 | Upload inválido (tipo, mais de 50 MB, dimensões) | Erro de validação no formulário Inertia. |
-| Ação não permitida pela Policy | 403. Inertia mostra a página de erro. |
+| Usuário que não pode ver o modelo (estranho, ou convidado sem email verificado) | 404, em qualquer ação, para não revelar que o modelo existe. |
+| Usuário que vê o modelo mas não tem a permissão da ação (leitor editando, editor excluindo) | 403. Inertia mostra a página de erro. |
 | Imagem de fundo ausente ou ilegível no RustFS | 422 com "Não foi possível ler a imagem do modelo". |
 | Fonte ou peso ausente | Fallback para o peso mais próximo, com aviso no log. |
 | Exceção inesperada na geração | 500 com mensagem genérica, exceção no log. `error.message` nunca vai para o cliente. |

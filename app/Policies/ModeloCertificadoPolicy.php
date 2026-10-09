@@ -5,38 +5,62 @@ namespace App\Policies;
 use App\Models\CompartilhamentoModelo;
 use App\Models\ModeloCertificado;
 use App\Models\User;
+use Illuminate\Auth\Access\Response;
 
+/**
+ * Quem não pode ver o modelo recebe 404 em qualquer ação, para não revelar que ele existe.
+ * Quem pode ver, mas não tem a permissão da ação, recebe 403.
+ */
 class ModeloCertificadoPolicy
 {
-    public function view(User $user, ModeloCertificado $modelo): bool
+    public function view(User $user, ModeloCertificado $modelo): Response
     {
-        return $this->ehDono($user, $modelo) || $this->compartilhamentoAtivo($user, $modelo) !== null;
+        return $this->responder($this->podeVer($user, $modelo), $user, $modelo);
     }
 
-    public function gerar(User $user, ModeloCertificado $modelo): bool
+    public function gerar(User $user, ModeloCertificado $modelo): Response
     {
         return $this->view($user, $modelo);
     }
 
-    public function update(User $user, ModeloCertificado $modelo): bool
+    public function update(User $user, ModeloCertificado $modelo): Response
     {
-        return $this->ehDono($user, $modelo)
-            || $this->compartilhamentoAtivo($user, $modelo)?->pode_editar === true;
+        return $this->responder($this->podeEditar($user, $modelo), $user, $modelo);
     }
 
-    public function editarCampos(User $user, ModeloCertificado $modelo): bool
+    public function editarCampos(User $user, ModeloCertificado $modelo): Response
     {
         return $this->update($user, $modelo);
     }
 
-    public function gerenciarCompartilhamentos(User $user, ModeloCertificado $modelo): bool
+    public function gerenciarCompartilhamentos(User $user, ModeloCertificado $modelo): Response
     {
-        return $this->ehDono($user, $modelo);
+        return $this->responder($this->ehDono($user, $modelo), $user, $modelo);
     }
 
-    public function delete(User $user, ModeloCertificado $modelo): bool
+    public function delete(User $user, ModeloCertificado $modelo): Response
     {
-        return $this->ehDono($user, $modelo);
+        return $this->responder($this->ehDono($user, $modelo), $user, $modelo);
+    }
+
+    private function responder(bool $permitido, User $user, ModeloCertificado $modelo): Response
+    {
+        if ($permitido) {
+            return Response::allow();
+        }
+
+        return $this->podeVer($user, $modelo) ? Response::deny() : Response::denyAsNotFound();
+    }
+
+    private function podeVer(User $user, ModeloCertificado $modelo): bool
+    {
+        return $this->ehDono($user, $modelo) || $this->compartilhamentoAtivo($user, $modelo) !== null;
+    }
+
+    private function podeEditar(User $user, ModeloCertificado $modelo): bool
+    {
+        return $this->ehDono($user, $modelo)
+            || $this->compartilhamentoAtivo($user, $modelo)?->pode_editar === true;
     }
 
     private function ehDono(User $user, ModeloCertificado $modelo): bool

@@ -3,6 +3,7 @@
 use App\Models\CompartilhamentoModelo;
 use App\Models\ModeloCertificado;
 use App\Models\User;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * Cria um modelo e devolve o usuário no papel pedido em relação a ele.
@@ -73,4 +74,29 @@ it('ignora em acessiveisPor os compartilhamentos de quem não verificou o email'
     CompartilhamentoModelo::factory()->for($compartilhado, 'modelo')->create(['email' => 'ana@example.com']);
 
     expect(ModeloCertificado::query()->acessiveisPor($user)->count())->toBe(0);
+});
+
+dataset('papeis sem acesso ao modelo', [
+    'estranho' => ['estranho'],
+    'convidado sem email verificado' => ['convidado-sem-email-verificado'],
+]);
+
+it('responde 404 em qualquer ação a quem não pode ver o modelo, para não revelar que ele existe', function (string $papel) {
+    [$user, $modelo] = usuarioComPapelNoModelo($papel);
+
+    $status = collect(['view', 'gerar', 'update', 'editarCampos', 'gerenciarCompartilhamentos', 'delete'])
+        ->map(fn (string $acao) => Gate::forUser($user)->inspect($acao, $modelo)->status())
+        ->unique()
+        ->all();
+
+    expect($status)->toBe([404]);
+})->with('papeis sem acesso ao modelo');
+
+it('responde 403, e não 404, a quem vê o modelo mas não tem a permissão', function () {
+    [$leitor, $modelo] = usuarioComPapelNoModelo('leitor');
+
+    $resposta = Gate::forUser($leitor)->inspect('update', $modelo);
+
+    expect($resposta->denied())->toBeTrue()
+        ->and($resposta->status())->not->toBe(404);
 });
