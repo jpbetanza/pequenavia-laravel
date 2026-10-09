@@ -7,6 +7,7 @@ use Illuminate\Auth\Access\Response;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Validator;
 
 class GerarCertificadoRequest extends FormRequest
 {
@@ -48,6 +49,25 @@ class GerarCertificadoRequest extends FormRequest
                 },
             ],
         ];
+    }
+
+    /**
+     * Exige pelo menos um valor preenchido entre os campos do modelo; valores de campos que não existem são ignorados.
+     */
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validador): void {
+            if ($validador->errors()->has('valores')) {
+                return;
+            }
+
+            $campos = $this->route('modelo')->campos->pluck('nome');
+            $valores = collect($this->input('valores', []))->only($campos->all());
+
+            if ($valores->every(fn (mixed $valor) => trim((string) $valor) === '')) {
+                $validador->errors()->add('valores', 'Preencha ao menos um campo.');
+            }
+        });
     }
 
     /**
