@@ -140,3 +140,30 @@ it('recusa o texto grande demais para ser desenhado', function () {
 
     (new GeradorCertificado)->gerar(fundoBranco(), [$campo], ['Nome' => str_repeat('W', 500)]);
 })->throws(TextoGrandeDemaisException::class, 'Nome');
+
+it('recusa um fundo em formato que não é PNG, JPEG nem WEBP', function (string $bytes) {
+    (new GeradorCertificado)->gerar($bytes, [campoDeTeste()], ['Nome' => 'Maria']);
+})->with([
+    'SVG' => ['<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="red"/></svg>'],
+    'GIF' => [(function () {
+        $gif = new Imagick;
+        $gif->newImage(50, 50, new ImagickPixel('white'));
+        $gif->setImageFormat('gif');
+
+        return $gif->getImageBlob();
+    })()],
+])->throws(ImagemInvalidaException::class, 'Não foi possível ler a imagem do modelo.');
+
+it('aceita fundo JPEG e WEBP e devolve PNG com as mesmas dimensões', function (string $formato) {
+    $fundo = new Imagick;
+    $fundo->newImage(640, 480, new ImagickPixel('white'));
+    $fundo->setImageFormat($formato);
+
+    $png = (new GeradorCertificado)->gerar($fundo->getImageBlob(), [campoDeTeste()], ['Nome' => 'Maria']);
+
+    $imagem = new Imagick;
+    $imagem->readImageBlob($png);
+    expect($imagem->getImageFormat())->toBe('PNG')
+        ->and($imagem->getImageWidth())->toBe(640)
+        ->and($imagem->getImageHeight())->toBe(480);
+})->with(['JPEG' => ['jpeg'], 'WEBP' => ['webp']]);

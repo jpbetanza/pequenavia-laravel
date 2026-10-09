@@ -34,6 +34,9 @@ class GeradorCertificado
 
     private const MEMORIA_MAXIMA = 1024 * 1024 * 1024;
 
+    /** @var list<string> */
+    private const FORMATOS_PERMITIDOS = ['PNG', 'JPEG', 'WEBP'];
+
     /**
      * @param  iterable<CampoCertificado>  $campos
      * @param  array<string, string>  $valores  texto de cada campo, indexado pelo nome do campo
@@ -73,6 +76,13 @@ class GeradorCertificado
         try {
             $imagem = new Imagick;
             $imagem->readImageBlob($bytes);
+
+            if (! in_array($imagem->getImageFormat(), self::FORMATOS_PERMITIDOS, true)) {
+                $imagem->clear();
+
+                throw new ImagemInvalidaException('Não foi possível ler a imagem do modelo.');
+            }
+
             $imagem->setFirstIterator();
             // O navegador exibe a foto já girada; o editor posiciona os campos nessa orientação.
             $imagem->autoOrient();
@@ -120,21 +130,25 @@ class GeradorCertificado
         $pincel->setFillColor(new ImagickPixel($campo->cor));
 
         $camada = new Imagick;
-        $camada->newImage($larguraDaCamada * $escala, $alturaDaCamada * $escala, new ImagickPixel('none'));
-        $camada->annotateImage(
-            $pincel,
-            ($margemX + $x - floor($x)) * $escala,
-            ($margemY + $y - floor($y) + $medidas['linhaDeBase']) * $escala,
-            0,
-            $texto,
-        );
 
-        if ($escala > 1) {
-            $camada->resizeImage($larguraDaCamada, $alturaDaCamada, Imagick::FILTER_BOX, 1);
+        try {
+            $camada->newImage($larguraDaCamada * $escala, $alturaDaCamada * $escala, new ImagickPixel('none'));
+            $camada->annotateImage(
+                $pincel,
+                ($margemX + $x - floor($x)) * $escala,
+                ($margemY + $y - floor($y) + $medidas['linhaDeBase']) * $escala,
+                0,
+                $texto,
+            );
+
+            if ($escala > 1) {
+                $camada->resizeImage($larguraDaCamada, $alturaDaCamada, Imagick::FILTER_BOX, 1);
+            }
+
+            $imagem->compositeImage($camada, Imagick::COMPOSITE_OVER, (int) floor($x) - $margemX, (int) floor($y) - $margemY);
+        } finally {
+            $camada->clear();
         }
-
-        $imagem->compositeImage($camada, Imagick::COMPOSITE_OVER, (int) floor($x) - $margemX, (int) floor($y) - $margemY);
-        $camada->clear();
     }
 
     /**
