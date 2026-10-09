@@ -136,7 +136,10 @@ class GeradorCertificado
             throw new TextoGrandeDemaisException("O texto do campo \"{$campo->nome}\" é grande demais para ser desenhado.");
         }
 
-        $x = $campo->centralizado ? ($imagem->getImageWidth() - $medidas['largura']) / 2 : $campo->x;
+        // O editor centraliza com a largura do navegador, que inclui o espaçamento depois da última letra.
+        $x = $campo->centralizado
+            ? ($imagem->getImageWidth() - ($medidas['largura'] + $espacamento)) / 2
+            : $campo->x;
         $y = $campo->y;
 
         $pincel = $this->pincel($arquivo, $tamanho, $espacamento, $escala);

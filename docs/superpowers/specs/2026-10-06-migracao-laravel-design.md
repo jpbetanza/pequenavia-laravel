@@ -247,7 +247,7 @@ O Imagick arredonda o avanço de cada letra para pixels inteiros em escala 1×. 
 3. Para cada campo, na ordem de criação, com valor não vazio após `trim`:
     1. Mede o texto em escala 8× (`queryFontMetrics`) e divide por 8. A **linha de base** fica a `(tamanho + ascendente + descendente) / 2` do topo do campo, com o descendente negativo. É a geometria do CSS `line-height: 1` que o editor usa (`top: y`).
     2. Calcula a camada transparente (largura do texto mais folga para floreios) e reduz a escala de 8× até 1× se ela passar de 16384 px de lado ou de 16.000.000 px de área. Se nem em 1× couber, 422.
-    3. `x = centralizado ? (largura da imagem - largura do texto) / 2 : x do campo`; a parte fracionária de `x` e `y` entra no desenho, para manter a precisão de sub-pixel.
+    3. `x = centralizado ? (largura da imagem - (largura do texto + espaçamento)) / 2 : x do campo`; a parte fracionária de `x` e `y` entra no desenho, para manter a precisão de sub-pixel.
     4. Desenha o texto na camada (fonte do peso mais próximo, cor, `setTextKerning` com o espaçamento), reduz com filtro de caixa e compõe sobre o fundo.
 4. Devolve o PNG, com as dimensões do fundo.
 
@@ -256,7 +256,7 @@ O Imagick arredonda o avanço de cada letra para pixels inteiros em escala 1×. 
 Medida contra o Chrome com as mesmas fontes e `line-height: 1`:
 
 - **Vertical:** a linha de base fica a no máximo 0,44 px da do navegador. O gerador antigo (canvas) errava de 2 a 3 px em algumas fontes.
-- **Horizontal:** o Imagick só aplica o kerning da tabela `kern`, não o da tabela GPOS que o navegador aplica. O texto sai 0,2 a 0,4% mais largo na maioria das fontes, 1,5% mais largo em Cinzel e 3,1% em Dancing Script. O texto centralizado continua centralizado, porque abre simetricamente. Não há caminho para igualar sem um motor de layout com HarfBuzz; `pango:` não existe no Imagick do `php.new`.
+- **Horizontal:** o Imagick só aplica o kerning da tabela `kern`, não o da tabela GPOS que o navegador aplica. O texto sai 0,2 a 0,4% mais largo na maioria das fontes, 1,5% mais largo em Cinzel e 3,1% em Dancing Script. O texto centralizado continua centralizado, porque abre simetricamente. O centralizado conta o espaçamento depois da última letra, como o navegador, então a tinta fica deslocada espaçamento/2 à esquerda do centro, igual ao preview. Não há caminho para igualar sem um motor de layout com HarfBuzz; `pango:` não existe no Imagick do `php.new`.
 - **Desempenho:** um fundo de 35 MB (3500×3500) com 3 campos leva cerca de 1,6 s e pico de 644 MB de memória.
 
 ## 8. Infraestrutura e deploy

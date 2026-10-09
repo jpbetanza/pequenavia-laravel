@@ -57,13 +57,15 @@ it('assenta a linha de base onde o navegador a coloca', function (string $famili
     expect($base - 100)->toEqualWithDelta($linhaDeBase, 1.5);
 })->with('fontes com a linha de base medida no navegador');
 
-it('centraliza o texto na largura da imagem, com ou sem espaçamento', function (float $espacamento) {
+it('centraliza o texto como o editor, que conta o espaçamento depois da última letra', function (float $espacamento) {
     $campo = campoDeTeste(['centralizado' => true, 'espacamento_letras' => $espacamento]);
 
     $png = (new GeradorCertificado)->gerar(fundoBranco(1200), [$campo], ['Nome' => 'HHH']);
 
+    // O navegador inclui o espaçamento após a última letra na largura; a tinta fica deslocada
+    // espaçamento/2 para a esquerda do centro.
     [$esquerda, , $direita] = caixaDaTinta($png);
-    expect(($esquerda + $direita) / 2)->toEqualWithDelta(600, 1.0);
+    expect(($esquerda + $direita) / 2)->toEqualWithDelta(600 - $espacamento / 2, 1.0);
 })->with([
     'sem espaçamento' => [0],
     'com espaçamento de 4px' => [4],
