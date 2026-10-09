@@ -8,7 +8,8 @@ use Illuminate\Support\Facades\File;
 | proposital no desenho, rode `UPDATE_GOLDEN=1 php artisan test --filter=GeradorCertificadoVisualTest`
 | e confira as imagens antes de commitar.
 |
-| As referências valem para ImageMagick 7; a imagem de produção deve usar a mesma versão.
+| As referências valem para ImageMagick 7 sem raqm. Com raqm (a imagem de produção), o layout do
+| texto muda e a comparação não faz sentido; o teste de layout (GeradorCertificadoLayoutTest) cobre esse caso.
 */
 dataset('certificados de referência', [
     'a: Lora 400 à esquerda' => ['a', [
@@ -40,6 +41,10 @@ dataset('certificados de referência', [
 it('reproduz a imagem de referência', function (string $id, array $campo, string $texto) {
     if (Imagick::getVersion()['versionNumber'] < 0x700) {
         $this->markTestSkipped('As imagens de referência foram geradas com ImageMagick 7.');
+    }
+
+    if (str_contains(Imagick::getConfigureOptions()['DELEGATES'] ?? '', 'raqm')) {
+        $this->markTestSkipped('Referências visuais valem só para ImageMagick sem raqm (layout de texto diferente).');
     }
 
     $png = (new GeradorCertificado)->gerar(fundoBranco(), [campoDeTeste($campo)], ['Nome' => $texto]);
