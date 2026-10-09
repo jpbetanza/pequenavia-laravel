@@ -47,6 +47,18 @@ class UserFactory extends Factory
     }
 
     /**
+     * Indicate that the user signs in only through Google (no password).
+     */
+    public function google(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'password' => null,
+            'google_id' => (string) fake()->unique()->numerify('####################'),
+            'avatar_url' => 'https://lh3.googleusercontent.com/a/exemplo',
+        ]);
+    }
+
+    /**
      * Indicate that the model has two-factor authentication configured.
      */
     public function withTwoFactor(): static
