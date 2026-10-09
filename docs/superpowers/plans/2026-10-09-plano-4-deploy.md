@@ -23,10 +23,12 @@
 ### Task 1: Proxy confiável e arquivos de ambiente de produção
 
 **Files:**
+
 - Modify: `bootstrap/app.php`, `.env.example`
 - Create: `tests/Feature/ProxyConfiavelTest.php`
 
 **Interfaces:**
+
 - Produces: o app atrás do Traefik gera URLs `https` e lê o IP do cliente de `X-Forwarded-*`; `.env.example` documenta as variáveis de produção (comentadas) sem mudar os valores de desenvolvimento.
 
 - [ ] **Step 1: Teste que falha**
@@ -101,9 +103,11 @@ git commit -m "feat: confia no proxy do Traefik e documenta variáveis de produ�
 ### Task 2: Imagem de produção (Dockerfile, Caddy, entrypoint) e testes dentro dela
 
 **Files:**
+
 - Create: `Dockerfile`, `.dockerignore`, `docker/Caddyfile`, `docker/entrypoint.sh`
 
 **Interfaces:**
+
 - Consumes: Task 1; `docker/php/uploads.ini`; `compose.yaml` (Postgres 127.0.0.1:54320 e RustFS 127.0.0.1:9010 de desenvolvimento, para os testes).
 - Produces: alvos de build `runtime` (padrão) e `test`; imagem escuta na porta **8080** sem TLS; `GET /up` responde 200; comandos suportados: `web` (padrão), `queue`, ou qualquer comando arbitrário.
 
@@ -295,9 +299,11 @@ git commit -m "feat: imagem de produção com FrankenPHP, Imagick 7 e testes den
 ### Task 3: Stack Swarm
 
 **Files:**
+
 - Create: `deploy/stack.yml`
 
 **Interfaces:**
+
 - Consumes: imagem `jpbetanza/pequenavia-laravel:latest` (Task 2); rede externa `network_swarm_public`.
 - Produces: stack `pequenavia-laravel` com serviços `app`, `queue`, `postgres`, `rustfs`, `s3-init`; todas as credenciais vêm de variáveis `${...}` da stack (Portainer).
 
@@ -312,176 +318,176 @@ git commit -m "feat: imagem de produção com FrankenPHP, Imagick 7 e testes den
 version: '3.7'
 
 x-app-env: &app-env
-  APP_NAME: PequenaVia
-  APP_ENV: production
-  APP_DEBUG: 'false'
-  APP_KEY: ${APP_KEY}
-  APP_URL: https://certificados.pequenavia.app.br
-  APP_LOCALE: pt_BR
-  LOG_CHANNEL: stderr
-  LOG_LEVEL: info
-  DB_CONNECTION: pgsql
-  DB_HOST: postgres
-  DB_PORT: '5432'
-  DB_DATABASE: pequenavia
-  DB_USERNAME: pequenavia
-  DB_PASSWORD: ${DB_PASSWORD}
-  SESSION_DRIVER: database
-  SESSION_SECURE_COOKIE: 'true'
-  QUEUE_CONNECTION: database
-  CACHE_STORE: database
-  FILESYSTEM_DISK: local
-  AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY}
-  AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY}
-  AWS_DEFAULT_REGION: us-east-1
-  AWS_BUCKET: modelos-certificado
-  AWS_ENDPOINT: http://rustfs:9000
-  AWS_USE_PATH_STYLE_ENDPOINT: 'true'
-  GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
-  GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
-  GOOGLE_REDIRECT_URI: https://certificados.pequenavia.app.br/auth/google/callback
-  MAIL_MAILER: smtp
-  MAIL_HOST: ${MAIL_HOST}
-  MAIL_PORT: ${MAIL_PORT}
-  MAIL_USERNAME: ${MAIL_USERNAME}
-  MAIL_PASSWORD: ${MAIL_PASSWORD}
-  MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS}
-  MAIL_FROM_NAME: PequenaVia
+    APP_NAME: PequenaVia
+    APP_ENV: production
+    APP_DEBUG: 'false'
+    APP_KEY: ${APP_KEY}
+    APP_URL: https://certificados.pequenavia.app.br
+    APP_LOCALE: pt_BR
+    LOG_CHANNEL: stderr
+    LOG_LEVEL: info
+    DB_CONNECTION: pgsql
+    DB_HOST: postgres
+    DB_PORT: '5432'
+    DB_DATABASE: pequenavia
+    DB_USERNAME: pequenavia
+    DB_PASSWORD: ${DB_PASSWORD}
+    SESSION_DRIVER: database
+    SESSION_SECURE_COOKIE: 'true'
+    QUEUE_CONNECTION: database
+    CACHE_STORE: database
+    FILESYSTEM_DISK: local
+    AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY}
+    AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY}
+    AWS_DEFAULT_REGION: us-east-1
+    AWS_BUCKET: modelos-certificado
+    AWS_ENDPOINT: http://rustfs:9000
+    AWS_USE_PATH_STYLE_ENDPOINT: 'true'
+    GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+    GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+    GOOGLE_REDIRECT_URI: https://certificados.pequenavia.app.br/auth/google/callback
+    MAIL_MAILER: smtp
+    MAIL_HOST: ${MAIL_HOST}
+    MAIL_PORT: ${MAIL_PORT}
+    MAIL_USERNAME: ${MAIL_USERNAME}
+    MAIL_PASSWORD: ${MAIL_PASSWORD}
+    MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS}
+    MAIL_FROM_NAME: PequenaVia
 
 services:
-  app:
-    image: jpbetanza/pequenavia-laravel:latest
-    command: ['web']
-    environment: *app-env
-    networks:
-      - network_swarm_public
-      - interna
-    healthcheck:
-      test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:8080/up']
-      interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 60s
-    deploy:
-      mode: replicated
-      replicas: 1
-      restart_policy:
-        condition: on-failure
-      update_config:
-        parallelism: 1
-        delay: 10s
-        order: start-first
-        failure_action: rollback
-        monitor: 30s
-      rollback_config:
-        parallelism: 1
-        delay: 5s
-        order: start-first
-      labels:
-        - 'com.centurylinklabs.watchtower.enable=true'
-        - 'traefik.enable=true'
-        - 'traefik.docker.network=network_swarm_public'
-        - 'traefik.http.routers.pequenavia-laravel.rule=Host(`certificados.pequenavia.app.br`)'
-        - 'traefik.http.routers.pequenavia-laravel.entrypoints=websecure'
-        - 'traefik.http.routers.pequenavia-laravel.tls=true'
-        - 'traefik.http.routers.pequenavia-laravel.tls.certresolver=letsencryptresolver'
-        - 'traefik.http.routers.pequenavia-laravel.service=pequenavia-laravel'
-        - 'traefik.http.services.pequenavia-laravel.loadbalancer.server.port=8080'
+    app:
+        image: jpbetanza/pequenavia-laravel:latest
+        command: ['web']
+        environment: *app-env
+        networks:
+            - network_swarm_public
+            - interna
+        healthcheck:
+            test: ['CMD', 'wget', '-qO-', 'http://127.0.0.1:8080/up']
+            interval: 15s
+            timeout: 5s
+            retries: 3
+            start_period: 60s
+        deploy:
+            mode: replicated
+            replicas: 1
+            restart_policy:
+                condition: on-failure
+            update_config:
+                parallelism: 1
+                delay: 10s
+                order: start-first
+                failure_action: rollback
+                monitor: 30s
+            rollback_config:
+                parallelism: 1
+                delay: 5s
+                order: start-first
+            labels:
+                - 'com.centurylinklabs.watchtower.enable=true'
+                - 'traefik.enable=true'
+                - 'traefik.docker.network=network_swarm_public'
+                - 'traefik.http.routers.pequenavia-laravel.rule=Host(`certificados.pequenavia.app.br`)'
+                - 'traefik.http.routers.pequenavia-laravel.entrypoints=websecure'
+                - 'traefik.http.routers.pequenavia-laravel.tls=true'
+                - 'traefik.http.routers.pequenavia-laravel.tls.certresolver=letsencryptresolver'
+                - 'traefik.http.routers.pequenavia-laravel.service=pequenavia-laravel'
+                - 'traefik.http.services.pequenavia-laravel.loadbalancer.server.port=8080'
 
-  queue:
-    image: jpbetanza/pequenavia-laravel:latest
-    command: ['queue']
-    environment: *app-env
-    networks:
-      - interna
-    deploy:
-      mode: replicated
-      replicas: 1
-      restart_policy:
-        condition: any
-      labels:
-        - 'com.centurylinklabs.watchtower.enable=true'
+    queue:
+        image: jpbetanza/pequenavia-laravel:latest
+        command: ['queue']
+        environment: *app-env
+        networks:
+            - interna
+        deploy:
+            mode: replicated
+            replicas: 1
+            restart_policy:
+                condition: any
+            labels:
+                - 'com.centurylinklabs.watchtower.enable=true'
 
-  postgres:
-    image: postgres:17
-    environment:
-      POSTGRES_DB: pequenavia
-      POSTGRES_USER: pequenavia
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - pequenavia_pg:/var/lib/postgresql/data
-    networks:
-      - interna
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U pequenavia']
-      interval: 10s
-      retries: 10
-    deploy:
-      mode: replicated
-      replicas: 1
-      restart_policy:
-        condition: on-failure
+    postgres:
+        image: postgres:17
+        environment:
+            POSTGRES_DB: pequenavia
+            POSTGRES_USER: pequenavia
+            POSTGRES_PASSWORD: ${DB_PASSWORD}
+        volumes:
+            - pequenavia_pg:/var/lib/postgresql/data
+        networks:
+            - interna
+        healthcheck:
+            test: ['CMD-SHELL', 'pg_isready -U pequenavia']
+            interval: 10s
+            retries: 10
+        deploy:
+            mode: replicated
+            replicas: 1
+            restart_policy:
+                condition: on-failure
 
-  rustfs:
-    image: rustfs/rustfs:1.0.1
-    # O volume precisa pertencer ao uid 10001; ver o serviço rustfs-perms.
-    environment:
-      RUSTFS_ACCESS_KEY: ${S3_ACCESS_KEY}
-      RUSTFS_SECRET_KEY: ${S3_SECRET_KEY}
-      RUSTFS_ADDRESS: ':9000'
-      RUSTFS_CONSOLE_ENABLE: 'false'
-    volumes:
-      - pequenavia_s3:/data
-    networks:
-      - interna
-    deploy:
-      mode: replicated
-      replicas: 1
-      restart_policy:
-        condition: on-failure
+    rustfs:
+        image: rustfs/rustfs:1.0.1
+        # O volume precisa pertencer ao uid 10001; ver o serviço rustfs-perms.
+        environment:
+            RUSTFS_ACCESS_KEY: ${S3_ACCESS_KEY}
+            RUSTFS_SECRET_KEY: ${S3_SECRET_KEY}
+            RUSTFS_ADDRESS: ':9000'
+            RUSTFS_CONSOLE_ENABLE: 'false'
+        volumes:
+            - pequenavia_s3:/data
+        networks:
+            - interna
+        deploy:
+            mode: replicated
+            replicas: 1
+            restart_policy:
+                condition: on-failure
 
-  rustfs-perms:
-    image: alpine:3
-    user: root
-    command: chown -R 10001:10001 /data
-    volumes:
-      - pequenavia_s3:/data
-    deploy:
-      mode: replicated
-      replicas: 1
-      restart_policy:
-        condition: none
+    rustfs-perms:
+        image: alpine:3
+        user: root
+        command: chown -R 10001:10001 /data
+        volumes:
+            - pequenavia_s3:/data
+        deploy:
+            mode: replicated
+            replicas: 1
+            restart_policy:
+                condition: none
 
-  s3-init:
-    image: amazon/aws-cli:latest
-    environment:
-      AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY}
-      AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY}
-      AWS_DEFAULT_REGION: us-east-1
-    entrypoint: >
-      /bin/sh -c "
-      until aws --endpoint-url http://rustfs:9000 s3api list-buckets; do sleep 3; done;
-      aws --endpoint-url http://rustfs:9000 s3api head-bucket --bucket modelos-certificado
-      || aws --endpoint-url http://rustfs:9000 s3api create-bucket --bucket modelos-certificado;
-      "
-    networks:
-      - interna
-    deploy:
-      mode: replicated
-      replicas: 1
-      restart_policy:
-        condition: none
+    s3-init:
+        image: amazon/aws-cli:latest
+        environment:
+            AWS_ACCESS_KEY_ID: ${S3_ACCESS_KEY}
+            AWS_SECRET_ACCESS_KEY: ${S3_SECRET_KEY}
+            AWS_DEFAULT_REGION: us-east-1
+        entrypoint: >
+            /bin/sh -c "
+            until aws --endpoint-url http://rustfs:9000 s3api list-buckets; do sleep 3; done;
+            aws --endpoint-url http://rustfs:9000 s3api head-bucket --bucket modelos-certificado
+            || aws --endpoint-url http://rustfs:9000 s3api create-bucket --bucket modelos-certificado;
+            "
+        networks:
+            - interna
+        deploy:
+            mode: replicated
+            replicas: 1
+            restart_policy:
+                condition: none
 
 volumes:
-  pequenavia_pg:
-  pequenavia_s3:
+    pequenavia_pg:
+    pequenavia_s3:
 
 networks:
-  network_swarm_public:
-    external: true
-    name: network_swarm_public
-  interna:
-    driver: overlay
+    network_swarm_public:
+        external: true
+        name: network_swarm_public
+    interna:
+        driver: overlay
 ```
 
 Observações para o implementador (confira, não invente): o healthcheck do `app` e da imagem usam a mesma ferramenta (`wget`); `rustfs-perms` e `s3-init` rodam uma vez (`condition: none`) e o `rustfs` pode reiniciar até o volume ter dono, o que é aceitável.

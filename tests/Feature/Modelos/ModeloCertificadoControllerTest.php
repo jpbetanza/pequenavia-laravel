@@ -5,7 +5,9 @@ use App\Models\CampoCertificado;
 use App\Models\CompartilhamentoModelo;
 use App\Models\ModeloCertificado;
 use App\Models\User;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 
@@ -57,6 +59,25 @@ it('lista os modelos próprios e, à parte, os compartilhados com o usuário', f
                 ->where('pode_editar', true)
                 ->where('compartilhamentos', [])
                 ->etc()));
+});
+
+it('carrega os compartilhamentos só dos modelos próprios, não dos compartilhados com o usuário', function () {
+    $user = User::factory()->create(['email' => 'ana@example.com']);
+    $proprio = ModeloCertificado::factory()->for($user)->create();
+    $deOutro = ModeloCertificado::factory()->create();
+    CompartilhamentoModelo::factory()->for($deOutro, 'modelo')->editor()->create(['email' => 'ana@example.com']);
+    $buscas = [];
+    DB::listen(function (QueryExecuted $consulta) use (&$buscas) {
+        if (str_starts_with($consulta->sql, 'select * from "compartilhamentos_modelo" where "compartilhamentos_modelo"."modelo_id" in (')) {
+            $buscas[] = $consulta->bindings;
+        }
+    });
+
+    $this->actingAs($user)->get(route('meus-certificados.index'))->assertOk();
+
+    expect($buscas)->toHaveCount(1)
+        ->and($buscas[0])->toContain($proprio->id)
+        ->and($buscas[0])->not->toContain($deOutro->id);
 });
 
 it('cria o modelo do usuário e envia a imagem de 50 MB para o bucket', function () {

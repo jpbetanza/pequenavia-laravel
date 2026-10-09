@@ -5,6 +5,7 @@ import {
     criarPlanilhaModelo,
     LIMITE_DE_LINHAS,
     lerPlanilha,
+    lerPlanilhaComAviso,
     nomeDaPlanilhaModelo,
 } from './planilha';
 
@@ -144,6 +145,55 @@ describe('lerPlanilha', () => {
 
     it('devolve lista vazia quando há só o cabeçalho', () => {
         expect(lerPlanilha(planilha([['Nome', 'Data']]), campos)).toEqual([]);
+    });
+});
+
+describe('lerPlanilhaComAviso', () => {
+    function linhasComDados(quantidade: number): unknown[][] {
+        const linhas: unknown[][] = [['Nome', 'Data']];
+
+        for (let i = 1; i <= quantidade; i++) {
+            linhas.push([`Pessoa ${i}`, 'x']);
+        }
+
+        return linhas;
+    }
+
+    it('não marca truncada quando a planilha tem exatamente o limite de linhas', () => {
+        const leitura = lerPlanilhaComAviso(
+            planilha(linhasComDados(LIMITE_DE_LINHAS)),
+            campos,
+        );
+
+        expect(leitura.truncada).toBe(false);
+        expect(leitura.linhas).toHaveLength(LIMITE_DE_LINHAS);
+    });
+
+    it('marca truncada quando há mais linhas que o limite e devolve só o limite', () => {
+        const leitura = lerPlanilhaComAviso(
+            planilha(linhasComDados(LIMITE_DE_LINHAS + 1)),
+            campos,
+        );
+
+        expect(leitura.truncada).toBe(true);
+        expect(leitura.linhas).toHaveLength(LIMITE_DE_LINHAS);
+        expect(leitura.linhas[LIMITE_DE_LINHAS - 1].Nome).toBe('Pessoa 500');
+    });
+
+    it('não conta como excedente uma linha extra sem dados nos campos', () => {
+        const linhas = linhasComDados(LIMITE_DE_LINHAS);
+        linhas.push(['', '']);
+
+        const leitura = lerPlanilhaComAviso(planilha(linhas), campos);
+
+        expect(leitura.truncada).toBe(false);
+        expect(leitura.linhas).toHaveLength(LIMITE_DE_LINHAS);
+    });
+
+    it('devolve lista vazia e não truncada quando não há dados', () => {
+        expect(
+            lerPlanilhaComAviso(planilha([['Nome', 'Data']]), campos),
+        ).toEqual({ linhas: [], truncada: false });
     });
 });
 

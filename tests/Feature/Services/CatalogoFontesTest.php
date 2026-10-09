@@ -90,3 +90,15 @@ it('ignora arquivos cujo nome não é um peso numérico', function () {
     expect(CatalogoFontes::pesosPorPasta()['lora'])->toBe([400, 700])
         ->and(CatalogoFontes::arquivo('Lora', 400))->toBe("{$diretorio}/lora/400.ttf");
 });
+
+it('lê os pesos mesmo quando o diretório de fontes tem colchetes no nome', function () {
+    $diretorio = sys_get_temp_dir().'/fontes-[lote]-'.uniqid();
+    $GLOBALS['fontes_temporarias'][] = $diretorio;
+    File::ensureDirectoryExists("{$diretorio}/lora");
+    File::put("{$diretorio}/lora/400.ttf", 'ttf');
+    File::put("{$diretorio}/lora/700.ttf", 'ttf');
+    config(['fontes.diretorio' => $diretorio]);
+
+    expect(CatalogoFontes::pesosPorPasta()['lora'])->toBe([400, 700])
+        ->and(CatalogoFontes::arquivo('Lora', 700))->toBe("{$diretorio}/lora/700.ttf");
+});

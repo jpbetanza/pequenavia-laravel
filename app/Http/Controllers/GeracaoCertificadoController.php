@@ -96,16 +96,32 @@ class GeracaoCertificadoController extends Controller
             ->map(fn (CampoCertificado $campo) => $valores[$campo->nome] ?? '')
             ->first(fn (string $valor) => $valor !== '');
 
-        $nome = $this->nomeSeguro($primeiroValor === null ? $modelo->title : "{$modelo->title} - {$primeiroValor}").'.png';
+        $nome = $this->nomeDoArquivo($modelo->title, $primeiroValor).'.png';
         $alternativa = preg_replace('/[^A-Za-z0-9 ._()-]/', '_', Str::ascii($nome));
 
         return HeaderUtils::makeDisposition(HeaderUtils::DISPOSITION_ATTACHMENT, $nome, $alternativa);
     }
 
-    private function nomeSeguro(string $nome): string
+    /**
+     * Junta o título e o primeiro valor, deixando de fora o que ficar vazio após a limpeza.
+     * Sem nada útil sobrando, usa "certificado".
+     */
+    private function nomeDoArquivo(string $titulo, ?string $primeiroValor): string
     {
-        $semProibidos = preg_replace('/[\x00-\x1F\x7F\/\\\\:*?"<>|]+/u', '', $nome) ?? '';
+        $partes = array_filter(
+            [$this->limparNome($titulo), $primeiroValor === null ? '' : $this->limparNome($primeiroValor)],
+            fn (string $parte) => $parte !== '',
+        );
 
-        return Str::limit(trim($semProibidos), 150, '');
+        $nome = Str::limit(implode(' - ', $partes), 150, '');
+
+        return $nome !== '' ? $nome : 'certificado';
+    }
+
+    private function limparNome(string $texto): string
+    {
+        $semProibidos = preg_replace('/[\x00-\x1F\x7F\/\\\\:*?"<>|]+/u', '', $texto) ?? '';
+
+        return trim($semProibidos);
     }
 }

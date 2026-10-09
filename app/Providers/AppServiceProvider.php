@@ -31,12 +31,17 @@ class AppServiceProvider extends ServiceProvider
     }
 
     /**
-     * Limita a geração de certificados por usuário.
+     * Limita a geração de certificados por usuário. Um valor não positivo na configuração bloquearia
+     * todas as gerações, então nesse caso vale o padrão de 60 por minuto.
      */
     protected function configureRateLimiting(): void
     {
-        RateLimiter::for('gerar-certificado', fn (Request $request) => Limit::perMinute(config('certificados.geracoes_por_minuto'))
-            ->by($request->user()?->id ?: $request->ip()));
+        RateLimiter::for('gerar-certificado', function (Request $request): Limit {
+            $geracoesPorMinuto = (int) config('certificados.geracoes_por_minuto');
+
+            return Limit::perMinute($geracoesPorMinuto > 0 ? $geracoesPorMinuto : 60)
+                ->by($request->user()?->id ?: $request->ip());
+        });
     }
 
     /**

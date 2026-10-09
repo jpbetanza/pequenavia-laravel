@@ -5,6 +5,8 @@ use App\Models\CompartilhamentoModelo;
 use App\Models\ModeloCertificado;
 use App\Models\User;
 use App\Services\GeradorCertificado;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -67,6 +69,27 @@ it('tira do nome do arquivo os caracteres que não podem aparecer nele', functio
     expect($resposta->headers->get('Content-Disposition'))->toContain('filename="Crisma 2024Turma - Maria.png"');
 });
 
+it('usa o primeiro valor preenchido no nome do arquivo quando o título não tem caracteres válidos', function () {
+    Storage::fake('s3');
+    $modelo = modeloGeravel(titulo: '/');
+
+    $resposta = $this->actingAs($modelo->user)
+        ->postJson(route('certificados.store', $modelo), ['valores' => ['Nome' => 'Maria']]);
+
+    expect($resposta->headers->get('Content-Disposition'))->toContain('filename=Maria.png');
+});
+
+it('nomeia o arquivo como certificado quando o título e o valor não sobram nada depois de limpos', function () {
+    Storage::fake('s3');
+    $modelo = modeloGeravel(titulo: '/');
+
+    $resposta = $this->actingAs($modelo->user)
+        ->postJson(route('certificados.store', $modelo), ['valores' => ['Nome' => '/']]);
+
+    $resposta->assertOk();
+    expect($resposta->headers->get('Content-Disposition'))->toContain('filename=certificado.png');
+});
+
 it('guarda como texto os valores que chegam como número', function () {
     Storage::fake('s3');
     $modelo = modeloGeravel();
@@ -123,6 +146,10 @@ it('recusa valores inválidos e não gera nem registra', function (array $dados,
     'valores que não é lista' => [['valores' => 'texto'], 'Os valores dos campos devem ser uma lista.'],
     'valor com mais de 500 caracteres' => [['valores' => ['Nome' => str_repeat('a', 501)]], 'Cada valor pode ter no máximo 500 caracteres.'],
     'valor que não é texto' => [['valores' => ['Nome' => ['a']]], 'Cada valor deve ser um texto.'],
+    'nenhum valor enviado' => [['valores' => []], 'Preencha ao menos um campo.'],
+    'todos os valores em branco' => [['valores' => ['Nome' => '   ']], 'Preencha ao menos um campo.'],
+    'valor nulo' => [['valores' => ['Nome' => null]], 'Preencha ao menos um campo.'],
+    'só valor de campo que não existe no modelo' => [['valores' => ['Outro' => 'Maria']], 'Preencha ao menos um campo.'],
 ]);
 
 it('responde 422 quando a imagem do modelo não está no bucket', function () {
@@ -180,6 +207,16 @@ it('limita a geração por minuto a cada usuário', function () {
     $outro = modeloGeravel();
     $this->actingAs($outro->user)->postJson(route('certificados.store', $outro), $dados)->assertOk();
 });
+
+it('usa 60 gerações por minuto quando o limite configurado não é positivo', function (int $configurado) {
+    config(['certificados.geracoes_por_minuto' => $configurado]);
+    $limite = RateLimiter::limiter('gerar-certificado')(Request::create('/', 'POST'));
+
+    expect($limite->maxAttempts)->toBe(60);
+})->with([
+    'zero' => [0],
+    'negativo' => [-5],
+]);
 
 it('aceita campos cujo nome tem ponto', function () {
     Storage::fake('s3');

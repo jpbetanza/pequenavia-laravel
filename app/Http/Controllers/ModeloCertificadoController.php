@@ -28,10 +28,15 @@ class ModeloCertificadoController extends Controller
 
         $modelos = ModeloCertificado::query()
             ->acessiveisPor($user)
-            ->with(['user:id,name', 'compartilhamentos'])->withCount('campos')
+            ->with('user:id,name')->withCount('campos')
             ->latest()
-            ->get()
-            ->map(fn (ModeloCertificado $modelo) => $this->resumo($modelo, $user));
+            ->get();
+
+        // Só o dono vê a lista de compartilhamentos, então só os modelos próprios a carregam.
+        $modelos->filter(fn (ModeloCertificado $modelo) => $modelo->user_id === $user->id)
+            ->load('compartilhamentos');
+
+        $modelos = $modelos->map(fn (ModeloCertificado $modelo) => $this->resumo($modelo, $user));
 
         return Inertia::render('meus-certificados/index', [
             'modelos' => $modelos->where('eh_dono', true)->values(),

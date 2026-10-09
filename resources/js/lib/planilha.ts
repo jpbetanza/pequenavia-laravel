@@ -71,29 +71,33 @@ export function cabecalhosFaltando(
         .filter((nome) => !cabecalhos.has(nome));
 }
 
+/** Resultado da leitura: os registros e se havia mais linhas de dados do que o limite. */
+export type LeituraDaPlanilha = {
+    linhas: Record<string, string>[];
+    truncada: boolean;
+};
+
 /**
  * Lê a primeira aba: a primeira linha traz os cabeçalhos e cada linha seguinte vira um registro.
  * Lê as células direto (e não `sheet_to_json`) para manter o formato de exibição de cada uma.
- * Devolve no máximo `LIMITE_DE_LINHAS` registros e corta cada valor em `TAMANHO_MAXIMO_DO_VALOR`.
+ * Devolve no máximo `LIMITE_DE_LINHAS` registros, cortando cada valor em `TAMANHO_MAXIMO_DO_VALOR`.
+ * `truncada` indica que havia mais linhas com dados do que o limite.
  */
-export function lerPlanilha(
+export function lerPlanilhaComAviso(
     conteudo: ArrayBuffer,
     campos: { nome: string }[],
-): Record<string, string>[] {
+): LeituraDaPlanilha {
     const leitura = abrirPrimeiraAba(conteudo);
 
     if (!leitura) {
-        return [];
+        return { linhas: [], truncada: false };
     }
 
     const { intervalo, celula, cabecalhos } = leitura;
     const linhas: Record<string, string>[] = [];
+    let truncada = false;
 
-    for (
-        let linha = intervalo.s.r + 1;
-        linha <= intervalo.e.r && linhas.length < LIMITE_DE_LINHAS;
-        linha++
-    ) {
+    for (let linha = intervalo.s.r + 1; linha <= intervalo.e.r; linha++) {
         const valores: Record<string, string> = {};
 
         cabecalhos.forEach((nome, indice) => {
@@ -106,22 +110,37 @@ export function lerPlanilha(
             (campo) => (valores[campo.nome] ?? '').trim() !== '',
         );
 
-        if (temValorNosCampos) {
-            linhas.push(
-                Object.fromEntries(
-                    campos.map((campo) => [
-                        campo.nome,
-                        (valores[campo.nome] ?? '').slice(
-                            0,
-                            TAMANHO_MAXIMO_DO_VALOR,
-                        ),
-                    ]),
-                ),
-            );
+        if (!temValorNosCampos) {
+            continue;
         }
+
+        if (linhas.length === LIMITE_DE_LINHAS) {
+            truncada = true;
+            break;
+        }
+
+        linhas.push(
+            Object.fromEntries(
+                campos.map((campo) => [
+                    campo.nome,
+                    (valores[campo.nome] ?? '').slice(
+                        0,
+                        TAMANHO_MAXIMO_DO_VALOR,
+                    ),
+                ]),
+            ),
+        );
     }
 
-    return linhas;
+    return { linhas, truncada };
+}
+
+/** Atalho de `lerPlanilhaComAviso` para quem só precisa dos registros. */
+export function lerPlanilha(
+    conteudo: ArrayBuffer,
+    campos: { nome: string }[],
+): Record<string, string>[] {
+    return lerPlanilhaComAviso(conteudo, campos).linhas;
 }
 
 /** Nome do arquivo da planilha modelo: troca o que não é letra, número, espaço, traço, sublinhado ou ponto por "-". */
