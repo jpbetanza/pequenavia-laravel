@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Exceptions\FonteNaoEncontradaException;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
+use SplFileInfo;
 
 class CatalogoFontes
 {
@@ -49,10 +50,13 @@ class CatalogoFontes
      */
     public static function pesosDisponiveis(string $pasta): array
     {
-        $arquivos = File::glob(config('fontes.diretorio')."/{$pasta}/*.ttf") ?: [];
+        $diretorio = config('fontes.diretorio')."/{$pasta}";
+
+        $arquivos = File::isDirectory($diretorio) ? File::files($diretorio) : [];
 
         $pesos = collect($arquivos)
-            ->map(fn (string $arquivo) => basename($arquivo, '.ttf'))
+            ->filter(fn (SplFileInfo $arquivo) => $arquivo->getExtension() === 'ttf')
+            ->map(fn (SplFileInfo $arquivo) => $arquivo->getBasename('.ttf'))
             ->filter(fn (string $nome) => preg_match('/^\d+$/', $nome) === 1)
             ->map(fn (string $nome) => (int) $nome)
             ->sort()
