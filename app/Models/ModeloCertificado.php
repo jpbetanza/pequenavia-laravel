@@ -5,6 +5,7 @@ namespace App\Models;
 use Database\Factories\ModeloCertificadoFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -27,6 +28,23 @@ class ModeloCertificado extends Model
 {
     /** @use HasFactory<ModeloCertificadoFactory> */
     use HasFactory, HasUuids;
+
+    /**
+     * Modelos que o usuário pode ver: os próprios e os compartilhados com o email dele.
+     * Compartilhamento só vale para quem verificou o email.
+     *
+     * @param  Builder<ModeloCertificado>  $query
+     */
+    public function scopeAcessiveisPor(Builder $query, User $user): void
+    {
+        $query->where(function (Builder $query) use ($user): void {
+            $query->where('user_id', $user->id)
+                ->when($user->hasVerifiedEmail(), fn (Builder $query) => $query->orWhereHas(
+                    'compartilhamentos',
+                    fn (Builder $compartilhamentos) => $compartilhamentos->where('email', $user->email),
+                ));
+        });
+    }
 
     /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
