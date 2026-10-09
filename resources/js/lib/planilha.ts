@@ -20,19 +20,28 @@ function textoDaCelula(celula: XLSX.CellObject | undefined): string {
     return celula.w ?? String(celula.v ?? '');
 }
 
-/**
- * Lê a primeira aba: a primeira linha traz os cabeçalhos e cada linha seguinte vira um registro.
- * Lê as células direto (e não `sheet_to_json`) para manter o formato de exibição de cada uma.
- */
-export function lerPlanilha(
-    conteudo: ArrayBuffer,
-    campos: { nome: string }[],
-): Record<string, string>[] {
+/** Máximo de linhas de dados importadas de uma vez. */
+export const LIMITE_DE_LINHAS = 500;
+
+/** Máximo de caracteres de cada valor importado (igual ao `maxLength` das células). */
+export const TAMANHO_MAXIMO_DO_VALOR = 500;
+
+/** Máximo do arquivo enviado para importação: 5 MB. */
+export const TAMANHO_MAXIMO_DO_ARQUIVO = 5 * 1024 * 1024;
+
+type PrimeiraAba = {
+    intervalo: XLSX.Range;
+    celula: (linha: number, coluna: number) => XLSX.CellObject | undefined;
+    cabecalhos: string[];
+};
+
+/** Abre a primeira aba e lê os cabeçalhos (primeira linha, sem espaços nas pontas). `null` se vazia. */
+function abrirPrimeiraAba(conteudo: ArrayBuffer): PrimeiraAba | null {
     const livro = XLSX.read(conteudo, { type: 'array', cellDates: true });
     const aba = livro.Sheets[livro.SheetNames[0]];
 
     if (!aba || !aba['!ref']) {
-        return [];
+        return null;
     }
 
     const intervalo = XLSX.utils.decode_range(aba['!ref']);
@@ -47,9 +56,44 @@ export function lerPlanilha(
         cabecalhos.push(textoDaCelula(celula(intervalo.s.r, coluna)).trim());
     }
 
+    return { intervalo, celula, cabecalhos };
+}
+
+/** Nomes dos campos que não têm coluna correspondente no cabeçalho da planilha. */
+export function cabecalhosFaltando(
+    conteudo: ArrayBuffer,
+    campos: { nome: string }[],
+): string[] {
+    const cabecalhos = new Set(abrirPrimeiraAba(conteudo)?.cabecalhos ?? []);
+
+    return campos
+        .map((campo) => campo.nome)
+        .filter((nome) => !cabecalhos.has(nome));
+}
+
+/**
+ * Lê a primeira aba: a primeira linha traz os cabeçalhos e cada linha seguinte vira um registro.
+ * Lê as células direto (e não `sheet_to_json`) para manter o formato de exibição de cada uma.
+ * Devolve no máximo `LIMITE_DE_LINHAS` registros e corta cada valor em `TAMANHO_MAXIMO_DO_VALOR`.
+ */
+export function lerPlanilha(
+    conteudo: ArrayBuffer,
+    campos: { nome: string }[],
+): Record<string, string>[] {
+    const leitura = abrirPrimeiraAba(conteudo);
+
+    if (!leitura) {
+        return [];
+    }
+
+    const { intervalo, celula, cabecalhos } = leitura;
     const linhas: Record<string, string>[] = [];
 
-    for (let linha = intervalo.s.r + 1; linha <= intervalo.e.r; linha++) {
+    for (
+        let linha = intervalo.s.r + 1;
+        linha <= intervalo.e.r && linhas.length < LIMITE_DE_LINHAS;
+        linha++
+    ) {
         const valores: Record<string, string> = {};
 
         cabecalhos.forEach((nome, indice) => {
@@ -67,7 +111,10 @@ export function lerPlanilha(
                 Object.fromEntries(
                     campos.map((campo) => [
                         campo.nome,
-                        valores[campo.nome] ?? '',
+                        (valores[campo.nome] ?? '').slice(
+                            0,
+                            TAMANHO_MAXIMO_DO_VALOR,
+                        ),
                     ]),
                 ),
             );
@@ -75,6 +122,13 @@ export function lerPlanilha(
     }
 
     return linhas;
+}
+
+/** Nome do arquivo da planilha modelo: troca o que não é letra, número, espaço, traço, sublinhado ou ponto por "-". */
+export function nomeDaPlanilhaModelo(titulo: string): string {
+    const seguro = titulo.replace(/[^\p{L}\p{N} _.-]/gu, '-').trim();
+
+    return seguro ? `modelo-${seguro}.xlsx` : 'modelo.xlsx';
 }
 
 /** Planilha vazia com os nomes dos campos como cabeçalho, para o usuário preencher. */

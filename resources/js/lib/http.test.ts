@@ -63,6 +63,21 @@ describe('nomeDoArquivoDoCabecalho', () => {
     });
 });
 
+describe('enviarParaArquivo', () => {
+    it('repassa o sinal de cancelamento ao fetch', async () => {
+        const fetchFalso = fingirFetch(
+            new Response('png', {
+                headers: { 'Content-Type': 'image/png' },
+            }),
+        );
+        const controle = new AbortController();
+
+        await enviarParaArquivo('/gerar', {}, 'x.png', controle.signal);
+
+        expect(fetchFalso.mock.calls[0][1].signal).toBe(controle.signal);
+    });
+});
+
 describe('enviarJson', () => {
     it('envia o corpo como JSON com o token CSRF e devolve o JSON da resposta', async () => {
         const fetchFalso = fingirFetch(

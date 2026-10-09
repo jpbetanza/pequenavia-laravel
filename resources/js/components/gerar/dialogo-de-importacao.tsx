@@ -10,6 +10,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import { TAMANHO_MAXIMO_DO_ARQUIVO } from '@/lib/planilha';
 import { cn } from '@/lib/utils';
 
 type Props = {
@@ -39,14 +40,22 @@ export default function DialogoDeImportacao({
         }
 
         if (
-            EXTENSOES_ACEITAS.some((extensao) =>
+            !EXTENSOES_ACEITAS.some((extensao) =>
                 arquivo.name.toLowerCase().endsWith(extensao),
             )
         ) {
-            aoEscolherArquivo(arquivo);
-        } else {
             toast.error('Formato não aceito. Envie um arquivo .xlsx ou .xls.');
+
+            return;
         }
+
+        if (arquivo.size > TAMANHO_MAXIMO_DO_ARQUIVO) {
+            toast.error('O arquivo é grande demais (máximo de 5 MB).');
+
+            return;
+        }
+
+        aoEscolherArquivo(arquivo);
     };
 
     return (

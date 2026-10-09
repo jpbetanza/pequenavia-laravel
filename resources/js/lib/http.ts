@@ -164,17 +164,19 @@ export async function enviarJson<T>(
     return resposta.status === 204 ? null : ((await resposta.json()) as T);
 }
 
-/** Envia JSON ao servidor e devolve a resposta como arquivo (o PNG do certificado). */
+/** Envia JSON ao servidor e devolve a resposta como arquivo (o PNG do certificado). Aceita `signal` para cancelar. */
 export async function enviarParaArquivo(
     url: string,
     corpo: unknown,
     nomePadrao: string,
+    signal?: AbortSignal,
 ): Promise<ArquivoBaixado> {
     const resposta = await fetch(url, {
         method: 'POST',
         credentials: 'same-origin',
         headers: cabecalhos({ 'Content-Type': 'application/json' }),
         body: JSON.stringify(corpo),
+        signal,
     });
 
     if (!resposta.ok) {

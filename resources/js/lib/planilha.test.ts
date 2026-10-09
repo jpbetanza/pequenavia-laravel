@@ -1,6 +1,12 @@
 import * as XLSX from 'xlsx';
 import { describe, expect, it } from 'vite-plus/test';
-import { criarPlanilhaModelo, lerPlanilha } from './planilha';
+import {
+    cabecalhosFaltando,
+    criarPlanilhaModelo,
+    LIMITE_DE_LINHAS,
+    lerPlanilha,
+    nomeDaPlanilhaModelo,
+} from './planilha';
 
 const campos = [{ nome: 'Nome' }, { nome: 'Data' }];
 
@@ -109,6 +115,33 @@ describe('lerPlanilha', () => {
         ]);
     });
 
+    it('para em 500 linhas de dados e ignora o resto', () => {
+        const linhas: unknown[][] = [['Nome', 'Data']];
+
+        for (let i = 1; i <= LIMITE_DE_LINHAS + 10; i++) {
+            linhas.push([`Pessoa ${i}`, 'x']);
+        }
+
+        const importadas = lerPlanilha(planilha(linhas), campos);
+
+        expect(LIMITE_DE_LINHAS).toBe(500);
+        expect(importadas).toHaveLength(LIMITE_DE_LINHAS);
+        expect(importadas[499].Nome).toBe('Pessoa 500');
+    });
+
+    it('corta valores com mais de 500 caracteres', () => {
+        const longo = 'a'.repeat(600);
+        const conteudo = planilha([
+            ['Nome', 'Data'],
+            [longo, 'x'],
+        ]);
+
+        const [linha] = lerPlanilha(conteudo, campos);
+
+        expect(linha.Nome).toHaveLength(500);
+        expect(linha.Nome).toBe('a'.repeat(500));
+    });
+
     it('devolve lista vazia quando há só o cabeçalho', () => {
         expect(lerPlanilha(planilha([['Nome', 'Data']]), campos)).toEqual([]);
     });
@@ -122,5 +155,50 @@ describe('criarPlanilhaModelo', () => {
         expect(
             XLSX.utils.sheet_to_json(livro.Sheets.Dados, { header: 1 }),
         ).toEqual([['Nome', 'Data']]);
+    });
+});
+
+describe('cabecalhosFaltando', () => {
+    it('lista os campos sem coluna, comparando o cabeçalho sem espaços nas pontas', () => {
+        const conteudo = planilha([
+            [' Nome ', 'Outra'],
+            ['Maria', 'x'],
+        ]);
+
+        expect(cabecalhosFaltando(conteudo, campos)).toEqual(['Data']);
+    });
+
+    it('devolve lista vazia quando todas as colunas existem', () => {
+        const conteudo = planilha([['Data', 'Nome']]);
+
+        expect(cabecalhosFaltando(conteudo, campos)).toEqual([]);
+    });
+
+    it('lista todos os campos quando a planilha está vazia', () => {
+        expect(cabecalhosFaltando(planilha([]), campos)).toEqual([
+            'Nome',
+            'Data',
+        ]);
+    });
+});
+
+describe('nomeDaPlanilhaModelo', () => {
+    it('mantém letras, números, espaços, traços, sublinhados e pontos', () => {
+        expect(nomeDaPlanilhaModelo('Batismo_2026 v1.2-final')).toBe(
+            'modelo-Batismo_2026 v1.2-final.xlsx',
+        );
+        expect(nomeDaPlanilhaModelo('Certificado de Participação')).toBe(
+            'modelo-Certificado de Participação.xlsx',
+        );
+    });
+
+    it('troca os demais caracteres por traço e tira espaços nas pontas', () => {
+        expect(nomeDaPlanilhaModelo('  a/b\\c:d?e  ')).toBe(
+            'modelo-a-b-c-d-e.xlsx',
+        );
+    });
+
+    it('usa um nome padrão quando nada sobra do título', () => {
+        expect(nomeDaPlanilhaModelo('   ')).toBe('modelo.xlsx');
     });
 });

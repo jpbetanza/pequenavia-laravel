@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { store } from '@/actions/App/Http/Controllers/GeracaoCertificadoController';
 import PreviewDoModelo from '@/components/campos/preview-do-modelo';
+import ConfirmacaoDeSubstituicao from '@/components/gerar/confirmacao-de-substituicao';
 import DialogoDeImportacao from '@/components/gerar/dialogo-de-importacao';
 import PainelDePreview from '@/components/gerar/painel-de-preview';
 import TabelaDeGeracao from '@/components/gerar/tabela-de-geracao';
@@ -13,6 +14,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { useFontesDoCatalogo } from '@/hooks/use-fontes-do-catalogo';
 import {
     editarCelula,
+    ehCancelamento,
     gerarCertificado,
     marcarErro,
     marcarGerando,
@@ -20,11 +22,18 @@ import {
     novaLinha,
     removerLinha,
     substituirLinhas,
+    tabelaTemDados,
     urlsDasLinhas,
     type LinhaDeGeracao,
 } from '@/lib/geracao';
 import { mensagemDoErro } from '@/lib/http';
-import { criarPlanilhaModelo, lerPlanilha } from '@/lib/planilha';
+import {
+    cabecalhosFaltando,
+    criarPlanilhaModelo,
+    LIMITE_DE_LINHAS,
+    lerPlanilha,
+    nomeDaPlanilhaModelo,
+} from '@/lib/planilha';
 import { campos as rotaDeCampos } from '@/routes/meus-certificados';
 import type {
     Campo,
@@ -71,11 +80,17 @@ export default function GerarCertificados({
     const [previewDoModelo, setPreviewDoModelo] = useState(false);
     const [importando, setImportando] = useState(false);
     const [lendoPlanilha, setLendoPlanilha] = useState(false);
+    // Linhas importadas esperando a confirmação de que podem substituir a tabela atual.
+    const [substituicaoPendente, setSubstituicaoPendente] = useState<
+        Record<string, string>[] | null
+    >(null);
 
     // Linhas em geração: impede o duplo clique de disparar a mesma requisição duas vezes.
     const geracoesEmAndamento = useRef(new Set<number>());
     const montado = useRef(false);
     const linhasAtuais = useRef(linhas);
+    // Um controlador por montagem: ao sair da página, cancela as gerações em andamento.
+    const controle = useRef<AbortController | null>(null);
 
     const algumGerando = linhas.some((linha) => linha.status === 'gerando');
 
@@ -86,8 +101,12 @@ export default function GerarCertificados({
     useEffect(() => {
         montado.current = true;
 
+        const controlador = new AbortController();
+        controle.current = controlador;
+
         return () => {
             montado.current = false;
+            controlador.abort();
             urlsDasLinhas(linhasAtuais.current).forEach((url) =>
                 URL.revokeObjectURL(url),
             );
@@ -116,6 +135,7 @@ export default function GerarCertificados({
                 linha.valores,
                 {
                     nomePadrao: `${modelo.title}.png`,
+                    signal: controle.current?.signal,
                 },
             );
 
@@ -135,13 +155,16 @@ export default function GerarCertificados({
             );
             baixarArquivo(url, arquivo.nome);
         } catch (erro) {
-            const mensagem = mensagemDoErro(erro);
-
-            if (montado.current) {
-                setLinhas((atuais) => marcarErro(atuais, id, mensagem));
+            // Cancelado (a página saiu): não mostra nada. Falhas ficam só na linha, sem toast duplicado.
+            if (ehCancelamento(erro)) {
+                return;
             }
 
-            toast.error(mensagem);
+            if (montado.current) {
+                setLinhas((atuais) =>
+                    marcarErro(atuais, id, mensagemDoErro(erro)),
+                );
+            }
         } finally {
             geracoesEmAndamento.current.delete(id);
         }
@@ -182,6 +205,23 @@ export default function GerarCertificados({
         setLinhas([novaLinha(proximoId.current++, campos)]);
     };
 
+    const aplicarImportacao = (importadas: Record<string, string>[]) => {
+        urlsDasLinhas(linhas).forEach((url) => URL.revokeObjectURL(url));
+        const primeiro = proximoId.current;
+        proximoId.current += importadas.length;
+        setLinhas(substituirLinhas(importadas, primeiro));
+        setPreviewDaLinha(null);
+        toast.success(
+            `${importadas.length} ${importadas.length === 1 ? 'linha importada' : 'linhas importadas'}.`,
+        );
+
+        if (importadas.length === LIMITE_DE_LINHAS) {
+            toast.warning(
+                `Foram importadas apenas as primeiras ${LIMITE_DE_LINHAS} linhas.`,
+            );
+        }
+    };
+
     const importar = async (arquivo: File) => {
         if (algumGerando) {
             return;
@@ -190,7 +230,19 @@ export default function GerarCertificados({
         setLendoPlanilha(true);
 
         try {
-            const importadas = lerPlanilha(await arquivo.arrayBuffer(), campos);
+            // Lê o arquivo antes de qualquer confirmação, para validar o conteúdo primeiro.
+            const conteudo = await arquivo.arrayBuffer();
+            const faltando = cabecalhosFaltando(conteudo, campos);
+
+            if (faltando.length > 0) {
+                toast.error(
+                    `A planilha não tem as colunas: ${faltando.join(', ')}.`,
+                );
+
+                return;
+            }
+
+            const importadas = lerPlanilha(conteudo, campos);
 
             if (importadas.length === 0) {
                 toast.error('A planilha não tem linhas de dados.');
@@ -198,15 +250,15 @@ export default function GerarCertificados({
                 return;
             }
 
-            urlsDasLinhas(linhas).forEach((url) => URL.revokeObjectURL(url));
-            const primeiro = proximoId.current;
-            proximoId.current += importadas.length;
-            setLinhas(substituirLinhas(importadas, primeiro));
-            setPreviewDaLinha(null);
+            if (tabelaTemDados(linhas)) {
+                setImportando(false);
+                setSubstituicaoPendente(importadas);
+
+                return;
+            }
+
+            aplicarImportacao(importadas);
             setImportando(false);
-            toast.success(
-                `${importadas.length} ${importadas.length === 1 ? 'linha importada' : 'linhas importadas'}.`,
-            );
         } catch {
             toast.error(
                 'Não foi possível ler a planilha. Confira se é um arquivo .xlsx ou .xls válido.',
@@ -214,6 +266,14 @@ export default function GerarCertificados({
         } finally {
             setLendoPlanilha(false);
         }
+    };
+
+    const confirmarSubstituicao = () => {
+        if (substituicaoPendente) {
+            aplicarImportacao(substituicaoPendente);
+        }
+
+        setSubstituicaoPendente(null);
     };
 
     const baixarPlanilhaModelo = () => {
@@ -224,7 +284,7 @@ export default function GerarCertificados({
             }),
         );
 
-        baixarArquivo(url, `modelo-${modelo.title}.xlsx`);
+        baixarArquivo(url, nomeDaPlanilhaModelo(modelo.title));
         setTimeout(() => URL.revokeObjectURL(url), 1000);
     };
 
@@ -307,6 +367,13 @@ export default function GerarCertificados({
                 aoFechar={() => setImportando(false)}
                 aoEscolherArquivo={(arquivo) => void importar(arquivo)}
                 aoBaixarModelo={baixarPlanilhaModelo}
+            />
+
+            <ConfirmacaoDeSubstituicao
+                aberto={substituicaoPendente !== null}
+                quantidadeDeLinhas={substituicaoPendente?.length ?? 0}
+                aoConfirmar={confirmarSubstituicao}
+                aoCancelar={() => setSubstituicaoPendente(null)}
             />
 
             <PainelDePreview

@@ -11,6 +11,7 @@ import {
     TableRow,
 } from '@/components/ui/table';
 import type { LinhaDeGeracao } from '@/lib/geracao';
+import { TAMANHO_MAXIMO_DO_VALOR } from '@/lib/planilha';
 import type { Campo } from '@/types/certificados';
 
 type Props = {
@@ -62,12 +63,20 @@ export default function TabelaDeGeracao({
                                     <Button
                                         size="sm"
                                         variant="destructive"
+                                        aria-describedby={
+                                            linha.erro
+                                                ? `erro-da-linha-${linha.id}`
+                                                : undefined
+                                        }
                                         onClick={() => aoGerar(linha.id)}
                                     >
                                         Tentar novamente
                                     </Button>
                                     {linha.erro && (
-                                        <p className="mt-1 max-w-48 text-xs whitespace-normal text-destructive">
+                                        <p
+                                            id={`erro-da-linha-${linha.id}`}
+                                            className="mt-1 max-w-48 text-xs whitespace-normal text-destructive"
+                                        >
                                             {linha.erro}
                                         </p>
                                     )}
@@ -93,6 +102,7 @@ export default function TabelaDeGeracao({
                                     placeholder={
                                         campo.label?.trim() || campo.nome
                                     }
+                                    maxLength={TAMANHO_MAXIMO_DO_VALOR}
                                     value={linha.valores[campo.nome] ?? ''}
                                     disabled={linha.status === 'gerando'}
                                     onChange={(evento) =>

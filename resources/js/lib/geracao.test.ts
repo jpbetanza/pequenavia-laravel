@@ -1,6 +1,8 @@
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test';
 import {
     editarCelula,
+    ehCancelamento,
+    esperarComSinal,
     gerarCertificado,
     marcarErro,
     marcarGerando,
@@ -8,6 +10,7 @@ import {
     novaLinha,
     removerLinha,
     substituirLinhas,
+    tabelaTemDados,
     urlsDasLinhas,
     valoresVazios,
 } from './geracao';
@@ -96,6 +99,23 @@ describe('linhas de geração', () => {
         });
     });
 
+    it('considera que a tabela tem dados quando há valor preenchido ou linha gerada/com erro', () => {
+        expect(tabelaTemDados([novaLinha(1, campos)])).toBe(false);
+        expect(
+            tabelaTemDados(
+                editarCelula([novaLinha(1, campos)], 1, 'Nome', ' '),
+            ),
+        ).toBe(false);
+        expect(
+            tabelaTemDados(
+                editarCelula([novaLinha(1, campos)], 1, 'Nome', 'x'),
+            ),
+        ).toBe(true);
+        expect(tabelaTemDados(marcarErro([novaLinha(1, campos)], 1, 'x'))).toBe(
+            true,
+        );
+    });
+
     it('lista as URLs dos arquivos gerados, para revogá-las', () => {
         const linhas = [
             marcarPronto([novaLinha(1, campos)], 1, arquivo)[0],
@@ -168,7 +188,7 @@ describe('gerarCertificado', () => {
             { nomePadrao: 'x.png', esperar },
         );
 
-        expect(esperar).toHaveBeenCalledWith(7000);
+        expect(esperar.mock.calls[0][0]).toBe(7000);
         expect(falso).toHaveBeenCalledTimes(2);
         expect(resultado.nome).toBe('a.png');
     });
@@ -186,5 +206,89 @@ describe('gerarCertificado', () => {
         ).rejects.toMatchObject({ status: 429 });
         expect(falso).toHaveBeenCalledTimes(3);
         expect(esperar).toHaveBeenCalledTimes(2);
+    });
+});
+
+describe('cancelamento da geração', () => {
+    function fingir(...respostas: Response[]) {
+        const falso = vi.fn();
+        respostas.forEach((resposta) => falso.mockResolvedValueOnce(resposta));
+        vi.stubGlobal('fetch', falso);
+        vi.stubGlobal('document', { cookie: '' });
+
+        return falso;
+    }
+
+    const limite = (retryAfter = '7') =>
+        new Response(JSON.stringify({ message: 'Too Many Attempts.' }), {
+            status: 429,
+            headers: {
+                'Retry-After': retryAfter,
+                'Content-Type': 'application/json',
+            },
+        });
+
+    it('reconhece só o AbortError como cancelamento', () => {
+        expect(ehCancelamento(new DOMException('x', 'AbortError'))).toBe(true);
+        expect(ehCancelamento(new Error('x'))).toBe(false);
+        expect(ehCancelamento(undefined)).toBe(false);
+    });
+
+    it('cancela a espera do Retry-After na hora, limpa o temporizador e não tenta de novo', async () => {
+        vi.useFakeTimers();
+
+        try {
+            const controle = new AbortController();
+            const promessa = esperarComSinal(7000, controle.signal);
+            expect(vi.getTimerCount()).toBe(1);
+
+            controle.abort();
+            const erro = await promessa.catch((e: unknown) => e);
+
+            expect(ehCancelamento(erro)).toBe(true);
+            expect(vi.getTimerCount()).toBe(0);
+        } finally {
+            vi.useRealTimers();
+        }
+    });
+
+    it('rejeita a espera logo se o sinal já estiver abortado', async () => {
+        const controle = new AbortController();
+        controle.abort();
+
+        const erro = await esperarComSinal(7000, controle.signal).catch(
+            (e: unknown) => e,
+        );
+
+        expect(ehCancelamento(erro)).toBe(true);
+    });
+
+    it('aborta durante a espera do 429 e não faz a segunda requisição', async () => {
+        const falso = fingir(limite(), new Response('png'));
+        const controle = new AbortController();
+
+        const promessa = gerarCertificado(
+            '/gerar',
+            {},
+            { nomePadrao: 'x.png', signal: controle.signal },
+        );
+
+        await new Promise((resolver) => setTimeout(resolver, 10));
+        controle.abort();
+
+        const erro = await promessa.catch((e: unknown) => e);
+
+        expect(ehCancelamento(erro)).toBe(true);
+        expect(falso).toHaveBeenCalledTimes(1);
+        expect(falso.mock.calls[0][1].signal).toBe(controle.signal);
+    });
+
+    it('limita a espera do Retry-After a 60 segundos', async () => {
+        fingir(limite('3600'), new Response(new Blob(['png'])));
+        const esperar = vi.fn().mockResolvedValue(undefined);
+
+        await gerarCertificado('/gerar', {}, { nomePadrao: 'x.png', esperar });
+
+        expect(esperar.mock.calls[0][0]).toBe(60_000);
     });
 });

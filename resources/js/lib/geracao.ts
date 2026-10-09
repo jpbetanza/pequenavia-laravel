@@ -114,21 +114,70 @@ export function substituirLinhas(
     );
 }
 
+/** Há algo na tabela que a importação substituiria: um valor preenchido ou uma linha já gerada/com erro. */
+export function tabelaTemDados(linhas: LinhaDeGeracao[]): boolean {
+    return linhas.some(
+        (linha) =>
+            linha.status !== 'ocioso' ||
+            Object.values(linha.valores).some((valor) => valor.trim() !== ''),
+    );
+}
+
 export function urlsDasLinhas(linhas: LinhaDeGeracao[]): string[] {
     return linhas.flatMap((linha) =>
         linha.arquivo ? [linha.arquivo.url] : [],
     );
 }
 
+/** Teto para a espera do Retry-After: um servidor que mande 1 hora não deixa a tela parada por tanto tempo. */
+export const ESPERA_MAXIMA_SEGUNDOS = 60;
+
 export type OpcoesDeGeracao = {
     nomePadrao: string;
     tentativas?: number;
-    esperar?: (milissegundos: number) => Promise<void>;
+    signal?: AbortSignal;
+    esperar?: (milissegundos: number, signal?: AbortSignal) => Promise<void>;
 };
+
+/** Erro que o `fetch` (ou a espera) lança quando o sinal é abortado. */
+export function erroDeCancelamento(): DOMException {
+    return new DOMException('A geração foi cancelada.', 'AbortError');
+}
+
+/** Verdadeiro quando o erro veio de um cancelamento (AbortController), e não de falha real. */
+export function ehCancelamento(erro: unknown): boolean {
+    return erro instanceof DOMException && erro.name === 'AbortError';
+}
+
+/** Espera `milissegundos`, mas rejeita na hora se o sinal for abortado (e limpa o temporizador). */
+export function esperarComSinal(
+    milissegundos: number,
+    signal?: AbortSignal,
+): Promise<void> {
+    return new Promise<void>((resolver, rejeitar) => {
+        if (signal?.aborted) {
+            rejeitar(erroDeCancelamento());
+
+            return;
+        }
+
+        const cancelar = () => {
+            clearTimeout(temporizador);
+            rejeitar(erroDeCancelamento());
+        };
+        const temporizador = setTimeout(() => {
+            signal?.removeEventListener('abort', cancelar);
+            resolver();
+        }, milissegundos);
+
+        signal?.addEventListener('abort', cancelar, { once: true });
+    });
+}
 
 /**
  * Pede ao servidor o PNG de uma linha. Se o limite por minuto estourar (429), espera o tempo que o
- * servidor mandar e tenta de novo, até `tentativas` vezes (padrão 4).
+ * servidor mandar (no máximo 60 s) e tenta de novo, até `tentativas` vezes (padrão 4). Com `signal`
+ * abortado, a requisição ou a espera são canceladas com AbortError.
  */
 export async function gerarCertificado(
     url: string,
@@ -136,14 +185,16 @@ export async function gerarCertificado(
     opcoes: OpcoesDeGeracao,
 ): Promise<ArquivoBaixado> {
     const maximo = opcoes.tentativas ?? 4;
-    const esperar =
-        opcoes.esperar ??
-        ((ms: number) =>
-            new Promise<void>((resolver) => setTimeout(resolver, ms)));
+    const esperar = opcoes.esperar ?? esperarComSinal;
 
     for (let tentativa = 1; ; tentativa++) {
         try {
-            return await enviarParaArquivo(url, { valores }, opcoes.nomePadrao);
+            return await enviarParaArquivo(
+                url,
+                { valores },
+                opcoes.nomePadrao,
+                opcoes.signal,
+            );
         } catch (erro) {
             if (
                 !(erro instanceof ErroHttp) ||
@@ -153,7 +204,12 @@ export async function gerarCertificado(
                 throw erro;
             }
 
-            await esperar((erro.esperarSegundos ?? 5) * 1000);
+            const segundos = Math.min(
+                erro.esperarSegundos ?? 5,
+                ESPERA_MAXIMA_SEGUNDOS,
+            );
+
+            await esperar(segundos * 1000, opcoes.signal);
         }
     }
 }
