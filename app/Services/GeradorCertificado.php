@@ -44,6 +44,7 @@ class GeradorCertificado
      *
      * @throws ImagemInvalidaException
      * @throws TextoGrandeDemaisException
+     * @throws ImagickException falhas internas do Imagick (ex.: estouro do limite de memória) sobem sem tratamento e viram 500 genérico no chamador
      */
     public function gerar(string $imagemDeFundo, iterable $campos, array $valores): string
     {
@@ -73,6 +74,11 @@ class GeradorCertificado
      */
     private function abrir(string $bytes): Imagick
     {
+        // Antes de qualquer leitura: o ImageMagick executaria o coder (SVG, MSL, MVG...) sobre os bytes.
+        if (! $this->temAssinaturaPermitida($bytes)) {
+            throw new ImagemInvalidaException('Não foi possível ler a imagem do modelo.');
+        }
+
         try {
             $imagem = new Imagick;
             $imagem->readImageBlob($bytes);
@@ -93,6 +99,13 @@ class GeradorCertificado
         }
 
         return $imagem;
+    }
+
+    private function temAssinaturaPermitida(string $bytes): bool
+    {
+        return str_starts_with($bytes, "\x89PNG\r\n\x1a\n")
+            || str_starts_with($bytes, "\xFF\xD8\xFF")
+            || (str_starts_with($bytes, 'RIFF') && substr($bytes, 8, 4) === 'WEBP');
     }
 
     /**

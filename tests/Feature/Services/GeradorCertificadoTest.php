@@ -167,3 +167,13 @@ it('aceita fundo JPEG e WEBP e devolve PNG com as mesmas dimensões', function (
         ->and($imagem->getImageWidth())->toBe(640)
         ->and($imagem->getImageHeight())->toBe(480);
 })->with(['JPEG' => ['jpeg'], 'WEBP' => ['webp']]);
+
+it('recusa fundo cujos bytes não têm assinatura de PNG, JPEG nem WEBP', function (string $bytes) {
+    (new GeradorCertificado)->gerar($bytes, [campoDeTeste()], ['Nome' => 'Maria']);
+})->with([
+    'SVG' => ['<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="red"/></svg>'],
+    'MSL' => ['<?xml version="1.0"?><image><read filename="x"/></image>'],
+    'texto qualquer' => ['isto não é uma imagem'],
+    'string vazia' => [''],
+    'RIFF que não é WEBP' => ["RIFF\x00\x00\x00\x00WAVE"],
+])->throws(ImagemInvalidaException::class, 'Não foi possível ler a imagem do modelo.');
