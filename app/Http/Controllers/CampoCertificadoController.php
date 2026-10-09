@@ -6,8 +6,10 @@ use App\Http\Requests\SalvarCampoCertificadoRequest;
 use App\Models\CampoCertificado;
 use App\Models\ModeloCertificado;
 use App\Services\CatalogoFontes;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response as HttpResponse;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -37,30 +39,30 @@ class CampoCertificadoController extends Controller
     /**
      * Cria um campo. O nome, se não vier, é o primeiro "Campo N" livre.
      */
-    public function store(SalvarCampoCertificadoRequest $request, ModeloCertificado $modelo): RedirectResponse
+    public function store(SalvarCampoCertificadoRequest $request, ModeloCertificado $modelo): RedirectResponse|JsonResponse
     {
-        $modelo->campos()->create([
+        $campo = $modelo->campos()->create([
             ...$request->validated(),
             'nome' => $request->validated('nome') ?? $this->proximoNome($modelo),
-        ]);
+        ])->refresh();
 
-        return back();
+        return $request->expectsJson() ? response()->json($campo, 201) : back();
     }
 
-    public function update(SalvarCampoCertificadoRequest $request, ModeloCertificado $modelo, CampoCertificado $campo): RedirectResponse
+    public function update(SalvarCampoCertificadoRequest $request, ModeloCertificado $modelo, CampoCertificado $campo): RedirectResponse|JsonResponse
     {
         $campo->update($request->validated());
 
-        return back();
+        return $request->expectsJson() ? response()->json($campo) : back();
     }
 
-    public function destroy(ModeloCertificado $modelo, CampoCertificado $campo): RedirectResponse
+    public function destroy(Request $request, ModeloCertificado $modelo, CampoCertificado $campo): RedirectResponse|HttpResponse
     {
         Gate::authorize('editarCampos', $modelo);
 
         $campo->delete();
 
-        return back();
+        return $request->expectsJson() ? response()->noContent() : back();
     }
 
     private function proximoNome(ModeloCertificado $modelo): string

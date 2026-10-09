@@ -211,3 +211,53 @@ it('informa os pesos disponíveis de cada fonte, para o editor carregar só o qu
             ->where('pesos_das_fontes.lato', [100, 300, 400, 700, 900])
             ->where('pesos_das_fontes.roboto', [100, 200, 300, 400, 500, 600, 700, 800, 900]));
 });
+
+it('cria o campo e devolve o JSON completo quando a requisição espera JSON', function () {
+    $modelo = ModeloCertificado::factory()->create();
+
+    $this->actingAs($modelo->user)
+        ->postJson(route('campos.store', $modelo), ['fonte_familia' => 'Cinzel', 'x' => 50, 'y' => 80])
+        ->assertCreated()
+        ->assertJsonPath('nome', 'Campo 1')
+        ->assertJsonPath('fonte_familia', 'Cinzel')
+        ->assertJsonPath('x', 50)
+        ->assertJsonPath('peso_fonte', 600)
+        ->assertJsonStructure([
+            'id', 'modelo_id', 'nome', 'label', 'x', 'y', 'cor', 'tamanho_fonte',
+            'fonte_familia', 'peso_fonte', 'espacamento_letras', 'centralizado',
+        ]);
+
+    expect($modelo->campos()->count())->toBe(1);
+});
+
+it('atualiza o campo e devolve o JSON quando a requisição espera JSON', function () {
+    $modelo = ModeloCertificado::factory()->create();
+    $campo = CampoCertificado::factory()->for($modelo, 'modelo')->create(['x' => 10]);
+
+    $this->actingAs($modelo->user)
+        ->patchJson(route('campos.update', [$modelo, $campo]), ['x' => 320])
+        ->assertOk()
+        ->assertJsonPath('id', $campo->id)
+        ->assertJsonPath('x', 320);
+});
+
+it('recusa o valor inválido com 422 em JSON', function () {
+    $modelo = ModeloCertificado::factory()->create();
+    $campo = CampoCertificado::factory()->for($modelo, 'modelo')->create();
+
+    $this->actingAs($modelo->user)
+        ->patchJson(route('campos.update', [$modelo, $campo]), ['x' => -1])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['x' => 'A posição não pode ser negativa.']);
+});
+
+it('exclui o campo e responde 204 quando a requisição espera JSON', function () {
+    $modelo = ModeloCertificado::factory()->create();
+    $campo = CampoCertificado::factory()->for($modelo, 'modelo')->create();
+
+    $this->actingAs($modelo->user)
+        ->deleteJson(route('campos.destroy', [$modelo, $campo]))
+        ->assertNoContent();
+
+    $this->assertModelMissing($campo);
+});

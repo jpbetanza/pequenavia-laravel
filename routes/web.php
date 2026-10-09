@@ -22,7 +22,7 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::inertia('dashboard', 'dashboard')->name('dashboard');
+    Route::get('dashboard', fn () => to_route('meus-certificados.index'))->name('dashboard');
 
     Route::get('historico', [HistoricoController::class, 'index'])->name('historico.index');
 
@@ -31,6 +31,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('modelos/{modelo}', [ModeloCertificadoController::class, 'update'])->name('modelos.update');
     Route::delete('modelos/{modelo}', [ModeloCertificadoController::class, 'destroy'])->name('modelos.destroy');
     Route::get('meus-certificados/{modelo}/campos', [CampoCertificadoController::class, 'edit'])->name('meus-certificados.campos');
+    Route::get('meus-certificados/{modelo}/gerar', [GeracaoCertificadoController::class, 'create'])->name('meus-certificados.gerar');
 
     Route::scopeBindings()->group(function () {
         Route::post('modelos/{modelo}/campos', [CampoCertificadoController::class, 'store'])->name('campos.store');

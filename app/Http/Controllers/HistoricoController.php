@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\GeracaoCertificado;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -13,11 +14,20 @@ class HistoricoController extends Controller
      */
     public function index(Request $request): Response
     {
-        return Inertia::render('historico/index', [
-            'geracoes' => $request->user()->geracoes()
-                ->latest('created_at')
-                ->limit(50)
-                ->get(['id', 'modelo_id', 'modelo_title', 'campos_valores', 'created_at']),
-        ]);
+        $geracoes = $request->user()->geracoes()
+            ->with('modelo.campos:id,modelo_id,nome,created_at')
+            ->latest('created_at')
+            ->limit(50)
+            ->get()
+            ->map(fn (GeracaoCertificado $geracao) => [
+                'id' => $geracao->id,
+                'modelo_id' => $geracao->modelo_id,
+                'modelo_title' => $geracao->modelo_title,
+                'campos_valores' => $geracao->campos_valores,
+                'ordem_campos' => $geracao->modelo?->campos->pluck('nome')->values()->all() ?? [],
+                'created_at' => $geracao->created_at,
+            ]);
+
+        return Inertia::render('historico/index', ['geracoes' => $geracoes]);
     }
 }

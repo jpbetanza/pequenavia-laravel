@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\CampoCertificado;
 use App\Models\GeracaoCertificado;
 use App\Models\ModeloCertificado;
 use App\Models\User;
@@ -29,6 +30,10 @@ it('mostra as 50 gerações mais recentes do próprio usuário, da mais nova par
 it('entrega de cada geração o modelo, os valores e a data', function () {
     $user = User::factory()->create();
     $modelo = ModeloCertificado::factory()->create(['title' => 'Crisma 2024']);
+    CampoCertificado::factory()->for($modelo, 'modelo')->count(2)->sequence(
+        ['nome' => 'Nome', 'created_at' => now()->subMinute()],
+        ['nome' => 'Data', 'created_at' => now()],
+    )->create();
     $geracao = GeracaoCertificado::factory()->for($user)->for($modelo, 'modelo')->create([
         'modelo_title' => 'Crisma 2024',
         'campos_valores' => ['Nome' => 'Maria'],
@@ -41,5 +46,18 @@ it('entrega de cada geração o modelo, os valores e a data', function () {
                 ->where('modelo_id', $modelo->id)
                 ->where('modelo_title', 'Crisma 2024')
                 ->where('campos_valores', ['Nome' => 'Maria'])
+                ->where('ordem_campos', ['Nome', 'Data'])
                 ->has('created_at')));
+});
+
+it('devolve a ordem dos campos vazia quando o modelo da geração foi excluído', function () {
+    $user = User::factory()->create();
+    $modelo = ModeloCertificado::factory()->create();
+    GeracaoCertificado::factory()->for($user)->for($modelo, 'modelo')->create(['campos_valores' => ['Nome' => 'Maria']]);
+    $modelo->delete();
+
+    $this->actingAs($user)->get(route('historico.index'))
+        ->assertInertia(fn ($page) => $page
+            ->where('geracoes.0.modelo_id', null)
+            ->where('geracoes.0.ordem_campos', []));
 });
