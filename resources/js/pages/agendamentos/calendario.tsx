@@ -1,18 +1,16 @@
 import { Head, router } from '@inertiajs/react';
 import { ChevronLeft, ChevronRight, Plus, Printer } from 'lucide-react';
 import { useState } from 'react';
+import AgendaCelular from '@/components/agenda/agenda-celular';
 import FiltroDeEspacos from '@/components/agenda/filtro-de-espacos';
 import GradeDaSemana from '@/components/agenda/grade-da-semana';
 import MiniCalendario from '@/components/agenda/mini-calendario';
+import OcupacaoDoDia from '@/components/agenda/ocupacao-do-dia';
+import PainelDeReserva, {
+    type AlvoDoPainel,
+} from '@/components/agenda/painel-de-reserva';
 import CabecalhoDaPagina from '@/components/cabecalho-da-pagina';
 import { Button } from '@/components/ui/button';
-import {
-    Sheet,
-    SheetContent,
-    SheetDescription,
-    SheetHeader,
-    SheetTitle,
-} from '@/components/ui/sheet';
 import {
     CHAVE_DO_FILTRO,
     lerFiltroSalvo,
@@ -34,12 +32,6 @@ import type {
     ReservaDoCalendario,
 } from '@/types/agendamentos';
 
-/** Painel de reserva: `null` fechado. Na 7c entra o formulário no lugar do texto provisório. */
-type PainelAberto =
-    | { modo: 'nova'; data: string; hora?: string; espacoId?: string }
-    | { modo: 'editar'; reserva: ReservaDoCalendario }
-    | null;
-
 const PASSO_DA_NAVEGACAO = { semana: 7, dia: 1 } as const;
 
 export default function Calendario({
@@ -48,6 +40,9 @@ export default function Calendario({
     data,
     reservas,
     espacos,
+    equipamentos,
+    grupos,
+    solicitacoes,
     agora,
 }: PropsDoCalendario) {
     const hoje = hojeDe(agora);
@@ -57,13 +52,16 @@ export default function Calendario({
         reconciliarSelecao(lerFiltroDoNavegador(), idsDosEspacos),
     );
     const [mesEscolhido, setMesEscolhido] = useState<string | null>(null);
-    const [painel, setPainel] = useState<PainelAberto>(null);
+    const [painel, setPainel] = useState<AlvoDoPainel | null>(null);
 
     const selecionadosSet = new Set(selecionados);
     const reservasVisiveis = reservas.filter((reserva) =>
         selecionadosSet.has(reserva.espaco_id),
     );
-    const dias = visao === 'dia' ? [data] : diasDaSemana(semana.inicio);
+    const espacosVisiveis = espacos.filter((espaco) =>
+        selecionadosSet.has(espaco.id),
+    );
+    const dias = diasDaSemana(semana.inicio);
     const titulo =
         visao === 'dia'
             ? dataPorExtenso(data)
@@ -91,6 +89,12 @@ export default function Calendario({
 
     function abrirEdicao(reserva: ReservaDoCalendario) {
         setPainel({ modo: 'editar', reserva });
+    }
+
+    function aoSalvarReserva() {
+        setPainel(null);
+        // Recarrega com a mesma URL, então `data` e `visao` continuam os mesmos.
+        router.reload();
     }
 
     const passo = PASSO_DA_NAVEGACAO[visao];
@@ -212,45 +216,58 @@ export default function Calendario({
                             </div>
                         </div>
 
-                        {visao === 'dia' && (
-                            <p className="border-b px-4 py-2 text-sm text-muted-foreground print:hidden">
-                                Visão do dia em construção. A grade mostra o dia
-                                selecionado.
-                            </p>
+                        {visao === 'semana' ? (
+                            <div className="hidden md:block">
+                                <GradeDaSemana
+                                    dias={dias}
+                                    hoje={hoje}
+                                    agora={agora}
+                                    reservas={reservasVisiveis}
+                                    espacos={espacos}
+                                    onNovaReserva={abrirNovaReserva}
+                                    onEditarReserva={abrirEdicao}
+                                />
+                            </div>
+                        ) : (
+                            <div className="hidden md:block">
+                                <OcupacaoDoDia
+                                    data={data}
+                                    hoje={hoje}
+                                    agora={agora}
+                                    espacos={espacosVisiveis}
+                                    reservas={reservasVisiveis}
+                                    solicitacoes={solicitacoes}
+                                    onReservar={abrirNovaReserva}
+                                    onEditarReserva={abrirEdicao}
+                                />
+                            </div>
                         )}
 
-                        <GradeDaSemana
-                            dias={dias}
+                        <AgendaCelular
+                            data={data}
                             hoje={hoje}
                             agora={agora}
+                            espacos={espacosVisiveis}
                             reservas={reservasVisiveis}
-                            espacos={espacos}
-                            onNovaReserva={abrirNovaReserva}
+                            solicitacoes={solicitacoes}
+                            onSelecionarDia={(dia) => navegar(dia)}
+                            onNovaReserva={(dia) => abrirNovaReserva(dia)}
                             onEditarReserva={abrirEdicao}
                         />
                     </section>
                 </div>
             </div>
 
-            <Sheet
-                open={painel !== null}
-                onOpenChange={(aberto) => {
-                    if (!aberto) {
-                        setPainel(null);
-                    }
-                }}
-            >
-                <SheetContent className="w-full sm:max-w-[560px]">
-                    <SheetHeader>
-                        <SheetTitle>
-                            {painel?.modo === 'editar'
-                                ? 'Editar reserva'
-                                : 'Nova reserva'}
-                        </SheetTitle>
-                        <SheetDescription>Em construção</SheetDescription>
-                    </SheetHeader>
-                </SheetContent>
-            </Sheet>
+            {painel !== null && (
+                <PainelDeReserva
+                    alvo={painel}
+                    espacos={espacos}
+                    grupos={grupos}
+                    equipamentos={equipamentos}
+                    onFechar={() => setPainel(null)}
+                    onSalvo={aoSalvarReserva}
+                />
+            )}
         </>
     );
 }
