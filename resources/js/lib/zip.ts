@@ -1,4 +1,4 @@
-import { zipSync } from 'fflate';
+import { Zip, ZipPassThrough } from 'fflate';
 
 export type ArquivoParaZip = {
     nome: string;
@@ -41,18 +41,35 @@ export function nomeDoZip(titulo: string): string {
 
 /**
  * Empacota os arquivos num .zip sem compressão (PNG já é comprimido). Nomes repetidos viram `-2`, `-3`…
+ *
+ * Cada arquivo é lido uma vez e entra no zip em streaming: as partes do zip vão direto para o Blob,
+ * sem montar um Uint8Array com o zip inteiro e copiá-lo depois.
  */
 export async function zipar(arquivos: ArquivoParaZip[]): Promise<Blob> {
     const nomes = nomesUnicos(arquivos.map((arquivo) => arquivo.nome));
-    const conteudo: Record<string, Uint8Array> = {};
+    const partes: Uint8Array<ArrayBuffer>[] = [];
+    const falhas: Error[] = [];
+    const zip = new Zip((falha, parte) => {
+        if (falha) {
+            falhas.push(falha);
+        } else {
+            // O fflate devolve um Uint8Array sobre ArrayBuffer comum; o tipo estreito só satisfaz o Blob.
+            partes.push(parte as Uint8Array<ArrayBuffer>);
+        }
+    });
 
     for (const [indice, arquivo] of arquivos.entries()) {
-        conteudo[nomes[indice]] = new Uint8Array(
-            await arquivo.blob.arrayBuffer(),
-        );
+        const entrada = new ZipPassThrough(nomes[indice]);
+
+        zip.add(entrada);
+        entrada.push(new Uint8Array(await arquivo.blob.arrayBuffer()), true);
     }
 
-    return new Blob([zipSync(conteudo, { level: 0 })], {
-        type: 'application/zip',
-    });
+    zip.end();
+
+    if (falhas.length > 0) {
+        throw falhas[0];
+    }
+
+    return new Blob(partes, { type: 'application/zip' });
 }

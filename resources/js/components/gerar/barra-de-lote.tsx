@@ -25,7 +25,7 @@ export default function BarraDeLote({
     return (
         <div className="flex flex-wrap items-center justify-between gap-4 border-t bg-muted p-4">
             <div className="flex min-w-56 flex-1 flex-col gap-2">
-                <span className="text-sm font-semibold">
+                <span aria-live="polite" className="text-sm font-semibold">
                     {prontas} de {preenchidas} prontos
                 </span>
                 <div

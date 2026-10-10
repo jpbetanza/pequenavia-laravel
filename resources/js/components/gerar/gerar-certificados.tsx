@@ -13,6 +13,7 @@ import VisaoCelular from '@/components/gerar/visao-celular';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { useFontesDoCatalogo } from '@/hooks/use-fontes-do-catalogo';
+import { useIsMobile } from '@/hooks/use-mobile';
 import {
     editarCelula,
     ehCancelamento,
@@ -84,6 +85,8 @@ export default function GerarCertificados({
     valoresIniciais,
 }: Props) {
     useFontesDoCatalogo(fontes, pesos);
+    // Celular e desktop montam uma só visão: a prévia não existe duas vezes na árvore.
+    const celular = useIsMobile();
 
     const [linhas, setLinhas] = useState<LinhaDeGeracao[]>(() => [
         novaLinha(
@@ -335,8 +338,29 @@ export default function GerarCertificados({
     };
 
     const remover = (id: number) => {
-        revogar(linhasRef.current.find((linha) => linha.id === id));
-        atualizar((atuais) => removerLinha(atuais, id));
+        const atuais = linhasRef.current;
+        const indice = atuais.findIndex((linha) => linha.id === id);
+        const proximas = removerLinha(atuais, id);
+
+        revogar(atuais[indice]);
+        atualizar(() => proximas);
+
+        // Tirou a linha selecionada: a selação vai para a vizinha (mesma posição, ou a anterior se era a última).
+        if (linhaSelecionada?.id === id) {
+            const vizinha = proximas[Math.min(indice, proximas.length - 1)];
+
+            setSelecionadaId(vizinha?.id ?? null);
+        }
+    };
+
+    const baixar = (id: number) => {
+        const arquivo = linhasRef.current.find(
+            (linha) => linha.id === id,
+        )?.arquivo;
+
+        if (arquivo) {
+            baixarArquivo(arquivo.url, arquivo.nome);
+        }
     };
 
     const limpar = () => {
@@ -455,7 +479,7 @@ export default function GerarCertificados({
 
     return (
         <div className="flex flex-col gap-4">
-            <div className="hidden md:block">
+            {!celular && (
                 <CabecalhoDaPagina
                     modelo={modelo.title}
                     titulo={`Gerar · ${modelo.title}`}
@@ -488,7 +512,7 @@ export default function GerarCertificados({
                         </>
                     }
                 />
-            </div>
+            )}
 
             {campos.length === 0 && (
                 <Alert>
@@ -505,70 +529,69 @@ export default function GerarCertificados({
                 </Alert>
             )}
 
-            <div className="hidden items-start gap-6 md:grid md:grid-cols-[minmax(0,1fr)_340px]">
-                <section
-                    aria-label="Registros"
-                    className="min-w-0 overflow-hidden rounded-2xl border bg-card"
-                >
-                    <div className="overflow-x-auto">
-                        <TabelaDeGeracao
-                            campos={campos}
-                            linhas={linhas}
-                            selecionadaId={linhaSelecionada?.id ?? null}
-                            geracaoBloqueada={gerandoLote}
-                            aoSelecionar={setSelecionadaId}
-                            aoEditar={editar}
-                            aoGerar={(id) => void gerar(id)}
-                            aoBaixar={(id) => {
-                                const arquivo = linhasRef.current.find(
-                                    (linha) => linha.id === id,
-                                )?.arquivo;
-
-                                if (arquivo) {
-                                    baixarArquivo(arquivo.url, arquivo.nome);
-                                }
-                            }}
-                            aoRemover={remover}
-                            aoAdicionar={adicionarLinha}
+            {!celular && (
+                <div className="grid grid-cols-[minmax(0,1fr)_340px] items-start gap-6">
+                    <section
+                        aria-label="Registros"
+                        className="min-w-0 overflow-hidden rounded-2xl border bg-card"
+                    >
+                        <div className="overflow-x-auto">
+                            <TabelaDeGeracao
+                                campos={campos}
+                                linhas={linhas}
+                                selecionadaId={linhaSelecionada?.id ?? null}
+                                geracaoBloqueada={gerandoLote}
+                                aoSelecionar={setSelecionadaId}
+                                aoEditar={editar}
+                                aoGerar={(id) => void gerar(id)}
+                                aoBaixar={baixar}
+                                aoRemover={remover}
+                                aoAdicionar={adicionarLinha}
+                            />
+                        </div>
+                        <BarraDeLote
+                            prontas={resumo.prontas}
+                            preenchidas={resumo.preenchidas}
+                            percentual={resumo.percentual}
+                            gerandoLote={gerandoLote}
+                            temParaGerar={
+                                linhasParaGerarTodas(linhas).length > 0
+                            }
+                            aoGerarTodos={() => void gerarTodos()}
+                            aoParar={pararLote}
+                            aoBaixarZip={() => void baixarProntos()}
                         />
-                    </div>
-                    <BarraDeLote
-                        prontas={resumo.prontas}
-                        preenchidas={resumo.preenchidas}
-                        percentual={resumo.percentual}
-                        gerandoLote={gerandoLote}
-                        temParaGerar={linhasParaGerarTodas(linhas).length > 0}
-                        aoGerarTodos={() => void gerarTodos()}
-                        aoParar={pararLote}
-                        aoBaixarZip={() => void baixarProntos()}
-                    />
-                </section>
+                    </section>
 
-                <PreviaDaLinha
+                    <PreviaDaLinha
+                        modelo={modelo}
+                        campos={campos}
+                        linha={linhaSelecionada}
+                        posicao={posicao}
+                    />
+                </div>
+            )}
+
+            {celular && (
+                <VisaoCelular
                     modelo={modelo}
                     campos={campos}
                     linha={linhaSelecionada}
                     posicao={posicao}
+                    total={linhas.length}
+                    geradosNaSessao={geradosNaSessao}
+                    algumGerando={algumGerando}
+                    geracaoBloqueada={gerandoLote}
+                    aoEditar={editar}
+                    aoAnterior={() => irParaIndice(indiceSelecionado - 1)}
+                    aoProxima={() => irParaIndice(indiceSelecionado + 1)}
+                    aoAdicionar={adicionarLinha}
+                    aoGerarEBaixar={(id) => void gerar(id)}
+                    aoBaixar={baixar}
+                    aoImportar={() => setImportando(true)}
+                    aoLimpar={limpar}
                 />
-            </div>
-
-            <VisaoCelular
-                modelo={modelo}
-                campos={campos}
-                linha={linhaSelecionada}
-                posicao={posicao}
-                total={linhas.length}
-                geradosNaSessao={geradosNaSessao}
-                algumGerando={algumGerando}
-                geracaoBloqueada={gerandoLote}
-                aoEditar={editar}
-                aoAnterior={() => irParaIndice(indiceSelecionado - 1)}
-                aoProxima={() => irParaIndice(indiceSelecionado + 1)}
-                aoAdicionar={adicionarLinha}
-                aoGerarEBaixar={(id) => void gerar(id)}
-                aoImportar={() => setImportando(true)}
-                aoLimpar={limpar}
-            />
+            )}
 
             <DialogoDeImportacao
                 aberto={importando}

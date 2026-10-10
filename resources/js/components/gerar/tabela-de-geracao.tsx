@@ -35,11 +35,14 @@ type Props = {
 
 function SituacaoDaLinha({
     linha,
+    numero,
     geracaoBloqueada,
     aoGerar,
     aoBaixar,
 }: {
     linha: LinhaDeGeracao;
+    /** Número da linha na tabela (começa em 1), usado nos nomes acessíveis dos botões. */
+    numero: number;
     geracaoBloqueada: boolean;
     aoGerar: (id: number) => void;
     aoBaixar: (id: number) => void;
@@ -49,6 +52,7 @@ function SituacaoDaLinha({
             <Button
                 size="sm"
                 className="bg-sucesso-fundo text-sucesso hover:bg-sucesso-fundo/80"
+                aria-label={`Baixar PNG da linha ${numero}`}
                 onClick={() => aoBaixar(linha.id)}
             >
                 <Download />
@@ -97,6 +101,7 @@ function SituacaoDaLinha({
                     size="sm"
                     variant="outline"
                     disabled={geracaoBloqueada}
+                    aria-label={`Tentar novamente a linha ${numero}`}
                     aria-describedby={`erro-da-linha-${linha.id}`}
                     onClick={() => aoGerar(linha.id)}
                 >
@@ -120,6 +125,7 @@ function SituacaoDaLinha({
             size="sm"
             variant="secondary"
             disabled={geracaoBloqueada || emAndamento(linha)}
+            aria-label={`Gerar linha ${numero}`}
             onClick={() => aoGerar(linha.id)}
         >
             Gerar
@@ -199,6 +205,7 @@ export default function TabelaDeGeracao({
                             <TableCell className="align-middle">
                                 <SituacaoDaLinha
                                     linha={linha}
+                                    numero={indice + 1}
                                     geracaoBloqueada={geracaoBloqueada}
                                     aoGerar={aoGerar}
                                     aoBaixar={aoBaixar}

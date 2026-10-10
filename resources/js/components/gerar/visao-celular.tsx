@@ -2,14 +2,17 @@ import { Link } from '@inertiajs/react';
 import {
     ChevronLeft,
     ChevronRight,
+    CircleAlert,
     CircleCheck,
     Download,
     FileUp,
     Plus,
 } from 'lucide-react';
+import type { ReactNode } from 'react';
 import PreviewDoModelo from '@/components/campos/preview-do-modelo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Spinner } from '@/components/ui/spinner';
 import {
     emAndamento,
     linhaPreenchida,
@@ -34,9 +37,71 @@ type Props = {
     aoProxima: () => void;
     aoAdicionar: () => void;
     aoGerarEBaixar: (id: number) => void;
+    aoBaixar: (id: number) => void;
     aoImportar: () => void;
     aoLimpar: () => void;
 };
+
+function StatusDaLinhaCelular({
+    linha,
+    aoBaixar,
+}: {
+    linha: LinhaDeGeracao | null;
+    aoBaixar: (id: number) => void;
+}) {
+    // A região fica sempre montada: o leitor de tela anuncia só as mudanças de texto.
+    let conteudo: ReactNode = null;
+
+    if (linha?.status === 'gerando') {
+        conteudo = (
+            <span className="flex items-center gap-2 font-medium text-muted-foreground">
+                <Spinner aria-hidden="true" />
+                Gerando…
+            </span>
+        );
+    } else if (linha?.status === 'aguardando') {
+        conteudo = (
+            <span className="flex items-center gap-2 font-medium text-muted-foreground">
+                <Spinner aria-hidden="true" />
+                Aguardando limite…
+            </span>
+        );
+    } else if (linha?.status === 'na-fila') {
+        conteudo = (
+            <span className="font-medium text-muted-foreground">Na fila</span>
+        );
+    } else if (linha?.status === 'pronto') {
+        conteudo = (
+            <span className="flex flex-wrap items-center gap-x-2 font-medium text-sucesso">
+                <CircleCheck className="size-4 shrink-0" aria-hidden="true" />
+                Pronto ·{' '}
+                <button
+                    type="button"
+                    className="font-semibold text-primary underline"
+                    onClick={() => aoBaixar(linha.id)}
+                >
+                    Baixar PNG
+                </button>
+            </span>
+        );
+    } else if (linha?.status === 'erro' && linha.erro) {
+        conteudo = (
+            <span className="flex items-start gap-1.5 text-aviso">
+                <CircleAlert
+                    className="mt-0.5 size-4 shrink-0"
+                    aria-hidden="true"
+                />
+                {linha.erro}
+            </span>
+        );
+    }
+
+    return (
+        <div aria-live="polite" className="min-h-6 text-sm">
+            {conteudo}
+        </div>
+    );
+}
 
 /** Gerar no celular (abaixo de md): prévia no topo, formulário empilhado e ações fixas embaixo. */
 export default function VisaoCelular({
@@ -53,6 +118,7 @@ export default function VisaoCelular({
     aoProxima,
     aoAdicionar,
     aoGerarEBaixar,
+    aoBaixar,
     aoImportar,
     aoLimpar,
 }: Props) {
@@ -63,7 +129,7 @@ export default function VisaoCelular({
         !geracaoBloqueada;
 
     return (
-        <div className="flex flex-col gap-4 pb-32 md:hidden">
+        <div className="flex flex-col gap-4 pb-32">
             <div className="flex items-center gap-2">
                 <Link
                     href={modelos()}
@@ -85,6 +151,7 @@ export default function VisaoCelular({
                     size="icon"
                     className="size-11"
                     aria-label="Importar planilha"
+                    disabled={algumGerando}
                     onClick={aoImportar}
                 >
                     <FileUp />
@@ -130,15 +197,14 @@ export default function VisaoCelular({
                             </label>
                         );
                     })}
-                    {linha.status === 'erro' && linha.erro && (
-                        <p className="text-sm text-aviso">{linha.erro}</p>
-                    )}
                 </form>
             ) : (
                 <p className="text-sm text-muted-foreground">
                     Nenhum registro. Adicione uma linha para começar.
                 </p>
             )}
+
+            <StatusDaLinhaCelular linha={linha} aoBaixar={aoBaixar} />
 
             <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-1">
@@ -171,7 +237,6 @@ export default function VisaoCelular({
                     size="icon"
                     className="size-11"
                     aria-label="Adicionar registro"
-                    disabled={algumGerando}
                     onClick={aoAdicionar}
                 >
                     <Plus />
