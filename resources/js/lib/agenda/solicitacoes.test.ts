@@ -6,6 +6,7 @@ import { estadoDaSolicitacao } from './solicitacoes';
 const salao: EspacoDoCalendario = {
     id: 'salao',
     nome: 'Salão',
+    ativo: true,
     capacidade: 120,
     cor: 'bordo',
     recursos_fixos: [],
@@ -103,6 +104,14 @@ describe('estadoDaSolicitacao', () => {
         expect(estadoDaSolicitacao(pedido, [bloqueado], []).motivos).toEqual([
             'Bloqueado: Reforma.',
         ]);
+    });
+
+    it('conflito quando o espaço escolhido está inativo, mesmo com ele na lista', () => {
+        const desativado: EspacoDoCalendario = { ...salao, ativo: false };
+
+        expect(estadoDaSolicitacao(pedido, [desativado], []).situacao).toBe(
+            'conflito',
+        );
     });
 
     it('conflito quando o espaço escolhido não está entre os ativos', () => {

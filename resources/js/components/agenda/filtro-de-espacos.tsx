@@ -4,6 +4,7 @@ import { corDoEspaco, type CorDoEspaco } from '@/lib/agenda/cores';
 export type EspacoDoFiltro = {
     id: string;
     nome: string;
+    ativo: boolean;
     cor: CorDoEspaco;
 };
 
@@ -70,6 +71,7 @@ export default function FiltroDeEspacos({
                             className="min-w-0 flex-1 cursor-pointer truncate text-sm"
                         >
                             {espaco.nome}
+                            {!espaco.ativo && ' (inativo)'}
                         </label>
                     </div>
                 );

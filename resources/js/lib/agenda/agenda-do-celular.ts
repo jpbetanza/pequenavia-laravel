@@ -48,6 +48,10 @@ export function espacosLivresAgora(
     const minuto = minutosDoHorario(horaAgora);
 
     return espacos.filter((espaco) => {
+        if (!espaco.ativo) {
+            return false;
+        }
+
         const bloqueado = espaco.bloqueios.some(
             (bloqueio: BloqueioDoCalendario) =>
                 bloqueio.inicio <= data && data <= bloqueio.fim,

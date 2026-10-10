@@ -55,6 +55,7 @@ import {
 } from '@/lib/agenda/disponibilidade';
 import { corDoEspaco } from '@/lib/agenda/cores';
 import { formatarDiaCurto } from '@/lib/agenda/datas';
+import { espacosDisponiveisParaReserva } from '@/lib/agenda/filtro';
 import {
     ateSugerido,
     datasDaRecorrencia,
@@ -159,12 +160,16 @@ function formularioInicial(
     }
 
     const inicio = alvo.hora ?? '09:00';
+    const ativos = espacosDisponiveisParaReserva(espacos, null);
 
     return {
         titulo: '',
         grupoId: '',
         pessoas: '',
-        espacoId: alvo.espacoId ?? espacos[0]?.id ?? '',
+        espacoId:
+            ativos.find((espaco) => espaco.id === alvo.espacoId)?.id ??
+            ativos[0]?.id ??
+            '',
         data: alvo.data,
         inicio,
         fim: fimPadrao(inicio),
@@ -472,6 +477,10 @@ export default function PainelDeReserva({
     const espacoEscolhido = espacos.find(
         (espaco) => espaco.id === form.espacoId,
     );
+    const espacosDoSelect = espacosDisponiveisParaReserva(
+        espacos,
+        alvo.modo === 'editar' ? alvo.reserva.espaco_id : null,
+    );
     const consideradasNaResposta = respostaAtual
         ? respostaAtual.datas.filter((item) => !form.pulas.includes(item.data))
         : null;
@@ -598,7 +607,7 @@ export default function PainelDeReserva({
                                     <SelectValue placeholder="Escolha o espaço" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {espacos.map((espaco) => (
+                                    {espacosDoSelect.map((espaco) => (
                                         <SelectItem
                                             key={espaco.id}
                                             value={espaco.id}

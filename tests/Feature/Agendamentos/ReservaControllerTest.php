@@ -276,6 +276,45 @@ describe('edição', function () {
             ->inicio->toBe('09:00:00');
     });
 
+    it('edita o título de uma reserva em espaço inativo sem trocar o espaço', function () {
+        $desativado = Espaco::factory()->inativo()->comHorarioComercial()->for($this->dono)->create(['nome' => 'Sala desativada']);
+        $reserva = Reserva::factory()->for($this->dono)->for($desativado, 'espaco')->create([
+            'titulo' => 'Ensaio antigo',
+            'data' => '2026-10-12',
+            'inicio' => '19:00',
+            'fim' => '21:00',
+        ]);
+
+        $this->actingAs($this->dono)
+            ->put(route('agendamentos.reservas.update', $reserva), corpoDeReservaNoSalao($desativado, [
+                'titulo' => 'Ensaio renomeado',
+            ]))
+            ->assertRedirect()
+            ->assertSessionHasNoErrors();
+
+        expect($reserva->fresh())
+            ->titulo->toBe('Ensaio renomeado')
+            ->espaco_id->toBe($desativado->id);
+    });
+
+    it('trocar a reserva para um espaço inativo responde 422 com o conflito de espaço inativo', function () {
+        $desativado = Espaco::factory()->inativo()->comHorarioComercial()->for($this->dono)->create(['nome' => 'Sala desativada']);
+        $reserva = Reserva::factory()->for($this->dono)->for($this->salao, 'espaco')->create([
+            'data' => '2026-10-12',
+            'inicio' => '19:00',
+            'fim' => '21:00',
+        ]);
+
+        $this->actingAs($this->dono)
+            ->putJson(route('agendamentos.reservas.update', $reserva), corpoDeReservaNoSalao($desativado, [
+                'data' => '2026-10-12',
+            ]))
+            ->assertUnprocessable()
+            ->assertJsonPath('conflitos.0.conflitos.0.tipo', 'espaco_inativo');
+
+        expect($reserva->fresh()->espaco_id)->toBe($this->salao->id);
+    });
+
     it('no escopo padrão, altera só a reserva escolhida mesmo quando ela faz parte de uma série', function () {
         [$doze, $dezenove, $vinteSeis] = serieDoCoral($this->dono, $this->salao);
 

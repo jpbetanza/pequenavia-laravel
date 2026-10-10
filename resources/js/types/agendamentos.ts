@@ -166,6 +166,8 @@ export type BloqueioDoCalendario = {
 export type EspacoDoCalendario = {
     id: string;
     nome: string;
+    /** Espaço inativo só chega à tela quando tem reserva no intervalo exibido. */
+    ativo: boolean;
     capacidade: number | null;
     cor: CorDoEspaco;
     recursos_fixos: string[];

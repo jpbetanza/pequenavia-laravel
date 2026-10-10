@@ -33,6 +33,7 @@ const reserva = (
 const salao: EspacoDoCalendario = {
     id: 's1',
     nome: 'Salão',
+    ativo: true,
     capacidade: 120,
     cor: 'bordo',
     recursos_fixos: [],
@@ -73,6 +74,14 @@ describe('posicaoDoAgoraNaLista', () => {
 });
 
 describe('espacosLivresAgora', () => {
+    it('não oferece espaço inativo, mesmo aberto e livre', () => {
+        const inativo = { ...auditorio, ativo: false };
+
+        expect(
+            espacosLivresAgora([inativo], [], '2026-10-10', '10:00'),
+        ).toEqual([]);
+    });
+
     it('exclui o espaço ocupado agora e o que está fechado', () => {
         const reservas = [reserva('a', '2026-10-10', '09:00', '12:00', 's1')];
 

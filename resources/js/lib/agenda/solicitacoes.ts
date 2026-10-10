@@ -40,7 +40,7 @@ export function estadoDaSolicitacao(
         (candidato) => candidato.id === solicitacao.espaco_id,
     );
 
-    if (espaco === undefined) {
+    if (espaco === undefined || !espaco.ativo) {
         return {
             situacao: 'conflito',
             motivos: ['O espaço escolhido não está ativo.'],

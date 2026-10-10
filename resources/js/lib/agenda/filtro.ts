@@ -55,6 +55,17 @@ export function reconciliarSelecao(
     );
 }
 
+/**
+ * Espaços oferecidos no Select de reserva: os ativos, e o espaço atual da reserva mesmo inativo (edição).
+ */
+export function espacosDisponiveisParaReserva<
+    T extends { id: string; ativo: boolean },
+>(espacos: T[], espacoAtualId: string | null): T[] {
+    return espacos.filter(
+        (espaco) => espaco.ativo || espaco.id === espacoAtualId,
+    );
+}
+
 export function montarFiltroSalvo(
     selecionados: string[],
     idsAtuais: string[],

@@ -94,6 +94,23 @@ it('lista os espaços ativos com horários e só os bloqueios que tocam a semana
             ]));
 });
 
+it('traz o espaço inativo que tem reserva no intervalo, marcado como inativo, e deixa de fora o inativo sem reservas', function () {
+    $desativada = Espaco::factory()->inativo()->for($this->dono)->create(['nome' => 'Auditório antigo']);
+    Espaco::factory()->inativo()->for($this->dono)->create(['nome' => 'Depósito sem reservas']);
+    $reservaNaDesativada = Reserva::factory()->for($this->dono)->for($desativada, 'espaco')->create(['data' => '2026-10-07']);
+
+    $this->actingAs($this->dono)
+        ->get(route('agendamentos.calendario'))
+        ->assertInertia(fn (Assert $pagina) => $pagina
+            ->has('espacos', 2)
+            ->where('espacos.0.id', $desativada->id)
+            ->where('espacos.0.ativo', false)
+            ->where('espacos.1.id', $this->salao->id)
+            ->where('espacos.1.ativo', true)
+            ->where('reservas.0.id', $reservaNaDesativada->id)
+            ->where('reservas.0.espaco_id', $desativada->id));
+});
+
 it('traz as reservas com grupo, pessoas, observações e equipamentos com a entrega', function () {
     $grupo = Grupo::factory()->for($this->dono)->create(['nome' => 'Pastoral da Catequese']);
     $projetor = Equipamento::factory()->for($this->dono)->create(['nome' => 'Projetor', 'quantidade' => 2]);

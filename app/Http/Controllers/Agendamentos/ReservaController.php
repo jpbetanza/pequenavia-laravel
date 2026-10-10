@@ -23,6 +23,7 @@ use App\Services\Agenda\Recorrencia;
 use App\Services\Agenda\VerificadorDeDisponibilidade;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Collection;
@@ -157,8 +158,9 @@ class ReservaController extends Controller
         $grupo = $this->grupoDoDono($dados['grupo_id'] ?? null);
         $equipamentos = $this->equipamentosDoDono($dados['equipamentos']);
         $membros = $this->membrosDaSerie($user, $reserva, $escopo);
+        $espacosOriginais = $membros->mapWithKeys(fn (Reserva $membro) => [$membro->id => $membro->espaco_id])->all();
 
-        DB::transaction(function () use ($user, $reserva, $espaco, $grupo, $dados, $equipamentos, $membros): void {
+        DB::transaction(function () use ($user, $reserva, $espaco, $grupo, $dados, $equipamentos, $membros, $espacosOriginais): void {
             $this->travarAgendaDo($user);
 
             foreach ($membros as $membro) {
@@ -190,6 +192,7 @@ class ReservaController extends Controller
                     ],
                     $equipamentos,
                     $membro->id,
+                    ignorarEspacoInativo: $espacosOriginais[$membro->id] === $espaco->id,
                 );
 
                 if ($conflitosDaData !== null) {
@@ -268,7 +271,7 @@ class ReservaController extends Controller
     }
 
     /**
-     * Espaços ativos do dono, com horários e os bloqueios que tocam o intervalo.
+     * Espaços ativos do dono e os inativos que têm reserva no intervalo, com horários e os bloqueios que tocam o intervalo.
      *
      * @return list<array<string, mixed>>
      */
@@ -276,7 +279,9 @@ class ReservaController extends Controller
     {
         return Espaco::query()
             ->where('user_id', $user->id)
-            ->where('ativo', true)
+            ->where(fn (Builder $consulta) => $consulta
+                ->where('ativo', true)
+                ->orWhereHas('reservas', fn (Builder $reservas) => $reservas->whereBetween('data', [$inicio, $fim])))
             ->with([
                 'horarios',
                 'bloqueios' => fn (HasMany $bloqueios) => $bloqueios
@@ -289,6 +294,7 @@ class ReservaController extends Controller
                 'id' => $espaco->id,
                 'nome' => $espaco->nome,
                 'capacidade' => $espaco->capacidade,
+                'ativo' => $espaco->ativo,
                 'cor' => $espaco->cor->value,
                 'recursos_fixos' => $espaco->recursos_fixos,
                 'horarios' => $espaco->horarios
@@ -371,13 +377,19 @@ class ReservaController extends Controller
     /**
      * Confere uma data candidata. Devolve null quando não há conflito.
      *
+     * O espaço inativo só conta como conflito quando a reserva passa a usá-lo: na edição sem troca de espaço, `ignorarEspacoInativo` o descarta.
+     *
      * @param  array<string, mixed>  $dados  Com `inicio` e `fim`.
      * @param  list<array{id: string, quantidade: int}>  $equipamentos
      * @return array{data: string, conflitos: list<array{tipo: string, mensagem: string}>}|null
      */
-    private function conflitosDaData(Espaco $espaco, CarbonImmutable $data, array $dados, array $equipamentos, ?string $ignorarReservaId): ?array
+    private function conflitosDaData(Espaco $espaco, CarbonImmutable $data, array $dados, array $equipamentos, ?string $ignorarReservaId, bool $ignorarEspacoInativo = false): ?array
     {
         $conflitos = $this->verificador->verificar($espaco, $data, $dados['inicio'], $dados['fim'], $equipamentos, $ignorarReservaId);
+
+        if ($ignorarEspacoInativo) {
+            $conflitos = array_values(array_filter($conflitos, fn (Conflito $conflito) => $conflito->tipo !== Conflito::ESPACO_INATIVO));
+        }
 
         if ($conflitos === []) {
             return null;

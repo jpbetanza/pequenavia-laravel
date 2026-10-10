@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
 import {
+    espacosDisponiveisParaReserva,
     lerFiltroSalvo,
     montarFiltroSalvo,
     reconciliarSelecao,
@@ -49,5 +50,28 @@ describe('lerFiltroSalvo', () => {
         expect(
             lerFiltroSalvo('{"selecionados":[1],"conhecidos":[]}'),
         ).toBeNull();
+    });
+});
+
+describe('espacosDisponiveisParaReserva', () => {
+    const espacos = [
+        { id: 'salao', ativo: true },
+        { id: 'sala-antiga', ativo: false },
+        { id: 'auditorio', ativo: true },
+    ];
+
+    it('lista só os ativos ao criar uma reserva', () => {
+        expect(espacosDisponiveisParaReserva(espacos, null)).toEqual([
+            { id: 'salao', ativo: true },
+            { id: 'auditorio', ativo: true },
+        ]);
+    });
+
+    it('na edição, mantém o espaço atual mesmo quando está inativo', () => {
+        expect(
+            espacosDisponiveisParaReserva(espacos, 'sala-antiga').map(
+                (espaco) => espaco.id,
+            ),
+        ).toEqual(['salao', 'sala-antiga', 'auditorio']);
     });
 });
