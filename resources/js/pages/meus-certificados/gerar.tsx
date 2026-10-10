@@ -43,7 +43,7 @@ export default function Gerar({
 Gerar.layout = {
     breadcrumbs: [
         {
-            title: 'Meus certificados',
+            title: 'Modelos',
             href: index(),
         },
     ],

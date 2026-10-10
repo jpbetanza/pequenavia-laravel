@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vite-plus/test';
 import {
     agruparPorDia,
     corDoSelo,
+    escolherDestaque,
     formatarData,
     horaDaGeracao,
     ordenarValores,
@@ -54,6 +55,73 @@ describe('formatarData', () => {
         expect(formatarData('2026-10-09T15:04:00Z', 'UTC')).toBe(
             '09/10/2026, 15:04',
         );
+    });
+});
+
+describe('escolherDestaque', () => {
+    it('escolhe o primeiro campo cujo nome contém "nome", sem diferenciar acento nem maiúsculas', () => {
+        const entradas: [string, string][] = [
+            ['Título', 'CERTIFICADO DE BATISMO'],
+            ['Nome completo', 'Maria Clara'],
+            ['Data', '2024'],
+        ];
+
+        expect(escolherDestaque(entradas)).toEqual({
+            destaque: ['Nome completo', 'Maria Clara'],
+            demais: [
+                ['Título', 'CERTIFICADO DE BATISMO'],
+                ['Data', '2024'],
+            ],
+        });
+        expect(escolherDestaque([['NÓME da mãe', 'Ana']]).destaque).toEqual([
+            'NÓME da mãe',
+            'Ana',
+        ]);
+    });
+
+    it('pula o campo "nome" que está vazio e usa o próximo com nome preenchido', () => {
+        const entradas: [string, string][] = [
+            ['Nome', '   '],
+            ['Paróquia', 'São José'],
+            ['Nome do padrinho', 'Pedro'],
+        ];
+
+        expect(escolherDestaque(entradas).destaque).toEqual([
+            'Nome do padrinho',
+            'Pedro',
+        ]);
+    });
+
+    it('sem campo de nome, usa o primeiro valor preenchido', () => {
+        const entradas: [string, string][] = [
+            ['Título', 'CERTIFICADO'],
+            ['Data', ''],
+            ['Paróquia', 'São José'],
+        ];
+
+        expect(escolherDestaque(entradas)).toEqual({
+            destaque: ['Título', 'CERTIFICADO'],
+            demais: [
+                ['Data', ''],
+                ['Paróquia', 'São José'],
+            ],
+        });
+    });
+
+    it('sem nenhum valor preenchido não há destaque, e todos os campos ficam como demais', () => {
+        const entradas: [string, string][] = [
+            ['Nome', ''],
+            ['Data', ' '],
+        ];
+
+        expect(escolherDestaque(entradas)).toEqual({
+            destaque: null,
+            demais: entradas,
+        });
+    });
+
+    it('trata uma lista vazia', () => {
+        expect(escolherDestaque([])).toEqual({ destaque: null, demais: [] });
     });
 });
 

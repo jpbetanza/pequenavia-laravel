@@ -100,6 +100,7 @@ export default function GerarCertificados({
     // Espelho síncrono de `linhas`: as gerações em sequência leem o valor atual sem esperar o render.
     const linhasRef = useRef(linhas);
     const proximoId = useRef(2);
+    const linhaParaFocar = useRef<number | null>(null);
     const [selecionadaId, setSelecionadaId] = useState<number | null>(1);
     const [importando, setImportando] = useState(false);
     const [lendoPlanilha, setLendoPlanilha] = useState(false);
@@ -335,7 +336,22 @@ export default function GerarCertificados({
 
         atualizar((atuais) => [...atuais, novaLinha(id, campos)]);
         setSelecionadaId(id);
+        linhaParaFocar.current = id;
     };
+
+    // Depois de "Adicionar linha", o foco vai para o primeiro campo do registro novo (tabela ou celular).
+    useEffect(() => {
+        const id = linhaParaFocar.current;
+
+        if (id === null) {
+            return;
+        }
+
+        linhaParaFocar.current = null;
+        document
+            .querySelector<HTMLInputElement>(`[data-linha-id="${id}"] input`)
+            ?.focus();
+    }, [linhas]);
 
     const remover = (id: number) => {
         const atuais = linhasRef.current;

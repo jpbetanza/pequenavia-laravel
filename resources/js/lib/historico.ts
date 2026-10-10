@@ -35,7 +35,33 @@ export function formatarData(iso: string, fusoHorario?: string): string {
     });
 }
 
-/** Valores sem o primeiro (que aparece em destaque na linha): só o texto, separado por " · ". */
+const semAcentos = (texto: string): string =>
+    texto.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+
+/**
+ * Campo em destaque da geração (o título da linha e do painel): o primeiro cujo nome contém "nome"
+ * e tem valor; se não houver, o primeiro valor preenchido. `demais` são os outros campos, na mesma ordem.
+ */
+export function escolherDestaque(entradas: [string, string][]): {
+    destaque: [string, string] | null;
+    demais: [string, string][];
+} {
+    const preenchido = ([, valor]: [string, string]) => valor.trim() !== '';
+    const destaque =
+        entradas.find(
+            (entrada) =>
+                semAcentos(entrada[0]).includes('nome') && preenchido(entrada),
+        ) ??
+        entradas.find(preenchido) ??
+        null;
+
+    return {
+        destaque,
+        demais: entradas.filter((entrada) => entrada !== destaque),
+    };
+}
+
+/** Valores (sem o destaque, que já aparece no título): só o texto, separado por " · ". */
 export function valoresResumidos(
     entradas: [string, string][],
     limite = 2,

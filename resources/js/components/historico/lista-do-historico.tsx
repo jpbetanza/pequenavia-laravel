@@ -1,5 +1,6 @@
 import {
     agruparPorDia,
+    escolherDestaque,
     horaDaGeracao,
     ordenarValores,
     valoresResumidos,
@@ -46,9 +47,11 @@ export default function ListaDoHistorico({
                     </h2>
                     <ol className="overflow-hidden rounded-2xl border border-border bg-card">
                         {grupo.itens.map((geracao) => {
-                            const [primeiro, ...demais] = ordenarValores(
-                                geracao.campos_valores,
-                                geracao.ordem_campos,
+                            const { destaque, demais } = escolherDestaque(
+                                ordenarValores(
+                                    geracao.campos_valores,
+                                    geracao.ordem_campos,
+                                ),
                             );
                             const selecionada = geracao.id === selecionadaId;
 
@@ -71,7 +74,7 @@ export default function ListaDoHistorico({
                                         </span>
                                         <span className="flex min-w-0 flex-1 basis-56 flex-col leading-tight">
                                             <span className="truncate font-serif text-[21px] font-semibold">
-                                                {primeiro?.[1] ??
+                                                {destaque?.[1] ??
                                                     geracao.modelo_title}
                                             </span>
                                             {demais.length > 0 && (

@@ -1,6 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { Check } from 'lucide-react';
 import AppLogoIcon from '@/components/app-logo-icon';
+import { cn } from '@/lib/utils';
 import { home } from '@/routes';
 import type { AuthLayoutProps } from '@/types';
 
@@ -33,7 +34,13 @@ export default function AuthSimpleLayout({
                 </Link>
 
                 <div className="flex max-w-md flex-col gap-5">
-                    <p className="font-serif text-3xl leading-tight font-semibold md:text-5xl">
+                    {/* Sem painel, o título da página já aparece no formulário: aqui só fica no desktop. */}
+                    <p
+                        className={cn(
+                            'font-serif text-3xl leading-tight font-semibold md:text-5xl',
+                            !painel && 'hidden md:block',
+                        )}
+                    >
                         {painel ?? title}
                     </p>
                     {painel && (

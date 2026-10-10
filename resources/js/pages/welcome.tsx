@@ -81,7 +81,12 @@ export default function Welcome() {
 
     return (
         <>
-            <Head title="Certificados sagrados, geridos com beleza" />
+            <Head title="Certificados sagrados, geridos com beleza">
+                <link
+                    rel="stylesheet"
+                    href="https://fonts.googleapis.com/css2?family=Pinyon+Script&display=swap"
+                />
+            </Head>
             <div className="min-h-screen bg-background text-foreground">
                 <header className="border-b border-border">
                     <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-4 px-6 py-4 md:px-8">
@@ -89,11 +94,13 @@ export default function Welcome() {
                             href={home()}
                             className="flex items-center gap-3 text-foreground"
                         >
-                            <img
-                                src="/images/logo.png"
-                                alt=""
-                                className="size-10 object-contain"
-                            />
+                            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#fbf8f2] p-1">
+                                <img
+                                    src="/images/logo.png"
+                                    alt=""
+                                    className="size-full object-contain"
+                                />
+                            </span>
                             <span className="font-serif text-[26px] font-bold tracking-wide">
                                 PequenaVia
                             </span>
@@ -196,23 +203,29 @@ export default function Welcome() {
                             />
                             <figure className="absolute top-0 left-[10%] m-0 h-[470px] w-[78%] rounded-md bg-[#FCF8EF] p-[18px] shadow-[0_30px_60px_-30px_rgba(60,30,20,0.45),0_2px_6px_rgba(60,30,20,0.08)]">
                                 <div className="h-full border-2 border-[#6E1F24] p-1.5">
-                                    <div className="flex h-full flex-col items-center justify-center gap-3.5 border border-[#B8955A] px-6 py-7 text-center sm:px-7">
+                                    <div className="flex h-full flex-col items-center justify-center gap-2.5 border border-[#B8955A] px-4 py-5 text-center sm:px-4">
                                         <img
                                             src="/images/logo.png"
                                             alt=""
-                                            className="size-16 object-contain opacity-90"
+                                            className="size-12 object-contain opacity-90"
                                         />
-                                        <p className="font-serif text-xl font-bold tracking-[0.14em] text-[#6E1F24] uppercase sm:text-3xl">
+                                        <p className="font-serif text-lg leading-snug font-bold tracking-[0.04em] text-[#6E1F24] uppercase sm:text-xl sm:whitespace-nowrap">
                                             Certificado de Batismo
                                         </p>
-                                        <p className="font-serif text-lg text-[#4A3D38] italic">
+                                        <p className="font-serif text-base text-[#4A3D38] italic">
                                             Certificamos que
                                         </p>
-                                        <p className="font-serif text-4xl leading-tight text-[#221A17] italic sm:text-5xl">
+                                        <p
+                                            className="text-3xl leading-tight text-[#221A17] sm:text-4xl"
+                                            style={{
+                                                fontFamily:
+                                                    "'Pinyon Script', cursive",
+                                            }}
+                                        >
                                             Maria Clara Souza
                                         </p>
                                         <div className="h-px w-3/5 bg-[#B8955A]" />
-                                        <p className="max-w-[340px] font-serif text-base text-[#4A3D38] sm:text-lg">
+                                        <p className="max-w-[340px] font-serif text-sm leading-snug text-[#4A3D38] sm:text-base">
                                             recebeu o Sacramento do Batismo em
                                             14 de setembro de 2026, na Paróquia
                                             [NOME DA PARÓQUIA].

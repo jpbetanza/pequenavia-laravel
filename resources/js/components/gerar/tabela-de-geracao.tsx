@@ -166,6 +166,7 @@ export default function TabelaDeGeracao({
                     return (
                         <TableRow
                             key={linha.id}
+                            data-linha-id={linha.id}
                             className={cn(
                                 'transition-colors',
                                 selecionada && 'bg-aviso-fundo',
@@ -185,7 +186,7 @@ export default function TabelaDeGeracao({
                                 <TableCell key={campo.id} className="p-2">
                                     <Input
                                         className="h-10 border-transparent bg-transparent shadow-none focus-visible:border-primary focus-visible:bg-card"
-                                        aria-label={`${campo.label?.trim() || campo.nome}, linha ${indice + 1}`}
+                                        aria-label={`${campo.nome}, linha ${indice + 1}`}
                                         placeholder={
                                             campo.label?.trim() || campo.nome
                                         }

@@ -2,7 +2,12 @@ import { Link } from '@inertiajs/react';
 import { Copy, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { horaDaGeracao, ordenarValores, tituloDoDia } from '@/lib/historico';
+import {
+    escolherDestaque,
+    horaDaGeracao,
+    ordenarValores,
+    tituloDoDia,
+} from '@/lib/historico';
 import { gerar } from '@/routes/meus-certificados';
 import type { Geracao } from '@/types/certificados';
 import SeloDoModelo from './selo-do-modelo';
@@ -14,8 +19,8 @@ type Props = {
 
 export default function PainelDeDetalhes({ geracao, agora }: Props) {
     const campos = ordenarValores(geracao.campos_valores, geracao.ordem_campos);
-    const [primeiro] = campos;
-    const titulo = primeiro?.[1] ?? geracao.modelo_title;
+    const titulo =
+        escolherDestaque(campos).destaque?.[1] ?? geracao.modelo_title;
     const semModelo = geracao.modelo_id === null;
 
     async function copiarDados() {

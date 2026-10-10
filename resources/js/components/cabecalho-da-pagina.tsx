@@ -38,7 +38,7 @@ export default function CabecalhoDaPagina({
                         </span>
                     </div>
                 )}
-                <h1 className="font-serif text-5xl leading-none font-semibold">
+                <h1 className="font-serif text-4xl leading-none font-semibold sm:text-5xl">
                     {titulo}
                 </h1>
                 {subtitulo && (

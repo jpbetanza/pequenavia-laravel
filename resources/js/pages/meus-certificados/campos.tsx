@@ -43,7 +43,7 @@ export default function Campos({
 Campos.layout = {
     breadcrumbs: [
         {
-            title: 'Meus certificados',
+            title: 'Modelos',
             href: index(),
         },
     ],

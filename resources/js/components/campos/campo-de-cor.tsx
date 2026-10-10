@@ -97,7 +97,7 @@ export default function CampoDeCor({
             <div
                 role="group"
                 aria-labelledby={idDoRotulo}
-                className="flex items-center gap-1"
+                className="flex flex-wrap items-center gap-1"
             >
                 {CORES_SUGERIDAS.map((sugestao) => (
                     <button
@@ -121,13 +121,15 @@ export default function CampoDeCor({
                     </button>
                 ))}
 
-                <div className="relative ml-1 flex h-11 min-w-0 flex-1 items-center gap-2 rounded-md border bg-background px-2">
+                <div className="relative ml-1 flex h-11 min-w-36 flex-1 items-center gap-2 rounded-md border bg-background px-2">
                     <span
                         aria-hidden="true"
                         className="size-5 shrink-0 rounded-full border"
                         style={{ background: rascunho ?? valor }}
                     />
-                    <span className="font-mono text-xs">{atual}</span>
+                    <span className="font-mono text-xs whitespace-nowrap">
+                        {atual}
+                    </span>
                     <input
                         type="color"
                         aria-label={`Escolher outra cor, atual ${atual}`}

@@ -8,7 +8,7 @@ import {
     FileUp,
     Plus,
 } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import PreviewDoModelo from '@/components/campos/preview-do-modelo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,6 +19,7 @@ import {
     type LinhaDeGeracao,
 } from '@/lib/geracao';
 import { TAMANHO_MAXIMO_DO_VALOR } from '@/lib/planilha';
+import { cn } from '@/lib/utils';
 import { index as historico } from '@/routes/historico';
 import { index as modelos } from '@/routes/meus-certificados';
 import type { Campo, ModeloBasico } from '@/types/certificados';
@@ -128,8 +129,39 @@ export default function VisaoCelular({
         !emAndamento(linha) &&
         !geracaoBloqueada;
 
+    // A barra fixa de ações cobre o fim da página: o espaço embaixo do conteúdo é a altura medida dela.
+    const barraRef = useRef<HTMLDivElement>(null);
+    const [alturaDaBarra, setAlturaDaBarra] = useState<number | null>(null);
+
+    useLayoutEffect(() => {
+        const barra = barraRef.current;
+
+        if (!barra) {
+            return;
+        }
+
+        const medir = () => setAlturaDaBarra(barra.offsetHeight);
+
+        medir();
+
+        const observador = new ResizeObserver(medir);
+        observador.observe(barra);
+
+        return () => observador.disconnect();
+    }, []);
+
     return (
-        <div className="flex flex-col gap-4 pb-32">
+        <div
+            className={cn(
+                'flex flex-col gap-4',
+                alturaDaBarra === null && 'pb-40',
+            )}
+            style={
+                alturaDaBarra === null
+                    ? undefined
+                    : { paddingBottom: alturaDaBarra }
+            }
+        >
             <div className="flex items-center gap-2">
                 <Link
                     href={modelos()}
@@ -169,34 +201,32 @@ export default function VisaoCelular({
 
             {linha ? (
                 <form
+                    data-linha-id={linha.id}
                     className="flex flex-col gap-3"
                     onSubmit={(evento) => evento.preventDefault()}
                 >
-                    {campos.map((campo) => {
-                        const rotulo = campo.label?.trim() || campo.nome;
-
-                        return (
-                            <label
-                                key={campo.id}
-                                className="flex flex-col gap-1.5 text-sm font-semibold"
-                            >
-                                {rotulo}
-                                <Input
-                                    className="h-12 text-base"
-                                    maxLength={TAMANHO_MAXIMO_DO_VALOR}
-                                    value={linha.valores[campo.nome] ?? ''}
-                                    disabled={emAndamento(linha)}
-                                    onChange={(evento) =>
-                                        aoEditar(
-                                            linha.id,
-                                            campo.nome,
-                                            evento.target.value,
-                                        )
-                                    }
-                                />
-                            </label>
-                        );
-                    })}
+                    {campos.map((campo) => (
+                        <label
+                            key={campo.id}
+                            className="flex flex-col gap-1.5 text-sm font-semibold"
+                        >
+                            {campo.nome}
+                            <Input
+                                className="h-12 text-base"
+                                placeholder={campo.label?.trim() || campo.nome}
+                                maxLength={TAMANHO_MAXIMO_DO_VALOR}
+                                value={linha.valores[campo.nome] ?? ''}
+                                disabled={emAndamento(linha)}
+                                onChange={(evento) =>
+                                    aoEditar(
+                                        linha.id,
+                                        campo.nome,
+                                        evento.target.value,
+                                    )
+                                }
+                            />
+                        </label>
+                    ))}
                 </form>
             ) : (
                 <p className="text-sm text-muted-foreground">
@@ -258,7 +288,10 @@ export default function VisaoCelular({
                 </Link>
             </p>
 
-            <div className="fixed inset-x-0 bottom-0 z-20 flex gap-2.5 border-t bg-card px-4 pt-3 pb-6">
+            <div
+                ref={barraRef}
+                className="fixed inset-x-0 bottom-0 z-20 flex gap-2.5 border-t bg-card px-4 pt-3 pb-[max(1.5rem,env(safe-area-inset-bottom))]"
+            >
                 <Button
                     variant="outline"
                     className="h-13 shrink-0 px-5 text-base"
