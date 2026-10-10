@@ -1,5 +1,13 @@
 <?php
 
+use App\Http\Controllers\Agendamentos\DisponibilidadeController;
+use App\Http\Controllers\Agendamentos\EquipamentoController;
+use App\Http\Controllers\Agendamentos\EspacoController;
+use App\Http\Controllers\Agendamentos\GrupoController;
+use App\Http\Controllers\Agendamentos\ReservaController;
+use App\Http\Controllers\Agendamentos\ReservaEquipamentoController;
+use App\Http\Controllers\Agendamentos\SolicitacaoController;
+use App\Http\Controllers\Agendamentos\SolicitacaoPublicaController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\CampoCertificadoController;
 use App\Http\Controllers\CompartilhamentoController;
@@ -15,6 +23,12 @@ Route::get('fontes/{pasta}/{peso}.ttf', [FonteController::class, 'show'])
     ->where('pasta', '[a-z0-9-]+')
     ->where('peso', '[1-9]00')
     ->name('fontes.show');
+
+Route::get('reservar/{slug}', [SolicitacaoPublicaController::class, 'create'])->name('reservar.create');
+Route::post('reservar/{slug}', [SolicitacaoPublicaController::class, 'store'])
+    ->middleware('throttle:solicitacoes')
+    ->name('reservar.store');
+Route::get('reservar/{slug}/enviado', [SolicitacaoPublicaController::class, 'enviado'])->name('reservar.enviado');
 
 Route::middleware('guest')->group(function () {
     Route::get('auth/google', [GoogleController::class, 'redirect'])->name('auth.google');
@@ -46,6 +60,39 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('modelos/{modelo}/certificados', [GeracaoCertificadoController::class, 'store'])
         ->middleware('throttle:gerar-certificado')
         ->name('certificados.store');
+
+    Route::prefix('agendamentos')->name('agendamentos')->group(function () {
+        Route::get('/', fn () => to_route('agendamentos.calendario'));
+
+        Route::name('.')->group(function () {
+            Route::get('calendario', [ReservaController::class, 'calendario'])->name('calendario');
+            Route::post('reservas', [ReservaController::class, 'store'])->name('reservas.store');
+            Route::put('reservas/{reserva}', [ReservaController::class, 'update'])->name('reservas.update');
+            Route::delete('reservas/{reserva}', [ReservaController::class, 'destroy'])->name('reservas.destroy');
+            Route::get('solicitacoes', [SolicitacaoController::class, 'index'])->name('solicitacoes.index');
+            Route::put('solicitacoes/{solicitacao}', [SolicitacaoController::class, 'update'])->name('solicitacoes.update');
+            Route::post('solicitacoes/{solicitacao}/aprovar', [SolicitacaoController::class, 'aprovar'])->name('solicitacoes.aprovar');
+            Route::post('solicitacoes/{solicitacao}/recusar', [SolicitacaoController::class, 'recusar'])->name('solicitacoes.recusar');
+            Route::get('espacos', [EspacoController::class, 'index'])->name('espacos.index');
+            Route::get('espacos/novo', [EspacoController::class, 'create'])->name('espacos.create');
+            Route::post('espacos', [EspacoController::class, 'store'])->name('espacos.store');
+            Route::get('espacos/{espaco}/editar', [EspacoController::class, 'edit'])->name('espacos.edit');
+            Route::put('espacos/{espaco}', [EspacoController::class, 'update'])->name('espacos.update');
+            Route::delete('espacos/{espaco}', [EspacoController::class, 'destroy'])->name('espacos.destroy');
+            Route::get('equipamentos', [EquipamentoController::class, 'index'])->name('equipamentos.index');
+            Route::post('equipamentos', [EquipamentoController::class, 'store'])->name('equipamentos.store');
+            Route::put('equipamentos/{equipamento}', [EquipamentoController::class, 'update'])->name('equipamentos.update');
+            Route::delete('equipamentos/{equipamento}', [EquipamentoController::class, 'destroy'])->name('equipamentos.destroy');
+            Route::scopeBindings()->group(function () {
+                Route::patch('reservas/{reserva}/equipamentos/{equipamento}', [ReservaEquipamentoController::class, 'update'])->name('reservas.equipamentos.update');
+            });
+            Route::get('grupos', [GrupoController::class, 'index'])->name('grupos.index');
+            Route::post('grupos', [GrupoController::class, 'store'])->name('grupos.store');
+            Route::put('grupos/{grupo}', [GrupoController::class, 'update'])->name('grupos.update');
+            Route::delete('grupos/{grupo}', [GrupoController::class, 'destroy'])->name('grupos.destroy');
+            Route::post('disponibilidade', DisponibilidadeController::class)->name('disponibilidade');
+        });
+    });
 
     Route::get('modelos/{modelo}/imagem', [ModeloCertificadoController::class, 'imagem'])->name('modelos.imagem');
 });

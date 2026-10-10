@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>PequenaVia — solicitar uma sala</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&amp;family=Instrument+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#6E1F24}a:hover{color:#4E1418}
+</style>
+</helmet>
+<div style="width: 390px; height: 1240px; box-sizing: border-box; background: #F5F0E6; color: #221A17; font-family: 'Instrument Sans', system-ui, sans-serif; font-size: 16px; line-height: 1.45; display: flex; flex-direction: column; overflow: hidden">
+
+  <header style="background: #6E1F24; color: #FBF8F2; padding: 24px 20px 22px; display: flex; flex-direction: column; gap: 14px">
+    <div style="display: flex; align-items: center; gap: 10px">
+      <span style="width: 40px; height: 40px; border-radius: 999px; background: #FBF8F2; display: flex; align-items: center; justify-content: center"><img src="/_blob/50066c2efa3bd703f79bbba990bb7aa8" alt="" style="width: 30px; height: 30px; object-fit: contain"></span>
+      <span style="font-size: 14px; color: #F1E3DA">Paróquia [NOME DA PARÓQUIA]</span>
+    </div>
+    <h1 style="margin: 0; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 36px; font-weight: 600; line-height: 1.05">Solicitar uma sala</h1>
+    <p style="margin: 0; font-size: 15px; color: #F1E3DA">Preencha o pedido e a secretaria entra em contato para confirmar. O pedido ainda não é uma reserva.</p>
+  </header>
+
+  <form style="flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 18px">
+    <fieldset style="margin: 0; padding: 0; border: none; display: flex; flex-direction: column; gap: 14px">
+      <legend style="font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #6B5D57; margin-bottom: 4px">Quem está pedindo</legend>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="p-grupo" style="font-weight: 600; font-size: 14px">Pastoral ou grupo</label>
+        <button id="p-grupo" type="button" style="height: 50px; padding: 0 14px; border: 1px solid #CDBFAC; border-radius: 12px; background: #FFFFFF; display: flex; align-items: center; justify-content: space-between; font: inherit; color: #221A17; cursor: pointer">Coral Santa Cecília <span aria-hidden="true">▾</span></button>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="p-nome" style="font-weight: 600; font-size: 14px">Seu nome</label>
+        <input id="p-nome" autocomplete="name" value="Rafael Moreira" style="height: 50px; padding: 0 14px; border: 1px solid #CDBFAC; border-radius: 12px; background: #FFFFFF; font: inherit; color: #221A17">
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="p-tel" style="font-weight: 600; font-size: 14px">Telefone (WhatsApp)</label>
+        <input id="p-tel" type="tel" autocomplete="tel" inputmode="tel" value="(11) 9 0000-0000" style="height: 50px; padding: 0 14px; border: 1px solid #CDBFAC; border-radius: 12px; background: #FFFFFF; font: inherit; color: #221A17">
+      </div>
+    </fieldset>
+
+    <fieldset style="margin: 0; padding: 0; border: none; display: flex; flex-direction: column; gap: 14px">
+      <legend style="font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #6B5D57; margin-bottom: 4px">O que vocês precisam</legend>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="p-titulo" style="font-weight: 600; font-size: 14px">Atividade</label>
+        <input id="p-titulo" value="Ensaio do coral" style="height: 50px; padding: 0 14px; border: 1px solid #CDBFAC; border-radius: 12px; background: #FFFFFF; font: inherit; color: #221A17">
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="p-data" style="font-weight: 600; font-size: 14px">Data</label>
+        <input id="p-data" type="text" value="sáb., 10/10/2026" style="height: 50px; padding: 0 14px; border: 1px solid #CDBFAC; border-radius: 12px; background: #FFFFFF; font: inherit; color: #221A17">
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">
+        <div style="display: flex; flex-direction: column; gap: 6px"><label for="p-ini" style="font-weight: 600; font-size: 14px">Das</label><input id="p-ini" value="18:00" style="height: 50px; padding: 0 14px; border: 1px solid #CDBFAC; border-radius: 12px; background: #FFFFFF; font: inherit; color: #221A17; min-width: 0"></div>
+        <div style="display: flex; flex-direction: column; gap: 6px"><label for="p-fim" style="font-weight: 600; font-size: 14px">Até</label><input id="p-fim" value="21:00" style="height: 50px; padding: 0 14px; border: 1px solid #CDBFAC; border-radius: 12px; background: #FFFFFF; font: inherit; color: #221A17; min-width: 0"></div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="p-espaco" style="font-weight: 600; font-size: 14px">Espaço desejado</label>
+        <button id="p-espaco" type="button" style="height: 50px; padding: 0 14px; border: 1px solid #CDBFAC; border-radius: 12px; background: #FFFFFF; display: flex; align-items: center; justify-content: space-between; font: inherit; color: #221A17; cursor: pointer">Auditório <span aria-hidden="true">▾</span></button>
+        <span style="font-size: 13px; color: #6B5D57">Pode escolher “Qualquer espaço disponível”.</span>
+      </div>
+      <fieldset style="margin: 0; padding: 0; border: none; display: flex; flex-direction: column; gap: 4px">
+        <legend style="font-weight: 600; font-size: 14px; margin-bottom: 6px">Precisa de equipamento? <span style="font-weight: 400; color: #6B5D57">(opcional)</span></legend>
+        <label style="display: flex; align-items: center; gap: 12px; min-height: 44px"><input type="checkbox" style="width: 20px; height: 20px; accent-color: #6E1F24">Projetor</label>
+        <label style="display: flex; align-items: center; gap: 12px; min-height: 44px"><input type="checkbox" checked style="width: 20px; height: 20px; accent-color: #6E1F24">Microfone sem fio</label>
+        <label style="display: flex; align-items: center; gap: 12px; min-height: 44px"><input type="checkbox" style="width: 20px; height: 20px; accent-color: #6E1F24">Caixa de som portátil</label>
+      </fieldset>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="p-obs"style="font-weight: 600; font-size: 14px">Observações <span style="font-weight: 400; color: #6B5D57">(opcional)</span></label>
+        <textarea id="p-obs" rows="2" placeholder="Ex.: precisamos do piano" style="padding: 12px 14px; border: 1px solid #CDBFAC; border-radius: 12px; background: #FFFFFF; font: inherit; color: #221A17; resize: none"></textarea>
+      </div>
+    </fieldset>
+
+    <button type="submit" style="margin-top: 4px; min-height: 54px; border: none; border-radius: 14px; background: #6E1F24; color: #FBF8F2; font: inherit; font-weight: 600; font-size: 17px; cursor: pointer">Enviar pedido</button>
+    <p style="margin: 0; font-size: 13px; color: #6B5D57; text-align: center">Seus dados são usados só para a secretaria falar com você sobre este pedido.</p>
+  </form>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1240}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

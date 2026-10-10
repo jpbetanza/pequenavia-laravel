@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>PequenaVia — grupos e pastorais</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&amp;family=Instrument+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F0E6}
+a{color:#6E1F24}a:hover{color:#4E1418}
+</style>
+</helmet>
+<div style="min-height: 900px; display: flex; flex-wrap: wrap; background: #F5F0E6; color: #221A17; font-family: 'Instrument Sans', system-ui, sans-serif; font-size: 14px; line-height: 1.45">
+
+  <aside style="flex: 1 1 248px; max-width: 100%; box-sizing: border-box; padding: 24px 16px; background: #EFE8DB; border-right: 1px solid #E1D7C8; display: flex; flex-direction: column; gap: 24px">
+    <a href="../Main.dc.html" style="display: flex; align-items: center; gap: 10px; padding: 0 8px; text-decoration: none; color: #221A17">
+      <span style="width: 36px; height: 36px; border-radius: 999px; background: #FBF8F2; display: flex; align-items: center; justify-content: center"><img src="/_blob/50066c2efa3bd703f79bbba990bb7aa8" alt="" style="width: 28px; height: 28px; object-fit: contain"></span>
+      <span style="font-family: 'Cormorant Garamond', Georgia, serif; font-size: 23px; font-weight: 700">PequenaVia</span>
+    </a>
+    <nav aria-label="Navegação do app" style="display: flex; flex-direction: column; gap: 6px">
+      <div>
+        <button type="button" aria-expanded="true" style="width: 100%; display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px; border: none; border-radius: 10px; background: transparent; font: inherit; font-size: 15px; font-weight: 600; color: #221A17; cursor: pointer; text-align: left">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M7 21h10M8 9h8M8 13h5"/></svg>
+          <span style="flex: 1">Certificados</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div style="display: flex; flex-direction: column; gap: 2px; margin: 4px 0 6px 22px; padding-left: 12px; border-left: 1px solid #D8CCBA">
+          <a href="../Modelos.dc.html" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; color: #4A3D38; text-decoration: none">Modelos</a>
+          <a href="../Historico.dc.html" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; color: #4A3D38; text-decoration: none">Histórico</a>
+        </div>
+      </div>
+      <div>
+        <button type="button" aria-expanded="true" style="width: 100%; display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px; border: none; border-radius: 10px; background: transparent; font: inherit; font-size: 15px; font-weight: 600; color: #221A17; cursor: pointer; text-align: left">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+          <span style="flex: 1">Agendamentos</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+        </button>
+        <div style="display: flex; flex-direction: column; gap: 2px; margin: 4px 0 0 22px; padding-left: 12px; border-left: 1px solid #D8CCBA">
+          <a href="Calendario.dc.html" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; color: #4A3D38; text-decoration: none">Calendário</a>
+          <a href="Solicitacoes.dc.html" style="display: flex; align-items: center; justify-content: space-between; min-height: 40px; padding: 0 12px; border-radius: 8px; color: #4A3D38; text-decoration: none">Solicitações <span aria-label="3 pendentes" style="min-width: 20px; height: 20px; padding: 0 6px; box-sizing: border-box; border-radius: 999px; background: #6E1F24; color: #FBF8F2; font-size: 12px; display: flex; align-items: center; justify-content: center">3</span></a>
+          <a href="Espacos.dc.html" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; color: #4A3D38; text-decoration: none">Espaços</a>
+          <a href="Equipamentos.dc.html" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; color: #4A3D38; text-decoration: none">Equipamentos</a>
+          <a href="Grupos.dc.html" aria-current="page" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px; border-radius: 8px; background: #FBF8F2; box-shadow: 0 1px 2px rgba(60, 30, 20, 0.08); color: #6E1F24; font-weight: 600; text-decoration: none">Grupos e pastorais</a>
+        </div>
+      </div>
+    </nav>
+    <div style="margin-top: auto; display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-top: 1px solid #E1D7C8">
+      <span style="width: 34px; height: 34px; border-radius: 999px; background: #6E1F24; color: #FBF8F2; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 13px">AS</span>
+      <span style="display: flex; flex-direction: column; min-width: 0; line-height: 1.3"><span style="font-weight: 600">Ana Secretaria</span><span style="font-size: 13px; color: #6B5D57">Paróquia [NOME]</span></span>
+    </div>
+  </aside>
+
+  <main style="flex: 999 1 560px; min-width: 0; padding: 32px 40px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px">
+    <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px">
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <h1 style="margin: 0; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 44px; font-weight: 600; line-height: 1">Grupos e pastorais</h1>
+        <p style="margin: 0; color: #6B5D57">Quem usa os espaços, com o contato de quem coordena e as reuniões fixas.</p>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 10px">
+        <label style="display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 14px; background: #FBF8F2; border: 1px solid #CDBFAC; border-radius: 999px; color: #6B5D57; width: 240px; box-sizing: border-box">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Buscar grupo</span>
+          <input type="search" placeholder="Buscar grupo" style="border: none; outline: none; background: transparent; font: inherit; color: #221A17; width: 100%">
+        </label>
+        <button type="button" style="display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 20px; border: none; border-radius: 10px; background: #6E1F24; color: #FBF8F2; font: inherit; font-weight: 600; cursor: pointer">+ Novo grupo</button>
+      </div>
+    </div>
+
+    <section aria-label="Grupos" style="background: #FBF8F2; border: 1px solid #E1D7C8; border-radius: 16px; overflow: hidden">
+      <div style="overflow-x: auto">
+        <table style="width: 100%; border-collapse: collapse; min-width: 760px">
+          <thead>
+            <tr style="background: #F2EBDF; text-align: left; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; color: #6B5D57">
+              <th scope="col" style="padding: 12px 18px; font-weight: 600">Grupo</th>
+              <th scope="col" style="padding: 12px 8px; font-weight: 600">Coordenação</th>
+              <th scope="col" style="padding: 12px 8px; font-weight: 600">Reuniões fixas</th>
+              <th scope="col" style="padding: 12px 18px; font-weight: 600"><span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Ações</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-top: 1px solid #E1D7C8">
+              <td style="padding: 14px 18px"><span style="font-weight: 600">Catequese</span><br><span style="font-size: 13px; color: #6B5D57">32 catequistas</span></td>
+              <td style="padding: 14px 8px">Irmã Lúcia<br><span style="font-size: 13px; color: #6B5D57">(11) 9 0000-0000</span></td>
+              <td style="padding: 14px 8px">Seg 19:00 · Sala de catequese<br><span style="font-size: 13px; color: #6B5D57">Sáb 15:00 · Sala de catequese</span></td>
+              <td style="padding: 14px 18px; text-align: right"><button type="button" aria-label="Editar Catequese" style="min-height: 38px; padding: 0 14px; border: 1px solid #CDBFAC; border-radius: 10px; background: transparent; font: inherit; font-weight: 600; color: #221A17; cursor: pointer">Editar</button></td>
+            </tr>
+            <tr style="border-top: 1px solid #E1D7C8">
+              <td style="padding: 14px 18px"><span style="font-weight: 600">Pastoral Familiar</span><br><span style="font-size: 13px; color: #6B5D57">12 casais</span></td>
+              <td style="padding: 14px 8px">Marcos e Helena<br><span style="font-size: 13px; color: #6B5D57">familiar@paroquia.org.br</span></td>
+              <td style="padding: 14px 8px">2º sáb. 09:00 · Salão paroquial</td>
+              <td style="padding: 14px 18px; text-align: right"><button type="button" aria-label="Editar Pastoral Familiar" style="min-height: 38px; padding: 0 14px; border: 1px solid #CDBFAC; border-radius: 10px; background: transparent; font: inherit; font-weight: 600; color: #221A17; cursor: pointer">Editar</button></td>
+            </tr>
+            <tr style="border-top: 1px solid #E1D7C8">
+              <td style="padding: 14px 18px"><span style="font-weight: 600">Coral Santa Cecília</span><br><span style="font-size: 13px; color: #6B5D57">18 vozes</span></td>
+              <td style="padding: 14px 8px">Rafael<br><span style="font-size: 13px; color: #6B5D57">(11) 9 0000-0000</span></td>
+              <td style="padding: 14px 8px">Sex 19:00 · Auditório</td>
+              <td style="padding: 14px 18px; text-align: right"><button type="button" aria-label="Editar Coral Santa Cecília" style="min-height: 38px; padding: 0 14px; border: 1px solid #CDBFAC; border-radius: 10px; background: transparent; font: inherit; font-weight: 600; color: #221A17; cursor: pointer">Editar</button></td>
+            </tr>
+            <tr style="border-top: 1px solid #E1D7C8">
+              <td style="padding: 14px 18px"><span style="font-weight: 600">Grupo Jovem</span><br><span style="font-size: 13px; color: #6B5D57">25 jovens</span></td>
+              <td style="padding: 14px 8px">Beatriz<br><span style="font-size: 13px; color: #6B5D57">jovem@paroquia.org.br</span></td>
+              <td style="padding: 14px 8px; color: #6B5D57">Nenhuma</td>
+              <td style="padding: 14px 18px; text-align: right"><button type="button" aria-label="Editar Grupo Jovem" style="min-height: 38px; padding: 0 14px; border: 1px solid #CDBFAC; border-radius: 10px; background: transparent; font: inherit; font-weight: 600; color: #221A17; cursor: pointer">Editar</button></td>
+            </tr>
+            <tr style="border-top: 1px solid #E1D7C8">
+              <td style="padding: 14px 18px"><span style="font-weight: 600">Conselho pastoral</span><br><span style="font-size: 13px; color: #6B5D57">9 conselheiros</span></td>
+              <td style="padding: 14px 8px">Pe. Antônio<br><span style="font-size: 13px; color: #6B5D57">secretaria</span></td>
+              <td style="padding: 14px 8px">1ª qua. 20:00 · Salão paroquial</td>
+              <td style="padding: 14px 18px; text-align: right"><button type="button" aria-label="Editar Conselho pastoral" style="min-height: 38px; padding: 0 14px; border: 1px solid #CDBFAC; border-radius: 10px; background: transparent; font: inherit; font-weight: 600; color: #221A17; cursor: pointer">Editar</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <p style="margin: 0; color: #6B5D57; font-size: 13px">Os grupos ativos aparecem na lista “Pastoral ou grupo” do formulário de solicitação.</p>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>
