@@ -212,3 +212,92 @@ export type PropsDoCalendario = {
     /** ISO 8601 no fuso da agenda, por exemplo "2026-10-04T23:00:00-03:00". */
     agora: string;
 };
+
+/** Status de uma solicitação, como as abas da tela da secretaria o nomeiam. */
+export type StatusDaSolicitacao = 'pendente' | 'aprovada' | 'recusada';
+
+/** Estado de conflito calculado no servidor. Nulo quando a solicitação já foi respondida. */
+export type EstadoDoCartao =
+    | 'sem_conflito'
+    | 'conflito'
+    | 'escolha_um_espaco'
+    | null;
+
+export type ConflitoDaSolicitacao = {
+    tipo: string;
+    mensagem: string;
+};
+
+export type SugestoesDaSolicitacao = {
+    espacos: { id: string; nome: string; capacidade: number | null }[];
+    horario: { inicio: string; fim: string } | null;
+};
+
+export type EquipamentoDaSolicitacao = {
+    id: string;
+    nome: string;
+    quantidade: number;
+};
+
+/** Cartão de uma solicitação, como a tela da secretaria e a resposta do PUT o trazem. */
+export type CartaoDeSolicitacao = {
+    id: string;
+    nome: string;
+    telefone: string;
+    titulo: string;
+    grupo_nome: string | null;
+    /** Data "YYYY-MM-DD". */
+    data: string;
+    /** "HH:MM" */
+    inicio: string;
+    /** "HH:MM" */
+    fim: string;
+    pessoas: number | null;
+    observacoes: string | null;
+    status: StatusDaSolicitacao;
+    motivo_recusa: string | null;
+    espaco_id: string | null;
+    /** ISO 8601 no fuso da agenda. */
+    recebida_em: string | null;
+    equipamentos: EquipamentoDaSolicitacao[];
+    reserva_id: string | null;
+    estado: EstadoDoCartao;
+    conflitos: ConflitoDaSolicitacao[];
+    sugestoes: SugestoesDaSolicitacao;
+};
+
+export type PropsDaSolicitacoes = {
+    link_do_formulario: string;
+    contagens: Record<StatusDaSolicitacao, number>;
+    status: StatusDaSolicitacao;
+    solicitacoes: CartaoDeSolicitacao[];
+    espacos: { id: string; nome: string; capacidade: number | null }[];
+    equipamentos: {
+        id: string;
+        nome: string;
+        quantidade: number;
+        /** Data "YYYY-MM-DD" ou null. */
+        manutencao_ate: string | null;
+    }[];
+};
+
+/** Dados da agenda que o formulário público e a página de envio recebem. */
+export type AgendaPublica = {
+    nome: string;
+    slug: string;
+};
+
+export type PropsDoFormularioPublico = {
+    agenda: AgendaPublica;
+    /** Hoje no fuso da agenda, "YYYY-MM-DD". */
+    hoje: string;
+    grupos: { id: string; nome: string }[];
+    espacos: {
+        id: string;
+        nome: string;
+        capacidade: number | null;
+        antecedencia_min_horas: number;
+        duracao_max_min: number | null;
+    }[];
+    equipamentos: { id: string; nome: string }[];
+};
