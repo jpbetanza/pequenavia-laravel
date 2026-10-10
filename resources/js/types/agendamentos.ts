@@ -55,3 +55,68 @@ export type EspacoFormulario = {
     horarios: HorarioDoEspaco[];
     bloqueios: BloqueioDoEspaco[];
 };
+
+/** Estado de um equipamento agora, calculado no servidor no fuso da agenda. */
+export type AgoraDoEquipamento = {
+    situacao: 'manutencao' | 'em_uso' | 'livre';
+    /** Unidades ocupadas por reservas que cobrem este horário. */
+    em_uso: number;
+    total: number;
+    livres: number;
+    /** Espaços das reservas que estão usando o equipamento agora. */
+    espacos: string[];
+    /** Dia e mês do fim da manutenção, em "dd/mm". Só existe em manutenção. */
+    ate: string | null;
+};
+
+/** Pico de uso simultâneo de um equipamento em um dia da semana. */
+export type DiaDeUsoDoEquipamento = {
+    /** Data "YYYY-MM-DD". */
+    data: string;
+    pico: number;
+    quantidade: number;
+};
+
+/** Equipamento na tabela da página. */
+export type EquipamentoResumo = {
+    id: string;
+    nome: string;
+    descricao: string | null;
+    quantidade: number;
+    local_guarda: string | null;
+    /** Data "YYYY-MM-DD" ou null. */
+    manutencao_ate: string | null;
+    em_manutencao: boolean;
+    agora: AgoraDoEquipamento;
+    /** Sete células, de segunda a domingo da semana atual. */
+    semana: DiaDeUsoDoEquipamento[];
+};
+
+/** `levar` aparece 15 min antes do início da reserva; `recolher`, no fim. */
+export type AcaoDeEquipamento = 'levar' | 'recolher';
+
+export type ItemDeMovimento = {
+    equipamento_id: string;
+    nome: string;
+    quantidade: number;
+    /** Entregue (para levar) ou recolhido (para recolher). */
+    marcado: boolean;
+};
+
+/** Uma linha do painel "Hoje: separar e recolher". */
+export type MovimentoDeHoje = {
+    chave: string;
+    acao: AcaoDeEquipamento;
+    /** "HH:MM" */
+    horario: string;
+    titulo: string;
+    espaco: string;
+    reserva_id: string;
+    itens: ItemDeMovimento[];
+};
+
+export type PainelDeHoje = {
+    /** Ex.: "sábado, 10 de outubro". */
+    rotulo: string;
+    movimentos: MovimentoDeHoje[];
+};

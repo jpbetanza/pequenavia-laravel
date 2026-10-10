@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\Agendamentos\DisponibilidadeController;
+use App\Http\Controllers\Agendamentos\EquipamentoController;
 use App\Http\Controllers\Agendamentos\EspacoController;
 use App\Http\Controllers\Agendamentos\GrupoController;
+use App\Http\Controllers\Agendamentos\ReservaEquipamentoController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\CampoCertificadoController;
 use App\Http\Controllers\CompartilhamentoController;
@@ -62,7 +64,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('espacos/{espaco}/editar', [EspacoController::class, 'edit'])->name('espacos.edit');
             Route::put('espacos/{espaco}', [EspacoController::class, 'update'])->name('espacos.update');
             Route::delete('espacos/{espaco}', [EspacoController::class, 'destroy'])->name('espacos.destroy');
-            Route::inertia('equipamentos', 'agendamentos/equipamentos/index')->name('equipamentos.index');
+            Route::get('equipamentos', [EquipamentoController::class, 'index'])->name('equipamentos.index');
+            Route::post('equipamentos', [EquipamentoController::class, 'store'])->name('equipamentos.store');
+            Route::put('equipamentos/{equipamento}', [EquipamentoController::class, 'update'])->name('equipamentos.update');
+            Route::delete('equipamentos/{equipamento}', [EquipamentoController::class, 'destroy'])->name('equipamentos.destroy');
+            Route::scopeBindings()->group(function () {
+                Route::patch('reservas/{reserva}/equipamentos/{equipamento}', [ReservaEquipamentoController::class, 'update'])->name('reservas.equipamentos.update');
+            });
             Route::get('grupos', [GrupoController::class, 'index'])->name('grupos.index');
             Route::post('grupos', [GrupoController::class, 'store'])->name('grupos.store');
             Route::put('grupos/{grupo}', [GrupoController::class, 'update'])->name('grupos.update');
