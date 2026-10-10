@@ -121,3 +121,31 @@
         @apply bg-background text-foreground;
     }
 }
+
+/* Imprimir a semana: só a área do calendário sai no papel, em paisagem. */
+@media print {
+    @page {
+        size: landscape;
+        margin: 10mm;
+    }
+
+    body * {
+        visibility: hidden;
+    }
+
+    #area-de-impressao,
+    #area-de-impressao * {
+        visibility: visible;
+    }
+
+    #area-de-impressao {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        border: none;
+        border-radius: 0;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+}

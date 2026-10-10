@@ -120,3 +120,95 @@ export type PainelDeHoje = {
     rotulo: string;
     movimentos: MovimentoDeHoje[];
 };
+
+/** Semana exibida no calendário: segunda e domingo, "YYYY-MM-DD". */
+export type SemanaDoCalendario = {
+    inicio: string;
+    fim: string;
+};
+
+/** Reserva do intervalo, como o calendário a recebe. */
+export type ReservaDoCalendario = {
+    id: string;
+    titulo: string;
+    data: string;
+    /** "HH:MM" */
+    inicio: string;
+    /** "HH:MM" */
+    fim: string;
+    pessoas: number | null;
+    observacoes: string | null;
+    /** Preenchido quando a reserva faz parte de uma série recorrente. */
+    serie_id: string | null;
+    espaco_id: string;
+    grupo_id: string | null;
+    grupo_nome: string | null;
+    equipamentos: EquipamentoDaReserva[];
+};
+
+export type EquipamentoDaReserva = {
+    id: string;
+    nome: string;
+    quantidade: number;
+    entregue_em: string | null;
+    recolhido_em: string | null;
+};
+
+/** Período fechado ou bloqueado de um espaço, com datas "YYYY-MM-DD". */
+export type BloqueioDoCalendario = {
+    id: string;
+    inicio: string;
+    fim: string;
+    motivo: string;
+};
+
+/** Espaço ativo do dono, com horários e os bloqueios que tocam o intervalo. */
+export type EspacoDoCalendario = {
+    id: string;
+    nome: string;
+    capacidade: number | null;
+    cor: CorDoEspaco;
+    recursos_fixos: string[];
+    horarios: HorarioDoEspaco[];
+    bloqueios: BloqueioDoCalendario[];
+};
+
+export type EquipamentoDoCalendario = {
+    id: string;
+    nome: string;
+    quantidade: number;
+    /** Data "YYYY-MM-DD" ou null. */
+    manutencao_ate: string | null;
+};
+
+export type GrupoDoCalendario = {
+    id: string;
+    nome: string;
+};
+
+/** Pedido pendente de reserva que cai no intervalo (usado na visão dia). */
+export type SolicitacaoDoCalendario = {
+    id: string;
+    titulo: string;
+    nome: string;
+    telefone: string;
+    data: string;
+    inicio: string;
+    fim: string;
+    pessoas: number | null;
+    espaco_id: string | null;
+};
+
+export type PropsDoCalendario = {
+    semana: SemanaDoCalendario;
+    visao: 'semana' | 'dia';
+    /** Dia selecionado, "YYYY-MM-DD". */
+    data: string;
+    reservas: ReservaDoCalendario[];
+    espacos: EspacoDoCalendario[];
+    equipamentos: EquipamentoDoCalendario[];
+    grupos: GrupoDoCalendario[];
+    solicitacoes: SolicitacaoDoCalendario[];
+    /** ISO 8601 no fuso da agenda, por exemplo "2026-10-04T23:00:00-03:00". */
+    agora: string;
+};
