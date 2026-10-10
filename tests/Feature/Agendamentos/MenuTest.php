@@ -1,5 +1,7 @@
 <?php
 
+use App\Enums\StatusSolicitacao;
+use App\Models\Solicitacao;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -37,6 +39,17 @@ test('a contagem de solicitações pendentes é compartilhada com quem está log
     $this->actingAs(User::factory()->create())
         ->get(route('agendamentos.calendario'))
         ->assertInertia(fn (Assert $page) => $page->where('agenda.solicitacoes_pendentes', 0));
+});
+
+test('a contagem de solicitações pendentes conta só as pendentes do usuário logado', function () {
+    $user = User::factory()->create();
+    Solicitacao::factory()->count(2)->pendente()->for($user)->create();
+    Solicitacao::factory()->for($user)->create(['status' => StatusSolicitacao::Aprovada]);
+    Solicitacao::factory()->pendente()->create();
+
+    $this->actingAs($user)
+        ->get(route('agendamentos.calendario'))
+        ->assertInertia(fn (Assert $page) => $page->where('agenda.solicitacoes_pendentes', 2));
 });
 
 test('visitantes não recebem a contagem da agenda', function () {

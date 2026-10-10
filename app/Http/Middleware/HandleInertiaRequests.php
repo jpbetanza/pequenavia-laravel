@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\StatusSolicitacao;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -42,7 +43,10 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
             ],
             'agenda' => fn () => $request->user() === null ? null : [
-                'solicitacoes_pendentes' => 0,
+                'solicitacoes_pendentes' => $request->user()
+                    ->solicitacoes()
+                    ->where('status', StatusSolicitacao::Pendente)
+                    ->count(),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];

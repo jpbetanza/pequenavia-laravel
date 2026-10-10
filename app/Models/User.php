@@ -105,4 +105,34 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     {
         return $this->hasMany(GeracaoCertificado::class);
     }
+
+    /** @return HasMany<Espaco, $this> */
+    public function espacos(): HasMany
+    {
+        return $this->hasMany(Espaco::class);
+    }
+
+    /** @return HasMany<Equipamento, $this> */
+    public function equipamentos(): HasMany
+    {
+        return $this->hasMany(Equipamento::class);
+    }
+
+    /** @return HasMany<Grupo, $this> */
+    public function grupos(): HasMany
+    {
+        return $this->hasMany(Grupo::class);
+    }
+
+    /** @return HasMany<Reserva, $this> */
+    public function reservas(): HasMany
+    {
+        return $this->hasMany(Reserva::class);
+    }
+
+    /** @return HasMany<Solicitacao, $this> */
+    public function solicitacoes(): HasMany
+    {
+        return $this->hasMany(Solicitacao::class);
+    }
 }
