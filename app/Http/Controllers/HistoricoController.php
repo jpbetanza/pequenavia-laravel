@@ -27,7 +27,7 @@ class HistoricoController extends Controller
         $geracoes = $request->user()->geracoes()
             ->with('modelo.campos:id,modelo_id,nome,created_at', 'user:id,name')
             ->when($busca !== '', fn (Builder $query) => $query->whereRaw(
-                'campos_valores::text ilike ?',
+                "exists (select 1 from jsonb_each_text(campos_valores) as v(chave, valor) where v.valor ilike ? escape '\\')",
                 [$this->padraoDaBusca($busca)],
             ))
             ->when($modelo !== null, fn (Builder $query) => $query->where('modelo_id', $modelo))
@@ -59,14 +59,11 @@ class HistoricoController extends Controller
     }
 
     /**
-     * Padrão ILIKE para o termo. Como a busca é feita sobre o JSON de `campos_valores`, o termo é
-     * codificado como o jsonb o escreve (a barra invertida vira `\\`), e depois `%`, `_` e `\` viram texto literal.
+     * Padrão ILIKE para o termo: `%`, `_` e a barra invertida viram texto literal. A busca olha só os
+     * valores dos campos (não os nomes das chaves), por isso o termo não passa por codificação JSON.
      */
     private function padraoDaBusca(string $busca): string
     {
-        $codificado = json_encode($busca, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
-        $trecho = is_string($codificado) ? substr($codificado, 1, -1) : $busca;
-
-        return '%'.addcslashes($trecho, '%_\\').'%';
+        return '%'.addcslashes($busca, '%_\\').'%';
     }
 }

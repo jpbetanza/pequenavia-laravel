@@ -87,6 +87,30 @@ it('acha as gerações pelo valor de qualquer campo, sem diferenciar maiúsculas
             ->etc());
 });
 
+it('não acha as gerações pelo nome de um campo que não aparece em nenhum valor', function () {
+    $user = User::factory()->create();
+    GeracaoCertificado::factory()->for($user)->create(['campos_valores' => ['Nome' => 'Maria', 'Data' => '2024']]);
+    GeracaoCertificado::factory()->for($user)->create(['campos_valores' => ['Nome' => 'João']]);
+
+    $this->actingAs($user)->get(route('historico.index', ['busca' => 'Nome']))
+        ->assertInertia(fn ($page) => $page->has('geracoes', 0)->etc());
+
+    $this->actingAs($user)->get(route('historico.index', ['busca' => 'Data']))
+        ->assertInertia(fn ($page) => $page->has('geracoes', 0)->etc());
+});
+
+it('acha o termo que está só no valor, mesmo quando ele também é nome de outro campo', function () {
+    $user = User::factory()->create();
+    $geracao = GeracaoCertificado::factory()->for($user)->create(['campos_valores' => ['Local' => 'Nome da Paróquia']]);
+    GeracaoCertificado::factory()->for($user)->create(['campos_valores' => ['Nome' => 'Ana']]);
+
+    $this->actingAs($user)->get(route('historico.index', ['busca' => 'paróquia']))
+        ->assertInertia(fn ($page) => $page
+            ->has('geracoes', 1)
+            ->where('geracoes.0.id', $geracao->id)
+            ->etc());
+});
+
 it('não mostra na busca as gerações de outro usuário com o mesmo valor', function () {
     $user = User::factory()->create();
     GeracaoCertificado::factory()->for($user)->create(['campos_valores' => ['Nome' => 'Maria']]);
