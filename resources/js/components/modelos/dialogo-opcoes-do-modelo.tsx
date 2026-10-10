@@ -27,18 +27,75 @@ import { cn } from '@/lib/utils';
 import { campos, gerar } from '@/routes/meus-certificados';
 import type { ModeloResumo } from '@/types/certificados';
 
-type Props = {
-    modelo: ModeloResumo | null;
-    aoFechar: () => void;
-    aoAlterar: (id: string) => void;
+type PropsDaConfirmacao = {
+    modelo: ModeloResumo;
+    aberta: boolean;
+    aoAbertaChange: (aberta: boolean) => void;
+    aoExcluido: () => void;
 };
 
-type PropsDoConteudo = {
-    modelo: ModeloResumo;
+/** Confirmação de exclusão de um modelo. Usada pelo diálogo de opções e pelo menu do cartão. */
+export function ConfirmacaoDeExclusao({
+    modelo,
+    aberta,
+    aoAbertaChange,
+    aoExcluido,
+}: PropsDaConfirmacao) {
+    const [excluindo, setExcluindo] = useState(false);
+
+    const excluir = () => {
+        router.delete(destroy.url({ modelo: modelo.id }), {
+            preserveScroll: true,
+            onStart: () => setExcluindo(true),
+            onFinish: () => setExcluindo(false),
+            onSuccess: () => {
+                aoAbertaChange(false);
+                aoExcluido();
+            },
+            ...tratamentoDeErro,
+        });
+    };
+
+    return (
+        <AlertDialog open={aberta} onOpenChange={aoAbertaChange}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>
+                        Excluir "{modelo.title}"?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Esta ação não pode ser desfeita. O modelo, os campos e a
+                        imagem serão apagados, e quem recebeu o compartilhamento
+                        perde o acesso.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction
+                        disabled={excluindo}
+                        onClick={(evento) => {
+                            evento.preventDefault();
+                            excluir();
+                        }}
+                    >
+                        Excluir
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+    );
+}
+
+type Props = {
+    modelo: ModeloResumo | null;
     compartilhando: boolean;
     aoAlternarCompartilhamento: () => void;
     aoFechar: () => void;
     aoAlterar: (id: string) => void;
+};
+
+type PropsDoConteudo = Omit<Props, 'modelo'> & {
+    modelo: ModeloResumo;
 };
 
 function Conteudo({
@@ -49,25 +106,11 @@ function Conteudo({
     aoAlterar,
 }: PropsDoConteudo) {
     const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
-    const [excluindo, setExcluindo] = useState(false);
     const semCampos = modelo.campos_count === 0;
 
     const ir = (url: string) => {
         aoFechar();
         router.visit(url);
-    };
-
-    const excluir = () => {
-        router.delete(destroy.url({ modelo: modelo.id }), {
-            preserveScroll: true,
-            onStart: () => setExcluindo(true),
-            onFinish: () => setExcluindo(false),
-            onSuccess: () => {
-                setConfirmandoExclusao(false);
-                aoFechar();
-            },
-            ...tratamentoDeErro,
-        });
     };
 
     return (
@@ -98,7 +141,7 @@ function Conteudo({
                     )}
 
                     <Button
-                        disabled={semCampos || excluindo}
+                        disabled={semCampos}
                         onClick={() => ir(gerar.url({ modelo: modelo.id }))}
                     >
                         <FileText />
@@ -131,7 +174,6 @@ function Conteudo({
                             <Button
                                 variant="secondary"
                                 className="flex-1"
-                                disabled={excluindo}
                                 onClick={() => {
                                     aoFechar();
                                     aoAlterar(modelo.id);
@@ -145,7 +187,6 @@ function Conteudo({
                             <Button
                                 variant="destructive"
                                 className="flex-1"
-                                disabled={excluindo}
                                 onClick={() => setConfirmandoExclusao(true)}
                             >
                                 <Trash2 />
@@ -160,55 +201,27 @@ function Conteudo({
                 )}
             </div>
 
-            <AlertDialog
-                open={confirmandoExclusao}
-                onOpenChange={setConfirmandoExclusao}
-            >
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>
-                            Excluir "{modelo.title}"?
-                        </AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Esta ação não pode ser desfeita. O modelo, os campos
-                            e a imagem serão apagados, e quem recebeu o
-                            compartilhamento perde o acesso.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction
-                            disabled={excluindo}
-                            onClick={(evento) => {
-                                evento.preventDefault();
-                                excluir();
-                            }}
-                        >
-                            Excluir
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            <ConfirmacaoDeExclusao
+                modelo={modelo}
+                aberta={confirmandoExclusao}
+                aoAbertaChange={setConfirmandoExclusao}
+                aoExcluido={aoFechar}
+            />
         </>
     );
 }
 
 export default function DialogoOpcoesDoModelo({
     modelo,
+    compartilhando,
+    aoAlternarCompartilhamento,
     aoFechar,
     aoAlterar,
 }: Props) {
-    const [compartilhando, setCompartilhando] = useState(false);
-
-    const fechar = () => {
-        setCompartilhando(false);
-        aoFechar();
-    };
-
     return (
         <Dialog
             open={modelo !== null}
-            onOpenChange={(abrir) => !abrir && fechar()}
+            onOpenChange={(abrir) => !abrir && aoFechar()}
         >
             <DialogContent
                 className={cn(
@@ -221,10 +234,8 @@ export default function DialogoOpcoesDoModelo({
                         key={modelo.id}
                         modelo={modelo}
                         compartilhando={compartilhando}
-                        aoAlternarCompartilhamento={() =>
-                            setCompartilhando((atual) => !atual)
-                        }
-                        aoFechar={fechar}
+                        aoAlternarCompartilhamento={aoAlternarCompartilhamento}
+                        aoFechar={aoFechar}
                         aoAlterar={aoAlterar}
                     />
                 )}
