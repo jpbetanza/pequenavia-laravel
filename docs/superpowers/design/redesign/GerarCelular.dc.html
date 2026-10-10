@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>PequenaVia — gerar no celular</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&amp;family=Instrument+Sans:wght@400;500;600&amp;family=Pinyon+Script&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#6E1F24}a:hover{color:#4E1418}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background: #F5F0E6; color: #221A17; font-family: 'Instrument Sans', system-ui, sans-serif; font-size: 15px; line-height: 1.45; display: flex; flex-direction: column; overflow: hidden">
+
+  <header style="display: flex; align-items: center; gap: 8px; padding: 16px 12px 12px; border-bottom: 1px solid #E1D7C8; background: #FBF8F2">
+    <a href="Modelos.dc.html" aria-label="Voltar para Modelos" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #221A17">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+    </a>
+    <div style="flex: 1; display: flex; flex-direction: column; line-height: 1.2">
+      <span style="font-size: 12px; color: #6B5D57">Gerar certificado</span>
+      <span style="font-family: 'Cormorant Garamond', Georgia, serif; font-size: 24px; font-weight: 600">Batismo</span>
+    </div>
+    <button type="button" aria-label="Importar planilha" style="width: 44px; height: 44px; border-radius: 10px; border: 1px solid #E1D7C8; background: transparent; color: #4A3D38; display: flex; align-items: center; justify-content: center; cursor: pointer">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21V9M7 14l5-5 5 5M5 3h14"/></svg>
+    </button>
+  </header>
+
+  <div style="flex: 1; overflow: hidden; padding: 16px; display: flex; flex-direction: column; gap: 16px">
+    <div style="aspect-ratio: 1.414 / 1; background: #FCF8EF; box-shadow: 0 18px 36px -22px rgba(60, 30, 20, 0.55); position: relative; flex: none">
+      <div style="position: absolute; inset: 3%; border: 2px solid #6E1F24"></div>
+      <div style="position: absolute; inset: 5.5%; border: 1px solid #B8955A"></div>
+      <div style="position: absolute; left: 0; right: 0; top: 22%; text-align: center; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 12px; font-weight: 700; letter-spacing: 0.16em; color: #6E1F24">CERTIFICADO DE BATISMO</div>
+      <div style="position: absolute; left: 0; right: 0; top: 38%; text-align: center; font-family: 'Pinyon Script', cursive; font-size: 26px; color: #221A17">Gabriel Martins</div>
+      <div style="position: absolute; left: 10%; right: 10%; top: 64%; text-align: center; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 10px; color: #4A3D38">recebeu o Sacramento do Batismo em 28/09/2026</div>
+    </div>
+
+    <form style="display: flex; flex-direction: column; gap: 12px">
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="m-nome" style="font-weight: 600; font-size: 14px">Nome</label>
+        <input id="m-nome" value="Gabriel Martins" style="height: 48px; padding: 0 14px; border: 1px solid #6E1F24; border-radius: 10px; background: #FFFFFF; font: inherit; font-size: 16px; color: #221A17">
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <label for="m-data" style="font-weight: 600; font-size: 14px">Data</label>
+          <input id="m-data" value="28/09/2026" inputmode="numeric" style="height: 48px; padding: 0 14px; border: 1px solid #CDBFAC; border-radius: 10px; background: #FFFFFF; font: inherit; font-size: 16px; color: #221A17; min-width: 0">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <label for="m-cel" style="font-weight: 600; font-size: 14px">Celebrante</label>
+          <input id="m-cel" value="Pe. Antônio" style="height: 48px; padding: 0 14px; border: 1px solid #CDBFAC; border-radius: 10px; background: #FFFFFF; font: inherit; font-size: 16px; color: #221A17; min-width: 0">
+        </div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 6px">
+        <label for="m-pad" style="font-weight: 600; font-size: 14px">Padrinhos</label>
+        <input id="m-pad" value="Ana e Paulo Martins" style="height: 48px; padding: 0 14px; border: 1px solid #CDBFAC; border-radius: 10px; background: #FFFFFF; font: inherit; font-size: 16px; color: #221A17">
+      </div>
+    </form>
+
+    <p style="margin: 0; font-size: 13px; color: #6B5D57; display: flex; align-items: center; gap: 8px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2F5D50" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+      2 certificados gerados nesta sessão · <a href="Historico.dc.html">ver</a>
+    </p>
+  </div>
+
+  <div style="padding: 12px 16px 24px; background: #FBF8F2; border-top: 1px solid #E1D7C8; display: flex; gap: 10px">
+    <button type="button" style="flex: none; min-height: 52px; padding: 0 16px; border: 1px solid #CDBFAC; border-radius: 12px; background: transparent; font: inherit; font-weight: 600; color: #221A17; cursor: pointer">Limpar</button>
+    <button type="button" style="flex: 1; min-height: 52px; border: none; border-radius: 12px; background: #6E1F24; color: #FBF8F2; font: inherit; font-weight: 600; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+      Gerar e baixar
+    </button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>
