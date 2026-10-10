@@ -19,8 +19,7 @@ export function UserInfo({
                 <AvatarImage src={user.avatar} alt={user.name} />
                 <AvatarFallback
                     className={
-                        classeDoAvatar ??
-                        'rounded-lg bg-neutral-200 text-black dark:bg-neutral-700 dark:text-white'
+                        classeDoAvatar ?? 'rounded-lg bg-neutral-200 text-black'
                     }
                 >
                     {getInitials(user.name)}

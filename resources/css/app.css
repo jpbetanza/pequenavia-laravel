@@ -5,8 +5,6 @@
 @source '../views';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 
-@custom-variant dark (&:is(.dark *));
-
 @theme {
     --font-sans:
         'Instrument Sans', ui-sans-serif, system-ui, sans-serif,
@@ -71,6 +69,7 @@
 }
 
 :root {
+    color-scheme: light;
     --background: #f5f0e6;
     --foreground: #221a17;
     --card: #fbf8f2;
@@ -110,48 +109,6 @@
     --sucesso-fundo: #e2eee8;
     --aviso: #8a4b12;
     --aviso-fundo: #fff6ee;
-    --medalha: #fbf8f2;
-}
-
-.dark {
-    --background: #17120f;
-    --foreground: #efe7da;
-    --card: #201915;
-    --card-foreground: #efe7da;
-    --popover: #201915;
-    --popover-foreground: #efe7da;
-    --primary: #d38277;
-    --primary-foreground: #1a110e;
-    --secondary: #2b221d;
-    --secondary-foreground: #efe7da;
-    --muted: #2b221d;
-    --muted-foreground: #b3a596;
-    --accent: #2b221d;
-    --accent-foreground: #efe7da;
-    --destructive: #e0675f;
-    --destructive-foreground: #1a110e;
-    --border: #3a2e27;
-    --input: #4a3c33;
-    --ring: #d38277;
-    --chart-1: oklch(0.488 0.243 264.376);
-    --chart-2: oklch(0.696 0.17 162.48);
-    --chart-3: oklch(0.769 0.188 70.08);
-    --chart-4: oklch(0.627 0.265 303.9);
-    --chart-5: oklch(0.645 0.246 16.439);
-    --sidebar: #1b1512;
-    --sidebar-foreground: #efe7da;
-    --sidebar-primary: #d38277;
-    --sidebar-primary-foreground: #1a110e;
-    --sidebar-accent: #2b221d;
-    --sidebar-accent-foreground: #f0b9b0;
-    --sidebar-border: #3a2e27;
-    --sidebar-ring: #d38277;
-    --mesa: #120e0c;
-    --dourado: #c9a45a;
-    --sucesso: #9fd3bb;
-    --sucesso-fundo: #1d3229;
-    --aviso: #f0b27a;
-    --aviso-fundo: #3a2716;
     --medalha: #fbf8f2;
 }
 
