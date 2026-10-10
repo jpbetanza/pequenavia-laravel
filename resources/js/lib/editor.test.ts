@@ -2,10 +2,13 @@ import { describe, expect, it } from 'vite-plus/test';
 import type { Campo } from '@/types/certificados';
 import {
     deslocamentoDaTecla,
+    deslocamentoDoEvento,
     deslocarPosicao,
     escalaDoPreview,
     limitarPosicao,
     moverCampo,
+    mudancasDiferentes,
+    retirarMudancas,
     reverterCampo,
     valoresDoNovoCampo,
 } from './editor';
@@ -185,5 +188,90 @@ describe('deslocarPosicao', () => {
             x: 0,
             y: 10000,
         });
+    });
+});
+
+describe('deslocamentoDoEvento', () => {
+    const tecla = {
+        key: 'ArrowRight',
+        shiftKey: false,
+        ctrlKey: false,
+        metaKey: false,
+        altKey: false,
+    };
+
+    it('mexe o campo com a seta sem modificadores', () => {
+        expect(deslocamentoDoEvento(tecla)).toEqual({ dx: 1, dy: 0 });
+    });
+
+    it('usa 10 px com Shift', () => {
+        expect(deslocamentoDoEvento({ ...tecla, shiftKey: true })).toEqual({
+            dx: 10,
+            dy: 0,
+        });
+    });
+
+    it('ignora Ctrl, Cmd e Alt para não atrapalhar atalhos do navegador', () => {
+        expect(deslocamentoDoEvento({ ...tecla, ctrlKey: true })).toBeNull();
+        expect(deslocamentoDoEvento({ ...tecla, metaKey: true })).toBeNull();
+        expect(deslocamentoDoEvento({ ...tecla, altKey: true })).toBeNull();
+        expect(
+            deslocamentoDoEvento({ ...tecla, shiftKey: true, ctrlKey: true }),
+        ).toBeNull();
+    });
+});
+
+describe('retirarMudancas', () => {
+    it('tira do pendente as chaves que a outra mudança passou a definir', () => {
+        expect(retirarMudancas({ x: 120, y: 80 }, { x: 500 })).toEqual({
+            y: 80,
+        });
+    });
+
+    it('deixa o pendente intacto quando a mudança não toca nas suas chaves', () => {
+        expect(retirarMudancas({ x: 120 }, { nome: 'Novo' })).toEqual({
+            x: 120,
+        });
+    });
+
+    it('tira x quando o campo passa a ser centralizado', () => {
+        expect(
+            retirarMudancas({ x: 120, y: 80 }, { centralizado: true }),
+        ).toEqual({ y: 80 });
+    });
+
+    it('não mexe no pendente original', () => {
+        const pendentes = { x: 120, y: 80 };
+
+        retirarMudancas(pendentes, { y: 1 });
+
+        expect(pendentes).toEqual({ x: 120, y: 80 });
+    });
+});
+
+describe('mudancasDiferentes', () => {
+    const confirmado: Campo = {
+        id: 'a',
+        modelo_id: 'm',
+        nome: 'Nome',
+        label: null,
+        x: 10,
+        y: 20,
+        cor: '#111111',
+        tamanho_fonte: 24,
+        fonte_familia: 'Georgia',
+        peso_fonte: 600,
+        espacamento_letras: 0,
+        centralizado: false,
+    };
+
+    it('devolve só as chaves que mudaram em relação ao confirmado', () => {
+        expect(mudancasDiferentes({ x: 10, y: 99 }, confirmado)).toEqual({
+            y: 99,
+        });
+    });
+
+    it('fica vazio quando o pendente voltou à posição confirmada', () => {
+        expect(mudancasDiferentes({ x: 10, y: 20 }, confirmado)).toEqual({});
     });
 });

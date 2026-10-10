@@ -13,6 +13,9 @@ export type Campo = {
     centralizado: boolean;
 };
 
+/** Como o editor mostra os textos dos campos: o nome da coluna ou um exemplo. */
+export type ModoDeExibicao = 'nomes' | 'exemplo';
+
 /** Grupo => (família exibida => pasta dos arquivos de fonte). */
 export type GruposFontes = Record<string, Record<string, string>>;
 

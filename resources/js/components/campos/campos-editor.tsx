@@ -7,7 +7,6 @@ import {
 } from '@/actions/App/Http/Controllers/CampoCertificadoController';
 import BarraDoEditor, {
     type EstadoDoSalvamento,
-    type ModoDeExibicao,
 } from '@/components/campos/barra-do-editor';
 import ListaDeCampos from '@/components/campos/lista-de-campos';
 import PainelDoCampo from '@/components/campos/painel-do-campo';
@@ -15,9 +14,11 @@ import PreviewDoModelo from '@/components/campos/preview-do-modelo';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useFontesDoCatalogo } from '@/hooks/use-fontes-do-catalogo';
 import {
-    deslocamentoDaTecla,
+    deslocamentoDoEvento,
     deslocarPosicao,
+    mudancasDiferentes,
     moverCampo,
+    retirarMudancas,
     reverterCampo,
     valoresDoNovoCampo,
 } from '@/lib/editor';
@@ -26,6 +27,7 @@ import type {
     Campo,
     GruposFontes,
     ModeloBasico,
+    ModoDeExibicao,
     PesosDasFontes,
 } from '@/types/certificados';
 
@@ -71,6 +73,7 @@ export default function CamposEditor({
     const [arrastando, setArrastando] = useState<string | null>(null);
     const [salvando, setSalvando] = useState(0);
     const [falhou, setFalhou] = useState(false);
+    const [salvouAlgo, setSalvouAlgo] = useState(false);
     const [criando, setCriando] = useState(false);
     const [selecionadoId, setSelecionadoId] = useState<string | null>(null);
     const [modo, setModo] = useState<ModoDeExibicao>('nomes');
@@ -81,6 +84,8 @@ export default function CamposEditor({
             camposIniciais.map((campo) => [campo.id, campo]),
         ),
     );
+    /** Quantos PATCH de cada campo ainda não voltaram; com um em voo, o servidor pode estar à frente da tela. */
+    const salvandoPorCampo = useRef(new Map<string, number>());
     const arrasteAtivo = useRef<Arraste | null>(null);
     /** Setas do teclado ainda não salvas: um único PATCH quando o campo para de se mover. */
     const deslocamentoPendente = useRef<{
@@ -107,11 +112,30 @@ export default function CamposEditor({
         arrasteAtivo.current = null;
     }, []);
 
+    /** Marca um salvamento bem-sucedido: o selo passa a mostrar "Salvo agora". */
+    const aoSalvar = () => {
+        setFalhou(false);
+        setSalvouAlgo(true);
+    };
+
     /** Aplica a mudança na tela na hora e salva; se o servidor recusar, desfaz só o que falhou. */
     const atualizar = async (id: string, mudancas: Partial<Campo>) => {
         if (!confirmados.current.has(id)) {
             // O campo foi excluído enquanto esta mudança esperava (ex.: cor pendente ao excluir).
             return;
+        }
+
+        // Uma mudança vinda do painel vale mais que o deslocamento pendente do teclado: esse pedaço sai dele.
+        const pendente = deslocamentoPendente.current;
+
+        if (pendente?.id === id) {
+            const restantes = retirarMudancas(pendente.mudancas, mudancas);
+
+            if (Object.keys(restantes).length === 0) {
+                descartarDeslocamento();
+            } else {
+                deslocamentoPendente.current = { id, mudancas: restantes };
+            }
         }
 
         setCampos((atuais) =>
@@ -120,6 +144,10 @@ export default function CamposEditor({
             ),
         );
         setSalvando((n) => n + 1);
+        salvandoPorCampo.current.set(
+            id,
+            (salvandoPorCampo.current.get(id) ?? 0) + 1,
+        );
 
         try {
             const salvo = await enviarJson<Campo>(
@@ -132,7 +160,7 @@ export default function CamposEditor({
                 confirmados.current.set(id, salvo);
             }
 
-            setFalhou(false);
+            aoSalvar();
         } catch (erro) {
             toast.error(mensagemDoErro(erro));
             setFalhou(true);
@@ -150,21 +178,52 @@ export default function CamposEditor({
             }
         } finally {
             setSalvando((n) => n - 1);
+
+            const emVoo = (salvandoPorCampo.current.get(id) ?? 1) - 1;
+
+            if (emVoo > 0) {
+                salvandoPorCampo.current.set(id, emVoo);
+            } else {
+                salvandoPorCampo.current.delete(id);
+            }
         }
     };
 
-    /** Salva na hora o deslocamento do teclado que ainda estava esperando a pausa. */
-    const descarregarDeslocamento = () => {
+    /** Cancela o deslocamento do teclado que ainda espera a pausa, sem salvar nada. */
+    const descartarDeslocamento = () => {
         if (temporizadorDoTeclado.current) {
             clearTimeout(temporizadorDoTeclado.current);
             temporizadorDoTeclado.current = null;
         }
 
-        const pendente = deslocamentoPendente.current;
         deslocamentoPendente.current = null;
+    };
 
-        if (pendente) {
-            void atualizar(pendente.id, pendente.mudancas);
+    /**
+     * Salva na hora o deslocamento do teclado que ainda estava esperando a pausa. Só envia as chaves
+     * que diferem do que o servidor confirmou: se o campo voltou à posição original, nada é enviado.
+     */
+    const descarregarDeslocamento = () => {
+        const pendente = deslocamentoPendente.current;
+        descartarDeslocamento();
+
+        if (!pendente) {
+            return;
+        }
+
+        const confirmado = confirmados.current.get(pendente.id);
+
+        if (!confirmado) {
+            return;
+        }
+
+        // Com um PATCH do mesmo campo ainda em voo, o servidor pode estar à frente: envia tudo por garantia.
+        const mudancas = salvandoPorCampo.current.has(pendente.id)
+            ? pendente.mudancas
+            : mudancasDiferentes(pendente.mudancas, confirmado);
+
+        if (Object.keys(mudancas).length > 0) {
+            void atualizar(pendente.id, mudancas);
         }
     };
 
@@ -206,10 +265,11 @@ export default function CamposEditor({
             if (criado) {
                 confirmados.current.set(criado.id, criado);
                 setCampos((atuais) => [...atuais, criado]);
+                descarregarDeslocamento();
                 setSelecionadoId(criado.id);
             }
 
-            setFalhou(false);
+            aoSalvar();
         } catch (erro) {
             toast.error(mensagemDoErro(erro));
             setFalhou(true);
@@ -227,8 +287,9 @@ export default function CamposEditor({
             return;
         }
 
+        // O campo some: o deslocamento pendente dele é descartado, sem PATCH.
         if (deslocamentoPendente.current?.id === id) {
-            descarregarDeslocamento();
+            descartarDeslocamento();
         }
 
         const confirmadoAntes = confirmados.current.get(id);
@@ -242,7 +303,7 @@ export default function CamposEditor({
                 destroy.url({ modelo: modelo.id, campo: id }),
             );
 
-            setFalhou(false);
+            aoSalvar();
         } catch (erro) {
             toast.error(mensagemDoErro(erro));
             setFalhou(true);
@@ -336,11 +397,11 @@ export default function CamposEditor({
 
     /** Setas movem o campo selecionado; a tela muda na hora e o servidor recebe um único PATCH na pausa. */
     const moverPeloTeclado = (evento: React.KeyboardEvent<HTMLDivElement>) => {
-        if (!selecionado || digitandoEm(evento.target)) {
+        if (somenteLeitura || !selecionado || digitandoEm(evento.target)) {
             return;
         }
 
-        const deslocamento = deslocamentoDaTecla(evento.key, evento.shiftKey);
+        const deslocamento = deslocamentoDoEvento(evento);
 
         if (!deslocamento) {
             return;
@@ -385,7 +446,13 @@ export default function CamposEditor({
     };
 
     const estado: EstadoDoSalvamento =
-        salvando > 0 ? 'salvando' : falhou ? 'erro' : 'salvo';
+        salvando > 0
+            ? 'salvando'
+            : falhou
+              ? 'erro'
+              : salvouAlgo
+                ? 'salvo'
+                : 'inicial';
 
     return (
         <div className="flex flex-col gap-6">

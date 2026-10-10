@@ -48,7 +48,7 @@ export default function ListaDeCampos({
                         <li key={campo.id}>
                             <button
                                 type="button"
-                                aria-pressed={ativo}
+                                aria-current={ativo ? 'true' : undefined}
                                 onClick={() => aoSelecionar(campo.id)}
                                 className={cn(
                                     'flex min-h-11 w-full items-center gap-3 rounded-lg border p-3 text-left transition-colors',

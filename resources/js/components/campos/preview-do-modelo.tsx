@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import type { ModoDeExibicao } from '@/components/campos/barra-do-editor';
 import { escalaDoPreview } from '@/lib/editor';
-import type { Campo, ModeloBasico } from '@/types/certificados';
+import type { Campo, ModeloBasico, ModoDeExibicao } from '@/types/certificados';
 
 type Props = {
     modelo: ModeloBasico;

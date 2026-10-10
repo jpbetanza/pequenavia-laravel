@@ -113,3 +113,52 @@ export function deslocarPosicao(
         ? { y }
         : { x: limitarPosicao(posicao.x + deslocamento.dx), y };
 }
+
+/** Tira de um deslocamento pendente as chaves que outra mudança passou a definir. Centralizar o campo também tira `x`. */
+export function retirarMudancas(
+    pendentes: Partial<Campo>,
+    mudancas: Partial<Campo>,
+): Partial<Campo> {
+    const restantes: Partial<Campo> = { ...pendentes };
+
+    for (const chave of Object.keys(mudancas) as (keyof Campo)[]) {
+        delete restantes[chave];
+    }
+
+    if (mudancas.centralizado === true) {
+        delete restantes.x;
+    }
+
+    return restantes;
+}
+
+/** Só as chaves de `mudancas` que diferem do valor que o servidor confirmou. */
+export function mudancasDiferentes(
+    mudancas: Partial<Campo>,
+    confirmado: Campo,
+): Partial<Campo> {
+    const diferentes: Partial<Campo> = {};
+
+    for (const chave of Object.keys(mudancas) as (keyof Campo)[]) {
+        if (mudancas[chave] !== confirmado[chave]) {
+            Object.assign(diferentes, { [chave]: mudancas[chave] });
+        }
+    }
+
+    return diferentes;
+}
+
+/** Como `deslocamentoDaTecla`, mas ignora as combinações com Ctrl, Cmd ou Alt, que não são do editor. */
+export function deslocamentoDoEvento(evento: {
+    key: string;
+    shiftKey: boolean;
+    ctrlKey: boolean;
+    metaKey: boolean;
+    altKey: boolean;
+}): { dx: number; dy: number } | null {
+    if (evento.ctrlKey || evento.metaKey || evento.altKey) {
+        return null;
+    }
+
+    return deslocamentoDaTecla(evento.key, evento.shiftKey);
+}

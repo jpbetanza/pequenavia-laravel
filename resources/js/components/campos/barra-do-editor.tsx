@@ -3,11 +3,10 @@ import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { gerar, index } from '@/routes/meus-certificados';
-import type { ModeloBasico } from '@/types/certificados';
+import type { ModeloBasico, ModoDeExibicao } from '@/types/certificados';
 
-export type ModoDeExibicao = 'nomes' | 'exemplo';
-
-export type EstadoDoSalvamento = 'salvando' | 'salvo' | 'erro';
+/** `inicial`: nada foi salvo ainda nesta tela, então não há o que confirmar. */
+export type EstadoDoSalvamento = 'inicial' | 'salvando' | 'salvo' | 'erro';
 
 type Props = {
     modelo: ModeloBasico;
@@ -25,6 +24,7 @@ const OPCOES_DE_EXIBICAO: { valor: ModoDeExibicao; rotulo: string }[] = [
 
 function SeloDoSalvamento({ estado }: { estado: EstadoDoSalvamento }) {
     const texto = {
+        inicial: 'Alterações salvas automaticamente',
         salvando: 'Salvando…',
         salvo: 'Salvo agora',
         erro: 'Não foi possível salvar',
@@ -37,7 +37,8 @@ function SeloDoSalvamento({ estado }: { estado: EstadoDoSalvamento }) {
             className={cn(
                 'rounded-full px-3 py-1 text-xs font-medium',
                 estado === 'salvo' && 'bg-sucesso-fundo text-sucesso',
-                estado === 'salvando' && 'bg-muted text-muted-foreground',
+                (estado === 'inicial' || estado === 'salvando') &&
+                    'bg-muted text-muted-foreground',
                 estado === 'erro' && 'bg-muted text-destructive',
             )}
         >
