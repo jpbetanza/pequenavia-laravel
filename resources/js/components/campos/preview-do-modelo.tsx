@@ -11,6 +11,10 @@ type Props = {
     selecionadoId?: string | null;
     /** Padrão: texto de exemplo, como antes do editor de três colunas. */
     modo?: ModoDeExibicao;
+    /** Valores reais (ex.: uma linha da geração). Campo vazio mostra o nome do campo, esmaecido. */
+    valores?: Record<string, string>;
+    /** Avisa o tamanho natural da imagem do modelo quando ela carrega. */
+    aoCarregar?: (natural: { w: number; h: number }) => void;
     aoSelecionar?: (id: string) => void;
     aoIniciarArraste: (
         evento: React.PointerEvent,
@@ -41,6 +45,8 @@ export default function PreviewDoModelo({
     arrastando,
     selecionadoId = null,
     modo = 'exemplo',
+    valores,
+    aoCarregar,
     aoSelecionar,
     aoIniciarArraste,
     aoTecla,
@@ -98,12 +104,15 @@ export default function PreviewDoModelo({
                     alt={modelo.title}
                     draggable={false}
                     className="pointer-events-none size-full rounded-lg object-contain"
-                    onLoad={(evento) =>
-                        setNatural({
+                    onLoad={(evento) => {
+                        const dimensoes = {
                             w: evento.currentTarget.naturalWidth,
                             h: evento.currentTarget.naturalHeight,
-                        })
-                    }
+                        };
+
+                        setNatural(dimensoes);
+                        aoCarregar?.(dimensoes);
+                    }}
                 />
 
                 {natural && selecionado?.centralizado && (
@@ -122,6 +131,13 @@ export default function PreviewDoModelo({
                             modo === 'nomes'
                                 ? campo.nome
                                 : campo.label?.trim() || campo.nome;
+                        const valor = valores?.[campo.nome] ?? '';
+                        const vazioComValores =
+                            valores !== undefined && valor.trim() === '';
+                        const texto =
+                            valores === undefined || vazioComValores
+                                ? exibido
+                                : valor;
                         const posicao = campo.centralizado
                             ? `centro, y ${campo.y}`
                             : `x ${campo.x}, y ${campo.y}`;
@@ -173,9 +189,10 @@ export default function PreviewDoModelo({
                                             : '1px dashed color-mix(in srgb, var(--foreground) 45%, transparent)',
                                     outlineOffset: 4,
                                     borderRadius: 2,
+                                    opacity: vazioComValores ? 0.4 : undefined,
                                 }}
                             >
-                                {exibido}
+                                {texto}
 
                                 {selecionadoAgora && !somenteLeitura && (
                                     <>

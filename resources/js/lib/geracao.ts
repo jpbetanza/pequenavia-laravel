@@ -1,11 +1,19 @@
 import { enviarParaArquivo, ErroHttp, type ArquivoBaixado } from '@/lib/http';
 
-export type StatusDaLinha = 'ocioso' | 'gerando' | 'pronto' | 'erro';
+/** `na-fila`: esperando a sua vez em "Gerar todos". `aguardando`: o servidor pediu uma espera (429). */
+export type StatusDaLinha =
+    | 'ocioso'
+    | 'na-fila'
+    | 'gerando'
+    | 'aguardando'
+    | 'pronto'
+    | 'erro';
 
 export type ArquivoGerado = {
     url: string;
     nome: string;
     tipo: string;
+    blob: Blob;
 };
 
 export type LinhaDeGeracao = {
@@ -74,8 +82,57 @@ export function marcarGerando(
     return alterar(linhas, id, (linha) => ({
         ...linha,
         status: 'gerando',
+        arquivo: null,
         erro: null,
     }));
+}
+
+/** Troca só o status (fila, espera, volta a ocioso), sem mexer no arquivo nem no erro. */
+export function mudarStatus(
+    linhas: LinhaDeGeracao[],
+    id: number,
+    status: StatusDaLinha,
+): LinhaDeGeracao[] {
+    return alterar(linhas, id, (linha) => ({ ...linha, status }));
+}
+
+/** Uma linha está em andamento quando a sua geração está rodando (com ou sem espera). */
+export function emAndamento(linha: LinhaDeGeracao): boolean {
+    return linha.status === 'gerando' || linha.status === 'aguardando';
+}
+
+/** A linha tem algum valor preenchido (uma linha vazia é "Falta preencher" e não entra em "Gerar todos"). */
+export function linhaPreenchida(linha: LinhaDeGeracao): boolean {
+    return Object.values(linha.valores).some((valor) => valor.trim() !== '');
+}
+
+/** Linhas que "Gerar todos" processa: preenchidas, ainda não prontas e fora de andamento (erros entram de novo). */
+export function linhasParaGerarTodas(
+    linhas: LinhaDeGeracao[],
+): LinhaDeGeracao[] {
+    return linhas.filter(
+        (linha) =>
+            linha.status !== 'pronto' &&
+            !emAndamento(linha) &&
+            linhaPreenchida(linha),
+    );
+}
+
+/** Quantas linhas preenchidas já estão prontas, para a barra de progresso. */
+export function progresso(linhas: LinhaDeGeracao[]): {
+    prontas: number;
+    preenchidas: number;
+    percentual: number;
+} {
+    const preenchidas = linhas.filter(linhaPreenchida).length;
+    const prontas = linhas.filter((linha) => linha.status === 'pronto').length;
+
+    return {
+        prontas,
+        preenchidas,
+        percentual:
+            preenchidas === 0 ? 0 : Math.round((prontas / preenchidas) * 100),
+    };
 }
 
 export function marcarPronto(
@@ -137,6 +194,10 @@ export type OpcoesDeGeracao = {
     tentativas?: number;
     signal?: AbortSignal;
     esperar?: (milissegundos: number, signal?: AbortSignal) => Promise<void>;
+    /** Chamado antes de esperar um 429, com os segundos que serão esperados. */
+    aoEsperar?: (segundos: number) => void;
+    /** Chamado quando a espera termina e a requisição é refeita. */
+    aoRetomar?: () => void;
 };
 
 /** Erro que o `fetch` (ou a espera) lança quando o sinal é abortado. */
@@ -209,7 +270,9 @@ export async function gerarCertificado(
                 ESPERA_MAXIMA_SEGUNDOS,
             );
 
+            opcoes.aoEsperar?.(segundos);
             await esperar(segundos * 1000, opcoes.signal);
+            opcoes.aoRetomar?.();
         }
     }
 }
