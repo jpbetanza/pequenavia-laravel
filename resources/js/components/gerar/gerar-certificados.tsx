@@ -51,6 +51,7 @@ import type {
     GruposFontes,
     ModeloBasico,
     PesosDasFontes,
+    ValoresIniciais,
 } from '@/types/certificados';
 
 type Props = {
@@ -59,7 +60,7 @@ type Props = {
     fontes: GruposFontes;
     pesos: PesosDasFontes;
     /** Valores de uma geração anterior (`?geracao=`): a primeira linha já vem preenchida. */
-    valoresIniciais: Record<string, string> | null;
+    valoresIniciais: ValoresIniciais;
 };
 
 function baixarArquivo(url: string, nome: string) {

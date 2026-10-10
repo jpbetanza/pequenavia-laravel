@@ -67,6 +67,7 @@
     --color-sucesso-fundo: var(--sucesso-fundo);
     --color-aviso: var(--aviso);
     --color-aviso-fundo: var(--aviso-fundo);
+    --color-medalha: var(--medalha);
 }
 
 :root {
@@ -109,6 +110,7 @@
     --sucesso-fundo: #e2eee8;
     --aviso: #8a4b12;
     --aviso-fundo: #fff6ee;
+    --medalha: #fbf8f2;
 }
 
 .dark {
@@ -150,6 +152,7 @@
     --sucesso-fundo: #1d3229;
     --aviso: #f0b27a;
     --aviso-fundo: #3a2716;
+    --medalha: #fbf8f2;
 }
 
 @layer base {

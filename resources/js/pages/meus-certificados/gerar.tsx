@@ -6,6 +6,7 @@ import type {
     GruposFontes,
     ModeloBasico,
     PesosDasFontes,
+    ValoresIniciais,
 } from '@/types/certificados';
 
 type Props = {
@@ -13,7 +14,7 @@ type Props = {
     campos: Campo[];
     fontes: GruposFontes;
     pesos_das_fontes: PesosDasFontes;
-    valores_iniciais: Record<string, string> | null;
+    valores_iniciais: ValoresIniciais;
 };
 
 export default function Gerar({

@@ -22,6 +22,7 @@ export default function PainelDeDetalhes({ geracao, agora }: Props) {
     const titulo =
         escolherDestaque(campos).destaque?.[1] ?? geracao.modelo_title;
     const semModelo = geracao.modelo_id === null;
+    const podeGerarDeNovo = !semModelo && geracao.modelo_acessivel;
 
     async function copiarDados() {
         const texto = campos
@@ -67,23 +68,24 @@ export default function PainelDeDetalhes({ geracao, agora }: Props) {
             </dl>
 
             <div className="flex flex-col gap-2.5">
-                {semModelo ? (
+                {!podeGerarDeNovo ? (
                     <>
                         <Button
                             variant="default"
                             className="min-h-11"
                             disabled
-                            aria-describedby="dica-sem-modelo"
+                            aria-describedby="dica-gerar-de-novo"
                         >
                             <RotateCcw />
                             Gerar de novo com estes dados
                         </Button>
                         <p
-                            id="dica-sem-modelo"
+                            id="dica-gerar-de-novo"
                             className="text-sm text-muted-foreground"
                         >
-                            O modelo foi excluído, por isso não dá para gerar de
-                            novo com estes dados.
+                            {semModelo
+                                ? 'O modelo foi excluído, por isso não dá para gerar de novo com estes dados.'
+                                : 'Você não tem mais acesso a este modelo, por isso não dá para gerar de novo com estes dados.'}
                         </p>
                     </>
                 ) : (

@@ -94,7 +94,7 @@ export default function Welcome() {
                             href={home()}
                             className="flex items-center gap-3 text-foreground"
                         >
-                            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[#fbf8f2] p-1">
+                            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-medalha p-1">
                                 <img
                                     src="/images/logo.png"
                                     alt=""

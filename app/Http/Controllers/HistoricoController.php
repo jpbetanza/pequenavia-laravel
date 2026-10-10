@@ -24,7 +24,9 @@ class HistoricoController extends Controller
         $busca = (string) ($dados['busca'] ?? '');
         $modelo = $dados['modelo'] ?? null;
 
-        $geracoes = $request->user()->geracoes()
+        $usuario = $request->user();
+
+        $geracoes = $usuario->geracoes()
             ->with('modelo.campos:id,modelo_id,nome,created_at', 'user:id,name')
             ->when($busca !== '', fn (Builder $query) => $query->whereRaw(
                 "exists (select 1 from jsonb_each_text(campos_valores) as v(chave, valor) where v.valor ilike ? escape '\\')",
@@ -33,16 +35,25 @@ class HistoricoController extends Controller
             ->when($modelo !== null, fn (Builder $query) => $query->where('modelo_id', $modelo))
             ->latest('created_at')
             ->limit(50)
-            ->get()
-            ->map(fn (GeracaoCertificado $geracao) => [
-                'id' => $geracao->id,
-                'modelo_id' => $geracao->modelo_id,
-                'modelo_title' => $geracao->modelo_title,
-                'campos_valores' => $geracao->campos_valores,
-                'ordem_campos' => $geracao->modelo?->campos->pluck('nome')->values()->all() ?? [],
-                'gerado_por' => $geracao->user->name,
-                'created_at' => $geracao->created_at,
-            ]);
+            ->get();
+
+        // Uma checagem de permissão por modelo, e não por geração, para não repetir a consulta de compartilhamento.
+        $podeGerar = $geracoes
+            ->pluck('modelo')
+            ->filter()
+            ->unique('id')
+            ->mapWithKeys(fn (ModeloCertificado $item) => [$item->id => $usuario->can('gerar', $item)]);
+
+        $geracoes = $geracoes->map(fn (GeracaoCertificado $geracao) => [
+            'id' => $geracao->id,
+            'modelo_id' => $geracao->modelo_id,
+            'modelo_title' => $geracao->modelo_title,
+            'campos_valores' => $geracao->campos_valores,
+            'ordem_campos' => $geracao->modelo?->campos->pluck('nome')->values()->all() ?? [],
+            'gerado_por' => $geracao->user->name,
+            'modelo_acessivel' => $geracao->modelo_id !== null && ($podeGerar[$geracao->modelo_id] ?? false),
+            'created_at' => $geracao->created_at,
+        ]);
 
         $modelos = ModeloCertificado::query()
             ->whereIn('id', $request->user()->geracoes()->whereNotNull('modelo_id')->select('modelo_id'))

@@ -21,6 +21,7 @@ export function NavMain({ items }: { items: NavItem[] }) {
                         <SidebarMenuButton
                             asChild
                             isActive={isActive}
+                            tooltip={{ children: item.title }}
                             className={cn(
                                 'h-11 gap-3 px-3 text-[15px] font-medium',
                                 isActive && 'font-semibold shadow-xs',

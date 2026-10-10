@@ -1,7 +1,7 @@
 const SEGUNDO = 1000;
 const MINUTO = 60 * SEGUNDO;
 const HORA = 60 * MINUTO;
-const DIA = 24 * HORA;
+export const DIA = 24 * HORA;
 
 const UNIDADES: [Intl.RelativeTimeFormatUnit, number][] = [
     ['year', 365 * DIA],

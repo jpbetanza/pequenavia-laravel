@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\CampoCertificado;
+use App\Models\CompartilhamentoModelo;
 use App\Models\GeracaoCertificado;
 use App\Models\ModeloCertificado;
 use App\Models\User;
@@ -29,7 +30,7 @@ it('mostra as 50 gerações mais recentes do próprio usuário, da mais nova par
 
 it('entrega de cada geração o modelo, os valores e a data', function () {
     $user = User::factory()->create();
-    $modelo = ModeloCertificado::factory()->create(['title' => 'Crisma 2024']);
+    $modelo = ModeloCertificado::factory()->for($user)->create(['title' => 'Crisma 2024']);
     CampoCertificado::factory()->for($modelo, 'modelo')->count(2)->sequence(
         ['nome' => 'Nome', 'created_at' => now()->subMinute()],
         ['nome' => 'Data', 'created_at' => now()],
@@ -48,6 +49,7 @@ it('entrega de cada geração o modelo, os valores e a data', function () {
                 ->where('campos_valores', ['Nome' => 'Maria'])
                 ->where('ordem_campos', ['Nome', 'Data'])
                 ->where('gerado_por', $user->name)
+                ->where('modelo_acessivel', true)
                 ->has('created_at')));
 });
 
@@ -171,13 +173,33 @@ it('filtra as gerações pelo modelo e lista só os modelos do histórico do usu
             ]));
 });
 
-it('ignora o filtro de modelo que não é um uuid', function () {
+it('devolve erro de validação quando o filtro de modelo não é um uuid', function () {
     $user = User::factory()->create();
     GeracaoCertificado::factory()->for($user)->create();
 
     $this->actingAs($user)->get(route('historico.index', ['modelo' => 'nao-e-uuid']))
         ->assertStatus(302)
         ->assertSessionHasErrors('modelo');
+});
+
+it('marca a geração como acessível só enquanto o usuário ainda pode gerar com o modelo', function () {
+    $modelo = ModeloCertificado::factory()->create();
+    CampoCertificado::factory()->for($modelo, 'modelo')->create(['nome' => 'Nome']);
+    $convidado = User::factory()->create(['email' => 'convidado@example.com']);
+    CompartilhamentoModelo::factory()->for($modelo, 'modelo')->create(['email' => 'convidado@example.com']);
+    GeracaoCertificado::factory()->for($convidado)->for($modelo, 'modelo')->create();
+
+    $this->actingAs($convidado)->get(route('historico.index'))
+        ->assertInertia(fn ($page) => $page
+            ->where('geracoes.0.modelo_acessivel', true)
+            ->etc());
+
+    $modelo->compartilhamentos()->delete();
+
+    $this->actingAs($convidado)->get(route('historico.index'))
+        ->assertInertia(fn ($page) => $page
+            ->where('geracoes.0.modelo_acessivel', false)
+            ->etc());
 });
 
 it('recusa uma busca com mais de 100 caracteres', function () {

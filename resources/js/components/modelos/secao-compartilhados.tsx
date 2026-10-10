@@ -68,15 +68,24 @@ export default function SecaoCompartilhados({ itens, buscando }: Props) {
 
                             <div className="flex gap-2">
                                 {modelo.campos_count === 0 ? (
-                                    <Button
-                                        variant="outline"
-                                        className="min-h-11"
-                                        disabled
-                                        title="Este modelo ainda não tem campos"
-                                    >
-                                        <FileText />
-                                        Gerar
-                                    </Button>
+                                    <>
+                                        <Button
+                                            variant="outline"
+                                            className="min-h-11"
+                                            disabled
+                                            title="Este modelo ainda não tem campos"
+                                            aria-describedby={`dica-sem-campos-${modelo.id}`}
+                                        >
+                                            <FileText />
+                                            Gerar
+                                        </Button>
+                                        <span
+                                            id={`dica-sem-campos-${modelo.id}`}
+                                            className="sr-only"
+                                        >
+                                            Este modelo ainda não tem campos
+                                        </span>
+                                    </>
                                 ) : (
                                     <Button
                                         asChild

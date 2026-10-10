@@ -1,3 +1,6 @@
+import { normalizarBusca } from './busca';
+import { DIA } from './tempo';
+
 /** Valores na ordem dos campos do modelo; os que não estão no modelo vão depois, em ordem alfabética. */
 export function ordenarValores(
     valores: Record<string, string>,
@@ -14,30 +17,6 @@ export function ordenarValores(
     return [...doModelo, ...demais];
 }
 
-export function resumoDosValores(
-    entradas: [string, string][],
-    limite = 3,
-): string {
-    return entradas
-        .slice(0, limite)
-        .map(([chave, valor]) => `${chave}: ${valor}`)
-        .join(' · ');
-}
-
-export function formatarData(iso: string, fusoHorario?: string): string {
-    return new Date(iso).toLocaleString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        timeZone: fusoHorario,
-    });
-}
-
-const semAcentos = (texto: string): string =>
-    texto.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
-
 /**
  * Campo em destaque da geração (o título da linha e do painel): o primeiro cujo nome contém "nome"
  * e tem valor; se não houver, o primeiro valor preenchido. `demais` são os outros campos, na mesma ordem.
@@ -50,7 +29,8 @@ export function escolherDestaque(entradas: [string, string][]): {
     const destaque =
         entradas.find(
             (entrada) =>
-                semAcentos(entrada[0]).includes('nome') && preenchido(entrada),
+                normalizarBusca(entrada[0]).includes('nome') &&
+                preenchido(entrada),
         ) ??
         entradas.find(preenchido) ??
         null;
@@ -71,8 +51,6 @@ export function valoresResumidos(
         .map(([, valor]) => valor)
         .join(' · ');
 }
-
-const DIA = 24 * 60 * 60 * 1000;
 
 function inicioDoDia(data: Date): Date {
     return new Date(data.getFullYear(), data.getMonth(), data.getDate());

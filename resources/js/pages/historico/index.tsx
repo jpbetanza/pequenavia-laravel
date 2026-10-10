@@ -1,6 +1,6 @@
 import { Head, router } from '@inertiajs/react';
 import { Search } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import CabecalhoDaPagina from '@/components/cabecalho-da-pagina';
 import PainelDeDetalhes from '@/components/historico/painel-de-detalhes';
 import ListaDoHistorico from '@/components/historico/lista-do-historico';
@@ -35,6 +35,7 @@ type Props = {
 
 const TODOS_OS_MODELOS = 'todos';
 const DEBOUNCE_DA_BUSCA_MS = 300;
+const LIMITE_DA_BUSCA = 100;
 
 export default function Historico({ geracoes, filtros, modelos }: Props) {
     const [agora] = useState(() => new Date());
@@ -42,6 +43,7 @@ export default function Historico({ geracoes, filtros, modelos }: Props) {
     const [modelo, setModelo] = useState(filtros.modelo);
     const [selecionadaId, setSelecionadaId] = useState<string | null>(null);
     const [folhaAberta, setFolhaAberta] = useState(false);
+    const buscaEmAndamento = useRef<{ cancel: () => void } | null>(null);
 
     const selecionada =
         geracoes.find((geracao) => geracao.id === selecionadaId) ??
@@ -58,13 +60,22 @@ export default function Historico({ geracoes, filtros, modelos }: Props) {
         }
 
         const temporizador = window.setTimeout(() => {
+            // Cancela a visita anterior, para que uma resposta antiga não sobrescreva a nova.
+            buscaEmAndamento.current?.cancel();
             router.get(
                 index(),
                 {
                     ...(termo !== '' ? { busca: termo } : {}),
                     ...(modelo !== null ? { modelo } : {}),
                 },
-                { preserveState: true, preserveScroll: true, replace: true },
+                {
+                    preserveState: true,
+                    preserveScroll: true,
+                    replace: true,
+                    onCancelToken: (token) => {
+                        buscaEmAndamento.current = token;
+                    },
+                },
             );
         }, DEBOUNCE_DA_BUSCA_MS);
 
@@ -103,6 +114,7 @@ export default function Historico({ geracoes, filtros, modelos }: Props) {
                                     aria-label="Buscar por nome"
                                     placeholder="Buscar por nome"
                                     value={busca}
+                                    maxLength={LIMITE_DA_BUSCA}
                                     onChange={(evento) =>
                                         setBusca(evento.target.value)
                                     }

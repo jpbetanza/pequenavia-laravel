@@ -26,14 +26,14 @@ export default function ListaDoHistorico({
 
     return (
         <div className="flex flex-col gap-7">
-            {grupos.map((grupo) => (
+            {grupos.map((grupo, indice) => (
                 <section
                     key={grupo.titulo}
-                    aria-labelledby={`dia-${grupo.titulo}`}
+                    aria-labelledby={`dia-${indice}`}
                     className="flex flex-col gap-2.5"
                 >
                     <h2
-                        id={`dia-${grupo.titulo}`}
+                        id={`dia-${indice}`}
                         className="flex flex-wrap items-baseline gap-3"
                     >
                         <span className="font-serif text-2xl font-semibold">

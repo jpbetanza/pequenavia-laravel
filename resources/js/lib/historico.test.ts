@@ -3,10 +3,8 @@ import {
     agruparPorDia,
     corDoSelo,
     escolherDestaque,
-    formatarData,
     horaDaGeracao,
     ordenarValores,
-    resumoDosValores,
     tituloDoDia,
     valoresResumidos,
 } from './historico';
@@ -34,27 +32,6 @@ describe('ordenarValores', () => {
         expect(
             ordenarValores([] as unknown as Record<string, string>, []),
         ).toEqual([]);
-    });
-});
-
-describe('resumoDosValores', () => {
-    it('junta os 3 primeiros com " · "', () => {
-        const entradas: [string, string][] = [
-            ['A', '1'],
-            ['B', '2'],
-            ['C', '3'],
-            ['D', '4'],
-        ];
-
-        expect(resumoDosValores(entradas)).toBe('A: 1 · B: 2 · C: 3');
-    });
-});
-
-describe('formatarData', () => {
-    it('formata em português, com dia, mês, ano, hora e minuto', () => {
-        expect(formatarData('2026-10-09T15:04:00Z', 'UTC')).toBe(
-            '09/10/2026, 15:04',
-        );
     });
 });
 

@@ -103,10 +103,17 @@ export default function CartaoDeModelo({
                                 className="min-h-11 flex-1"
                                 disabled
                                 title={dicaSemCampos}
+                                aria-describedby={`dica-sem-campos-${modelo.id}`}
                             >
                                 <FileText />
                                 Gerar
                             </Button>
+                            <span
+                                id={`dica-sem-campos-${modelo.id}`}
+                                className="sr-only"
+                            >
+                                {dicaSemCampos}
+                            </span>
                             <Button
                                 asChild
                                 className="min-h-11 flex-1 bg-foreground text-background hover:bg-foreground/90"

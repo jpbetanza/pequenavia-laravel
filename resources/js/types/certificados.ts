@@ -54,6 +54,8 @@ export type Geracao = {
     campos_valores: Record<string, string>;
     ordem_campos: string[];
     gerado_por: string;
+    /** Se o usuário ainda pode gerar com o modelo (existe e tem a permissão de gerar). */
+    modelo_acessivel: boolean;
     created_at: string;
 };
 
