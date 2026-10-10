@@ -48,6 +48,7 @@ it('lista os modelos próprios e, à parte, os compartilhados com o usuário', f
                 ->where('eh_dono', true)
                 ->where('pode_editar', true)
                 ->where('campos_count', 0)
+                ->has('atualizado_em')
                 ->has('compartilhamentos', 1, fn ($c) => $c
                     ->where('id', $compartilhamento->id)
                     ->where('email', 'joao@example.com')
@@ -254,5 +255,16 @@ it('informa quantos campos cada modelo tem', function () {
         ->assertInertia(fn ($page) => $page
             ->where('modelos.0.campos_count', 2)
             ->where('compartilhados.0.campos_count', 1)
+            ->etc());
+});
+
+it('informa quando cada modelo foi alterado pela última vez', function () {
+    $user = User::factory()->create();
+    $modelo = ModeloCertificado::factory()->for($user)->create(['updated_at' => '2026-10-01 12:30:00']);
+
+    $this->actingAs($user)->get(route('meus-certificados.index'))
+        ->assertInertia(fn ($page) => $page
+            ->where('modelos.0.id', $modelo->id)
+            ->where('modelos.0.atualizado_em', $modelo->updated_at->toIso8601String())
             ->etc());
 });

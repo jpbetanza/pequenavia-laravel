@@ -40,6 +40,7 @@ export type ModeloResumo = {
     eh_dono: boolean;
     pode_editar: boolean;
     campos_count: number;
+    atualizado_em: string | null;
     compartilhamentos: Compartilhamento[];
 };
 
@@ -49,5 +50,21 @@ export type Geracao = {
     modelo_title: string;
     campos_valores: Record<string, string>;
     ordem_campos: string[];
+    gerado_por: string;
     created_at: string;
 };
+
+/** Filtros aplicados na página de histórico. `modelo` é o id do modelo ou null. */
+export type FiltrosHistorico = {
+    busca: string;
+    modelo: string | null;
+};
+
+/** Modelo que aparece no histórico do usuário, para o filtro por modelo. */
+export type ModeloHistorico = {
+    id: string;
+    title: string;
+};
+
+/** Valores para "gerar de novo": campo => valor. Null quando não há geração válida na URL. */
+export type ValoresIniciais = Record<string, string> | null;

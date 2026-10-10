@@ -10,6 +10,7 @@ use App\Models\ModeloCertificado;
 use App\Services\CatalogoFontes;
 use App\Services\GeradorCertificado;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
@@ -23,8 +24,9 @@ class GeracaoCertificadoController extends Controller
 {
     /**
      * Mostra a página onde se preenchem os dados e se geram os certificados do modelo.
+     * Com `?geracao={id}`, a página já vem preenchida com os valores de uma geração anterior.
      */
-    public function create(ModeloCertificado $modelo): InertiaResponse
+    public function create(ModeloCertificado $modelo, Request $request): InertiaResponse
     {
         Gate::authorize('gerar', $modelo);
 
@@ -37,6 +39,7 @@ class GeracaoCertificadoController extends Controller
             'campos' => $modelo->campos,
             'fontes' => CatalogoFontes::grupos(),
             'pesos_das_fontes' => CatalogoFontes::pesosPorPasta(),
+            'valores_iniciais' => $this->valoresIniciais($modelo, $request),
         ]);
     }
 
@@ -67,6 +70,37 @@ class GeracaoCertificadoController extends Controller
             'Content-Type' => 'image/png',
             'Content-Disposition' => $this->cabecalhoDeDownload($modelo, $campos, $valores),
         ]);
+    }
+
+    /**
+     * Valores de uma geração do próprio usuário, feita do mesmo modelo. Qualquer outro caso
+     * (geração de outro usuário ou de outro modelo, id inexistente ou mal formado) devolve null.
+     *
+     * @return array<string, string>|null
+     */
+    private function valoresIniciais(ModeloCertificado $modelo, Request $request): ?array
+    {
+        $geracaoId = $request->query('geracao');
+
+        if (! is_string($geracaoId) || ! Str::isUuid($geracaoId)) {
+            return null;
+        }
+
+        $geracao = $request->user()->geracoes()
+            ->where('modelo_id', $modelo->id)
+            ->find($geracaoId);
+
+        if ($geracao === null) {
+            return null;
+        }
+
+        $valores = $geracao->campos_valores;
+
+        return $modelo->campos
+            ->pluck('nome')
+            ->filter(fn (string $nome) => array_key_exists($nome, $valores))
+            ->mapWithKeys(fn (string $nome) => [$nome => $valores[$nome]])
+            ->all();
     }
 
     /**
