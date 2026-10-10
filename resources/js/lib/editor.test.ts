@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vite-plus/test';
 import type { Campo } from '@/types/certificados';
 import {
+    deslocamentoDaTecla,
+    deslocarPosicao,
     escalaDoPreview,
     limitarPosicao,
     moverCampo,
@@ -121,6 +123,67 @@ describe('reverterCampo', () => {
         expect(reverterCampo(atual, { x: 99, y: 50 }, base)).toMatchObject({
             x: 10,
             y: 300,
+        });
+    });
+});
+
+describe('deslocamentoDaTecla', () => {
+    it('mapeia as setas para 1 px da imagem', () => {
+        expect(deslocamentoDaTecla('ArrowLeft', false)).toEqual({
+            dx: -1,
+            dy: 0,
+        });
+        expect(deslocamentoDaTecla('ArrowRight', false)).toEqual({
+            dx: 1,
+            dy: 0,
+        });
+        expect(deslocamentoDaTecla('ArrowUp', false)).toEqual({
+            dx: 0,
+            dy: -1,
+        });
+        expect(deslocamentoDaTecla('ArrowDown', false)).toEqual({
+            dx: 0,
+            dy: 1,
+        });
+    });
+
+    it('usa 10 px com Shift', () => {
+        expect(deslocamentoDaTecla('ArrowDown', true)).toEqual({
+            dx: 0,
+            dy: 10,
+        });
+    });
+
+    it('ignora as outras teclas', () => {
+        expect(deslocamentoDaTecla('a', false)).toBeNull();
+        expect(deslocamentoDaTecla('Enter', true)).toBeNull();
+    });
+});
+
+describe('deslocarPosicao', () => {
+    it('move nos dois eixos quando o campo é livre', () => {
+        expect(
+            deslocarPosicao({ x: 100, y: 200 }, false, { dx: 10, dy: -10 }),
+        ).toEqual({
+            x: 110,
+            y: 190,
+        });
+    });
+
+    it('não mexe em x quando o campo é centralizado', () => {
+        expect(
+            deslocarPosicao({ x: 100, y: 200 }, true, { dx: 10, dy: 1 }),
+        ).toEqual({
+            y: 201,
+        });
+    });
+
+    it('não passa dos limites da imagem', () => {
+        expect(
+            deslocarPosicao({ x: 0, y: 10000 }, false, { dx: -1, dy: 10 }),
+        ).toEqual({
+            x: 0,
+            y: 10000,
         });
     });
 });

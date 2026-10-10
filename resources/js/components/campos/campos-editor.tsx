@@ -1,4 +1,3 @@
-import { Plus } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import {
@@ -6,11 +5,22 @@ import {
     store,
     update,
 } from '@/actions/App/Http/Controllers/CampoCertificadoController';
-import CartaoDoCampo from '@/components/campos/cartao-do-campo';
+import BarraDoEditor, {
+    type EstadoDoSalvamento,
+    type ModoDeExibicao,
+} from '@/components/campos/barra-do-editor';
+import ListaDeCampos from '@/components/campos/lista-de-campos';
+import PainelDoCampo from '@/components/campos/painel-do-campo';
 import PreviewDoModelo from '@/components/campos/preview-do-modelo';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useFontesDoCatalogo } from '@/hooks/use-fontes-do-catalogo';
-import { moverCampo, reverterCampo, valoresDoNovoCampo } from '@/lib/editor';
+import {
+    deslocamentoDaTecla,
+    deslocarPosicao,
+    moverCampo,
+    reverterCampo,
+    valoresDoNovoCampo,
+} from '@/lib/editor';
 import { enviarJson, mensagemDoErro } from '@/lib/http';
 import type {
     Campo,
@@ -34,6 +44,20 @@ type Arraste = {
     aoCancelar: () => void;
 };
 
+/** Tempo sem novas setas até o deslocamento pelo teclado ser salvo. */
+const ESPERA_DO_TECLADO = 400;
+
+function digitandoEm(alvo: EventTarget | null): boolean {
+    if (!(alvo instanceof HTMLElement)) {
+        return false;
+    }
+
+    return (
+        alvo.isContentEditable ||
+        ['INPUT', 'TEXTAREA', 'SELECT'].includes(alvo.tagName)
+    );
+}
+
 export default function CamposEditor({
     modelo,
     camposIniciais,
@@ -46,7 +70,10 @@ export default function CamposEditor({
     const [campos, setCampos] = useState<Campo[]>(camposIniciais);
     const [arrastando, setArrastando] = useState<string | null>(null);
     const [salvando, setSalvando] = useState(0);
+    const [falhou, setFalhou] = useState(false);
     const [criando, setCriando] = useState(false);
+    const [selecionadoId, setSelecionadoId] = useState<string | null>(null);
+    const [modo, setModo] = useState<ModoDeExibicao>('nomes');
     const criandoRef = useRef(false);
     /** Último valor que o servidor confirmou para cada campo; é para onde a tela volta em caso de falha. */
     const confirmados = useRef(
@@ -55,6 +82,17 @@ export default function CamposEditor({
         ),
     );
     const arrasteAtivo = useRef<Arraste | null>(null);
+    /** Setas do teclado ainda não salvas: um único PATCH quando o campo para de se mover. */
+    const deslocamentoPendente = useRef<{
+        id: string;
+        mudancas: Partial<Campo>;
+    } | null>(null);
+    const temporizadorDoTeclado = useRef<ReturnType<typeof setTimeout> | null>(
+        null,
+    );
+    const descarregarRef = useRef<() => void>(() => {});
+
+    const selecionado = campos.find((campo) => campo.id === selecionadoId);
 
     const encerrarArraste = useCallback(() => {
         const ativo = arrasteAtivo.current;
@@ -68,8 +106,6 @@ export default function CamposEditor({
         window.removeEventListener('pointercancel', ativo.aoCancelar);
         arrasteAtivo.current = null;
     }, []);
-
-    useEffect(() => () => encerrarArraste(), [encerrarArraste]);
 
     /** Aplica a mudança na tela na hora e salva; se o servidor recusar, desfaz só o que falhou. */
     const atualizar = async (id: string, mudancas: Partial<Campo>) => {
@@ -95,8 +131,11 @@ export default function CamposEditor({
             if (salvo) {
                 confirmados.current.set(id, salvo);
             }
+
+            setFalhou(false);
         } catch (erro) {
             toast.error(mensagemDoErro(erro));
+            setFalhou(true);
 
             const confirmado = confirmados.current.get(id);
 
@@ -112,6 +151,41 @@ export default function CamposEditor({
         } finally {
             setSalvando((n) => n - 1);
         }
+    };
+
+    /** Salva na hora o deslocamento do teclado que ainda estava esperando a pausa. */
+    const descarregarDeslocamento = () => {
+        if (temporizadorDoTeclado.current) {
+            clearTimeout(temporizadorDoTeclado.current);
+            temporizadorDoTeclado.current = null;
+        }
+
+        const pendente = deslocamentoPendente.current;
+        deslocamentoPendente.current = null;
+
+        if (pendente) {
+            void atualizar(pendente.id, pendente.mudancas);
+        }
+    };
+
+    useEffect(() => {
+        descarregarRef.current = descarregarDeslocamento;
+    });
+
+    useEffect(
+        () => () => {
+            encerrarArraste();
+            descarregarRef.current();
+        },
+        [encerrarArraste],
+    );
+
+    const selecionar = (id: string) => {
+        if (id !== selecionadoId) {
+            descarregarDeslocamento();
+        }
+
+        setSelecionadoId(id);
     };
 
     const criar = async () => {
@@ -132,9 +206,13 @@ export default function CamposEditor({
             if (criado) {
                 confirmados.current.set(criado.id, criado);
                 setCampos((atuais) => [...atuais, criado]);
+                setSelecionadoId(criado.id);
             }
+
+            setFalhou(false);
         } catch (erro) {
             toast.error(mensagemDoErro(erro));
+            setFalhou(true);
         } finally {
             criandoRef.current = false;
             setCriando(false);
@@ -149,17 +227,25 @@ export default function CamposEditor({
             return;
         }
 
+        if (deslocamentoPendente.current?.id === id) {
+            descarregarDeslocamento();
+        }
+
         const confirmadoAntes = confirmados.current.get(id);
         confirmados.current.delete(id);
         setCampos((atuais) => atuais.filter((campo) => campo.id !== id));
+        setSelecionadoId((atual) => (atual === id ? null : atual));
 
         try {
             await enviarJson(
                 'DELETE',
                 destroy.url({ modelo: modelo.id, campo: id }),
             );
+
+            setFalhou(false);
         } catch (erro) {
             toast.error(mensagemDoErro(erro));
+            setFalhou(true);
 
             if (confirmadoAntes) {
                 confirmados.current.set(id, confirmadoAntes);
@@ -189,6 +275,7 @@ export default function CamposEditor({
     ) => {
         evento.preventDefault();
         encerrarArraste();
+        descarregarDeslocamento();
 
         const inicio = { mouseX: evento.clientX, mouseY: evento.clientY };
         const original = { x: campo.x, y: campo.y };
@@ -247,82 +334,115 @@ export default function CamposEditor({
         window.addEventListener('pointercancel', aoCancelar);
     };
 
+    /** Setas movem o campo selecionado; a tela muda na hora e o servidor recebe um único PATCH na pausa. */
+    const moverPeloTeclado = (evento: React.KeyboardEvent<HTMLDivElement>) => {
+        if (!selecionado || digitandoEm(evento.target)) {
+            return;
+        }
+
+        const deslocamento = deslocamentoDaTecla(evento.key, evento.shiftKey);
+
+        if (!deslocamento) {
+            return;
+        }
+
+        evento.preventDefault();
+
+        const pendente =
+            deslocamentoPendente.current?.id === selecionado.id
+                ? deslocamentoPendente.current.mudancas
+                : {};
+        const base = { ...selecionado, ...pendente };
+        const posicao = deslocarPosicao(
+            { x: base.x, y: base.y },
+            base.centralizado,
+            deslocamento,
+        );
+
+        if (posicao.y === base.y && (posicao.x ?? base.x) === base.x) {
+            return;
+        }
+
+        deslocamentoPendente.current = {
+            id: selecionado.id,
+            mudancas: { ...pendente, ...posicao },
+        };
+
+        setCampos((atuais) =>
+            atuais.map((campo) =>
+                campo.id === selecionado.id ? { ...campo, ...posicao } : campo,
+            ),
+        );
+
+        if (temporizadorDoTeclado.current) {
+            clearTimeout(temporizadorDoTeclado.current);
+        }
+
+        temporizadorDoTeclado.current = setTimeout(
+            () => descarregarRef.current(),
+            ESPERA_DO_TECLADO,
+        );
+    };
+
+    const estado: EstadoDoSalvamento =
+        salvando > 0 ? 'salvando' : falhou ? 'erro' : 'salvo';
+
     return (
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <div className="flex flex-col gap-4">
-                <div>
-                    <h2 className="text-lg font-semibold">Campos</h2>
-                    <p className="text-sm text-muted-foreground">
-                        Configure os campos de texto do certificado: posição,
-                        cor e fonte.
-                    </p>
-                </div>
+        <div className="flex flex-col gap-6">
+            <BarraDoEditor
+                modelo={modelo}
+                temCampos={campos.length > 0}
+                modo={modo}
+                aoMudarModo={setModo}
+                estado={somenteLeitura ? null : estado}
+            />
 
-                {somenteLeitura && (
-                    <Alert>
-                        <AlertDescription>
-                            Você pode ver os campos deste modelo, mas não
-                            editá-los.
-                        </AlertDescription>
-                    </Alert>
-                )}
+            {somenteLeitura && (
+                <Alert>
+                    <AlertDescription>
+                        Você pode ver os campos deste modelo, mas não editá-los.
+                    </AlertDescription>
+                </Alert>
+            )}
 
-                <div className="flex flex-col gap-3">
-                    {campos.map((campo) => (
-                        <CartaoDoCampo
-                            key={campo.id}
-                            campo={campo}
-                            fontes={fontes}
-                            pesos={pesos}
-                            somenteLeitura={somenteLeitura}
-                            aoAtualizar={(id, mudancas) =>
-                                void atualizar(id, mudancas)
-                            }
-                            aoExcluir={(id) => void excluir(id)}
-                        />
-                    ))}
-                </div>
-
-                {!somenteLeitura && (
-                    <button
-                        type="button"
-                        disabled={criando}
-                        onClick={() => void criar()}
-                        className="flex items-center justify-center gap-2 rounded-lg border-2 border-dashed px-4 py-3 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-foreground disabled:pointer-events-none disabled:opacity-50"
-                    >
-                        <Plus className="size-4" />
-                        Novo campo
-                    </button>
-                )}
-            </div>
-
-            <div className="flex flex-col gap-3">
-                <div>
-                    <h2 className="text-lg font-semibold">Pré-visualização</h2>
-                    <p className="text-sm text-muted-foreground">
-                        {somenteLeitura
-                            ? 'Veja como os campos ficam sobre a imagem.'
-                            : 'Arraste os campos para reposicioná-los sobre a imagem.'}
-                    </p>
-                </div>
+            <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[260px_minmax(0,1fr)_300px]">
+                <ListaDeCampos
+                    campos={campos}
+                    selecionadoId={selecionadoId}
+                    somenteLeitura={somenteLeitura}
+                    criando={criando}
+                    aoSelecionar={selecionar}
+                    aoCriar={() => void criar()}
+                />
 
                 <PreviewDoModelo
                     modelo={modelo}
                     campos={campos}
                     somenteLeitura={somenteLeitura}
                     arrastando={arrastando}
+                    selecionadoId={selecionadoId}
+                    modo={modo}
+                    aoSelecionar={selecionar}
                     aoIniciarArraste={iniciarArraste}
+                    aoTecla={moverPeloTeclado}
                 />
 
-                {!somenteLeitura && (
-                    <p
-                        className="text-right text-xs text-muted-foreground"
-                        aria-live="polite"
-                    >
-                        {salvando > 0
-                            ? 'Salvando…'
-                            : 'Alterações salvas automaticamente'}
-                    </p>
+                {selecionado ? (
+                    <PainelDoCampo
+                        key={selecionado.id}
+                        campo={selecionado}
+                        fontes={fontes}
+                        pesos={pesos}
+                        somenteLeitura={somenteLeitura}
+                        aoAtualizar={(id, mudancas) =>
+                            void atualizar(id, mudancas)
+                        }
+                        aoExcluir={(id) => void excluir(id)}
+                    />
+                ) : (
+                    <aside className="rounded-xl border bg-card p-4 text-sm text-muted-foreground lg:self-start">
+                        Selecione um campo na imagem ou na lista.
+                    </aside>
                 )}
             </div>
         </div>
