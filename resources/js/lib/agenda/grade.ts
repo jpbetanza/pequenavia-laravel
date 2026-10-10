@@ -6,6 +6,8 @@ export const HORA_INICIAL = 7;
 export const HORA_FINAL = 22;
 export const PIXELS_POR_HORA = 48;
 export const ALTURA_DA_GRADE = (HORA_FINAL - HORA_INICIAL) * PIXELS_POR_HORA;
+/** Altura mínima, em px, de um bloco que cai inteiro fora de 07:00–22:00. */
+export const ALTURA_MINIMA_DO_BLOCO = 24;
 
 const MINUTO_INICIAL = HORA_INICIAL * 60;
 const MINUTO_FINAL = HORA_FINAL * 60;
@@ -48,23 +50,32 @@ function minutoParaPixel(minuto: number): number {
     return ((minuto - MINUTO_INICIAL) / 60) * PIXELS_POR_HORA;
 }
 
-/** Topo e altura de um bloco, recortados ao intervalo 07:00–22:00. */
+/**
+ * Topo e altura de um bloco, recortados ao intervalo 07:00–22:00.
+ * Um bloco inteiro antes de 07:00 ou depois de 22:00 fica grudado na borda correspondente,
+ * com a altura mínima, para continuar visível e clicável.
+ */
 export function posicaoDoBloco(inicio: string, fim: string): PosicaoDoBloco {
-    const inicioVisivel = Math.min(
-        Math.max(minutosDoHorario(inicio), MINUTO_INICIAL),
-        MINUTO_FINAL,
-    );
-    const fimVisivel = Math.min(
-        Math.max(minutosDoHorario(fim), MINUTO_INICIAL),
-        MINUTO_FINAL,
-    );
+    const inicioMinutos = minutosDoHorario(inicio);
+    const fimMinutos = minutosDoHorario(fim);
+
+    if (fimMinutos <= MINUTO_INICIAL) {
+        return { topo: 0, altura: ALTURA_MINIMA_DO_BLOCO };
+    }
+
+    if (inicioMinutos >= MINUTO_FINAL) {
+        return {
+            topo: ALTURA_DA_GRADE - ALTURA_MINIMA_DO_BLOCO,
+            altura: ALTURA_MINIMA_DO_BLOCO,
+        };
+    }
+
+    const inicioVisivel = Math.max(inicioMinutos, MINUTO_INICIAL);
+    const fimVisivel = Math.min(fimMinutos, MINUTO_FINAL);
 
     return {
         topo: minutoParaPixel(inicioVisivel),
-        altura: Math.max(
-            0,
-            minutoParaPixel(fimVisivel) - minutoParaPixel(inicioVisivel),
-        ),
+        altura: minutoParaPixel(fimVisivel) - minutoParaPixel(inicioVisivel),
     };
 }
 

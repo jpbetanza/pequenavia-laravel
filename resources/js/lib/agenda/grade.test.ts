@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vite-plus/test';
 import {
     ALTURA_DA_GRADE,
+    ALTURA_MINIMA_DO_BLOCO,
     colunasLadoALado,
     horaDoClique,
     posicaoDoAgora,
@@ -36,9 +37,39 @@ describe('posicaoDoBloco', () => {
         });
     });
 
-    it('devolve altura zero quando o bloco fica todo fora do intervalo', () => {
-        expect(posicaoDoBloco('05:00', '06:30').altura).toBe(0);
-        expect(posicaoDoBloco('22:30', '23:00').altura).toBe(0);
+    it('06:00–07:00 fica grudado no topo, com a altura mínima visível', () => {
+        expect(posicaoDoBloco('06:00', '07:00')).toEqual({
+            topo: 0,
+            altura: ALTURA_MINIMA_DO_BLOCO,
+        });
+        expect(posicaoDoBloco('05:00', '06:30')).toEqual({
+            topo: 0,
+            altura: ALTURA_MINIMA_DO_BLOCO,
+        });
+    });
+
+    it('22:00–23:00 fica grudado na base, com a altura mínima visível', () => {
+        expect(posicaoDoBloco('22:00', '23:00')).toEqual({
+            topo: ALTURA_DA_GRADE - ALTURA_MINIMA_DO_BLOCO,
+            altura: ALTURA_MINIMA_DO_BLOCO,
+        });
+        expect(posicaoDoBloco('22:30', '23:00').altura).toBe(
+            ALTURA_MINIMA_DO_BLOCO,
+        );
+    });
+
+    it('06:00–08:00 é parcial: recorta no 07:00 e mantém a altura real visível', () => {
+        expect(posicaoDoBloco('06:00', '08:00')).toEqual({
+            topo: 0,
+            altura: 48,
+        });
+    });
+
+    it('21:30–23:00 é parcial: recorta no 22:00 e mantém a altura real visível', () => {
+        expect(posicaoDoBloco('21:30', '23:00')).toEqual({
+            topo: 696,
+            altura: 24,
+        });
     });
 
     it('cobre a grade inteira de 07:00 a 22:00', () => {
