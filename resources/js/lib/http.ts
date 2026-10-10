@@ -5,17 +5,22 @@ export class ErroHttp extends Error {
 
     readonly esperarSegundos: number | null;
 
+    /** Corpo JSON completo da resposta de erro (por exemplo, os conflitos de um 422). */
+    readonly corpo: Record<string, unknown> | null;
+
     constructor(
         status: number,
         mensagem: string,
         erros: Record<string, string[]> = {},
         esperarSegundos: number | null = null,
+        corpo: Record<string, unknown> | null = null,
     ) {
         super(mensagem);
         this.name = 'ErroHttp';
         this.status = status;
         this.erros = erros;
         this.esperarSegundos = esperarSegundos;
+        this.corpo = corpo;
     }
 }
 
@@ -112,7 +117,10 @@ function cabecalhos(
 }
 
 async function erroDaResposta(resposta: Response): Promise<ErroHttp> {
-    let dados: { message?: string; errors?: Record<string, string[]> } = {};
+    let dados: { message?: string; errors?: Record<string, string[]> } & Record<
+        string,
+        unknown
+    > = {};
 
     try {
         dados = await resposta.json();
@@ -139,29 +147,47 @@ async function erroDaResposta(resposta: Response): Promise<ErroHttp> {
         mensagem,
         dados.errors ?? {},
         esperarSegundos,
+        dados,
     );
 }
 
-/** Envia JSON ao servidor (com CSRF) e devolve o JSON da resposta; `null` para 204. */
+/**
+ * Envia JSON ao servidor (com CSRF) e devolve o JSON da resposta. Devolve `null` para 204 e
+ * quando o servidor redireciona (`to_route` responde 302, e o navegador segue até a página);
+ * nesse caso não há JSON para ler. Aceita `signal` para cancelar a requisição.
+ *
+ * PUT e DELETE vão como POST com `_method` na query. Sem o cabeçalho do Inertia, o 302 do
+ * servidor manteria o método original ao seguir o redirect, e a página de calendário não aceita PUT.
+ */
 export async function enviarJson<T>(
-    metodo: 'POST' | 'PATCH' | 'DELETE',
+    metodo: 'POST' | 'PATCH' | 'DELETE' | 'PUT',
     url: string,
     corpo?: unknown,
+    signal?: AbortSignal,
 ): Promise<T | null> {
-    const resposta = await fetch(url, {
-        method: metodo,
+    const sobrescrito =
+        metodo === 'PUT' || metodo === 'DELETE'
+            ? `${url}${url.includes('?') ? '&' : '?'}_method=${metodo}`
+            : url;
+    const resposta = await fetch(sobrescrito, {
+        method: metodo === 'PUT' || metodo === 'DELETE' ? 'POST' : metodo,
         credentials: 'same-origin',
         headers: cabecalhos(
             corpo === undefined ? {} : { 'Content-Type': 'application/json' },
         ),
         body: corpo === undefined ? undefined : JSON.stringify(corpo),
+        signal,
     });
 
     if (!resposta.ok) {
         throw await erroDaResposta(resposta);
     }
 
-    return resposta.status === 204 ? null : ((await resposta.json()) as T);
+    if (resposta.status === 204 || resposta.redirected) {
+        return null;
+    }
+
+    return (await resposta.json()) as T;
 }
 
 /** Envia JSON ao servidor e devolve a resposta como arquivo (o PNG do certificado). Aceita `signal` para cancelar. */
