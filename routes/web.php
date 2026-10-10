@@ -47,6 +47,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->middleware('throttle:gerar-certificado')
         ->name('certificados.store');
 
+    Route::prefix('agendamentos')->name('agendamentos')->group(function () {
+        Route::get('/', fn () => to_route('agendamentos.calendario'));
+
+        Route::name('.')->group(function () {
+            Route::inertia('calendario', 'agendamentos/calendario')->name('calendario');
+            Route::inertia('solicitacoes', 'agendamentos/solicitacoes')->name('solicitacoes.index');
+            Route::inertia('espacos', 'agendamentos/espacos/index')->name('espacos.index');
+            Route::inertia('equipamentos', 'agendamentos/equipamentos/index')->name('equipamentos.index');
+            Route::inertia('grupos', 'agendamentos/grupos/index')->name('grupos.index');
+        });
+    });
+
     Route::get('modelos/{modelo}/imagem', [ModeloCertificadoController::class, 'imagem'])->name('modelos.imagem');
 });
 

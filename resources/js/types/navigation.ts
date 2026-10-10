@@ -11,4 +11,14 @@ export type NavItem = {
     href: NonNullable<InertiaLinkProps['href']>;
     icon?: LucideIcon | null;
     isActive?: boolean;
+    /** Número no canto do item; some quando é 0. */
+    contador?: number;
+};
+
+export type NavSecao = {
+    /** Chave estável: guarda no localStorage se a seção fica aberta. */
+    id: string;
+    title: string;
+    icon: LucideIcon;
+    items: NavItem[];
 };

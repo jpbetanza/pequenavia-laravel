@@ -1,5 +1,5 @@
-import { Link } from '@inertiajs/react';
-import { FileText, History, Settings } from 'lucide-react';
+import { Link, usePage } from '@inertiajs/react';
+import { CalendarDays, FileText, Settings } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -12,25 +12,49 @@ import {
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import { calendario } from '@/routes/agendamentos';
+import { index as equipamentos } from '@/routes/agendamentos/equipamentos';
+import { index as espacos } from '@/routes/agendamentos/espacos';
+import { index as grupos } from '@/routes/agendamentos/grupos';
+import { index as solicitacoes } from '@/routes/agendamentos/solicitacoes';
 import { index as historico } from '@/routes/historico';
 import { index as meusCertificados } from '@/routes/meus-certificados';
 import { edit as editarPerfil } from '@/routes/profile';
-import type { NavItem } from '@/types';
+import type { NavSecao } from '@/types';
 
-const mainNavItems: NavItem[] = [
-    {
-        title: 'Modelos',
-        href: meusCertificados(),
-        icon: FileText,
-    },
-    {
-        title: 'Histórico',
-        href: historico(),
-        icon: History,
-    },
-];
+function secoesDoMenu(solicitacoesPendentes: number): NavSecao[] {
+    return [
+        {
+            id: 'certificados',
+            title: 'Certificados',
+            icon: FileText,
+            items: [
+                { title: 'Modelos', href: meusCertificados() },
+                { title: 'Histórico', href: historico() },
+            ],
+        },
+        {
+            id: 'agendamentos',
+            title: 'Agendamentos',
+            icon: CalendarDays,
+            items: [
+                { title: 'Calendário', href: calendario() },
+                {
+                    title: 'Solicitações',
+                    href: solicitacoes(),
+                    contador: solicitacoesPendentes,
+                },
+                { title: 'Espaços', href: espacos() },
+                { title: 'Equipamentos', href: equipamentos() },
+                { title: 'Grupos e pastorais', href: grupos() },
+            ],
+        },
+    ];
+}
 
 export function AppSidebar() {
+    const { agenda } = usePage().props;
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
@@ -50,7 +74,9 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                <NavMain
+                    secoes={secoesDoMenu(agenda?.solicitacoes_pendentes ?? 0)}
+                />
             </SidebarContent>
 
             <SidebarFooter>

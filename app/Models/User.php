@@ -27,6 +27,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property string|null $password
  * @property string|null $google_id
  * @property string|null $avatar_url
+ * @property string|null $agenda_slug
  * @property bool $tem_senha
  * @property string|null $two_factor_secret
  * @property string|null $two_factor_recovery_codes
@@ -75,6 +76,22 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     protected function temSenha(): Attribute
     {
         return Attribute::get(fn (): bool => $this->password !== null);
+    }
+
+    /**
+     * Slug do formulário público de solicitações. É criado na primeira vez que alguém precisa dele.
+     */
+    public function agendaSlug(): string
+    {
+        if ($this->agenda_slug === null) {
+            do {
+                $slug = Str::lower(Str::random(10));
+            } while (static::query()->where('agenda_slug', $slug)->exists());
+
+            $this->forceFill(['agenda_slug' => $slug])->save();
+        }
+
+        return $this->agenda_slug;
     }
 
     /** @return HasMany<ModeloCertificado, $this> */
