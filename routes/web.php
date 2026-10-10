@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Agendamentos\DisponibilidadeController;
+use App\Http\Controllers\Agendamentos\EspacoController;
 use App\Http\Controllers\Agendamentos\GrupoController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\CampoCertificadoController;
@@ -55,7 +56,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::name('.')->group(function () {
             Route::inertia('calendario', 'agendamentos/calendario')->name('calendario');
             Route::inertia('solicitacoes', 'agendamentos/solicitacoes')->name('solicitacoes.index');
-            Route::inertia('espacos', 'agendamentos/espacos/index')->name('espacos.index');
+            Route::get('espacos', [EspacoController::class, 'index'])->name('espacos.index');
+            Route::get('espacos/novo', [EspacoController::class, 'create'])->name('espacos.create');
+            Route::post('espacos', [EspacoController::class, 'store'])->name('espacos.store');
+            Route::get('espacos/{espaco}/editar', [EspacoController::class, 'edit'])->name('espacos.edit');
+            Route::put('espacos/{espaco}', [EspacoController::class, 'update'])->name('espacos.update');
+            Route::delete('espacos/{espaco}', [EspacoController::class, 'destroy'])->name('espacos.destroy');
             Route::inertia('equipamentos', 'agendamentos/equipamentos/index')->name('equipamentos.index');
             Route::get('grupos', [GrupoController::class, 'index'])->name('grupos.index');
             Route::post('grupos', [GrupoController::class, 'store'])->name('grupos.store');
