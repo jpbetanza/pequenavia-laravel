@@ -2,80 +2,95 @@ import { Link } from '@inertiajs/react';
 import { FileText, Settings } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { campos, gerar } from '@/routes/meus-certificados';
 import type { ModeloResumo } from '@/types/certificados';
 
 type Props = {
     itens: ModeloResumo[];
+    buscando: boolean;
 };
 
-export default function SecaoCompartilhados({ itens }: Props) {
-    if (itens.length === 0) {
-        return null;
-    }
-
+export default function SecaoCompartilhados({ itens, buscando }: Props) {
     return (
-        <section className="mt-12">
-            <div className="mb-6">
-                <h2 className="font-serif text-2xl font-bold">
-                    Compartilhados comigo
-                </h2>
-                <p className="mt-1 text-muted-foreground">
-                    Modelos que outros usuários compartilharam com você.
-                </p>
-            </div>
+        <section
+            aria-labelledby="compartilhados"
+            className="flex flex-col gap-4"
+        >
+            <h2
+                id="compartilhados"
+                className="text-xs font-semibold tracking-[0.14em] text-muted-foreground uppercase"
+            >
+                Compartilhados comigo · {itens.length}
+            </h2>
 
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-                {itens.map((modelo) => (
-                    <Card
-                        key={modelo.id}
-                        className="gap-0 overflow-hidden py-0"
-                    >
-                        <div className="aspect-[4/3] w-full overflow-hidden bg-muted">
-                            <img
-                                src={modelo.imagem_url}
-                                alt={modelo.title}
-                                loading="lazy"
-                                className="size-full object-cover"
-                            />
-                        </div>
-                        <div className="flex flex-col gap-2 p-4">
-                            <div>
-                                <p className="line-clamp-1 text-sm font-semibold">
+            {itens.length === 0 ? (
+                <p className="rounded-2xl border border-dashed border-input px-5 py-8 text-center text-muted-foreground">
+                    {buscando
+                        ? 'Nenhum modelo compartilhado corresponde à busca.'
+                        : 'Nenhum modelo foi compartilhado com você.'}
+                </p>
+            ) : (
+                <ul className="divide-y rounded-2xl border bg-card">
+                    {itens.map((modelo) => (
+                        <li
+                            key={modelo.id}
+                            className="flex flex-wrap items-center gap-x-4 gap-y-3 px-5 py-3.5"
+                        >
+                            <span className="flex h-10 w-14 shrink-0 items-center justify-center overflow-hidden rounded-sm bg-mesa">
+                                <img
+                                    src={modelo.imagem_url}
+                                    alt=""
+                                    loading="lazy"
+                                    className="size-full object-contain"
+                                />
+                            </span>
+
+                            <span className="flex min-w-0 flex-1 basis-[200px] flex-col leading-snug">
+                                <span className="truncate font-semibold">
                                     {modelo.title}
-                                </p>
-                                {modelo.description && (
-                                    <p className="line-clamp-2 text-xs text-muted-foreground">
-                                        {modelo.description}
-                                    </p>
-                                )}
-                                <p className="mt-1 text-xs text-muted-foreground">
-                                    Compartilhado por {modelo.dono_nome}
-                                </p>
-                            </div>
-                            <div className="flex flex-wrap gap-1">
-                                <Badge variant="secondary">Pode gerar</Badge>
-                                {modelo.pode_editar && (
-                                    <Badge>Pode editar</Badge>
-                                )}
-                            </div>
+                                </span>
+                                <span className="text-sm text-muted-foreground">
+                                    de {modelo.dono_nome} ·{' '}
+                                    {modelo.campos_count}{' '}
+                                    {modelo.campos_count === 1
+                                        ? 'campo'
+                                        : 'campos'}
+                                </span>
+                            </span>
+
+                            {modelo.pode_editar ? (
+                                <Badge className="rounded-full bg-sucesso-fundo text-sucesso hover:bg-sucesso-fundo">
+                                    Pode editar
+                                </Badge>
+                            ) : (
+                                <Badge variant="secondary">Só gerar</Badge>
+                            )}
+
                             <div className="flex gap-2">
                                 {modelo.campos_count === 0 ? (
-                                    <Button
-                                        size="sm"
-                                        className="flex-1"
-                                        disabled
-                                        title="Este modelo ainda não tem campos"
-                                    >
-                                        <FileText />
-                                        Gerar
-                                    </Button>
+                                    <>
+                                        <Button
+                                            variant="outline"
+                                            className="min-h-11"
+                                            disabled
+                                            title="Este modelo ainda não tem campos"
+                                            aria-describedby={`dica-sem-campos-${modelo.id}`}
+                                        >
+                                            <FileText />
+                                            Gerar
+                                        </Button>
+                                        <span
+                                            id={`dica-sem-campos-${modelo.id}`}
+                                            className="sr-only"
+                                        >
+                                            Este modelo ainda não tem campos
+                                        </span>
+                                    </>
                                 ) : (
                                     <Button
                                         asChild
-                                        size="sm"
-                                        className="flex-1"
+                                        variant="outline"
+                                        className="min-h-11"
                                     >
                                         <Link
                                             href={gerar({ modelo: modelo.id })}
@@ -88,9 +103,8 @@ export default function SecaoCompartilhados({ itens }: Props) {
                                 {modelo.pode_editar && (
                                     <Button
                                         asChild
-                                        size="sm"
-                                        variant="secondary"
-                                        className="flex-1"
+                                        variant="outline"
+                                        className="min-h-11"
                                     >
                                         <Link
                                             href={campos({ modelo: modelo.id })}
@@ -101,10 +115,10 @@ export default function SecaoCompartilhados({ itens }: Props) {
                                     </Button>
                                 )}
                             </div>
-                        </div>
-                    </Card>
-                ))}
-            </div>
+                        </li>
+                    ))}
+                </ul>
+            )}
         </section>
     );
 }

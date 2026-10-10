@@ -72,3 +72,93 @@ export function reverterCampo(
 
     return { ...atual, ...reverso };
 }
+
+/** Quanto o campo anda com uma tecla de seta: 1 px da imagem, ou 10 px com Shift. */
+export const PASSO_DO_TECLADO = 1;
+export const PASSO_DO_TECLADO_COM_SHIFT = 10;
+
+/** Direção (em pixels da imagem) de cada seta; null para as outras teclas. */
+export function deslocamentoDaTecla(
+    tecla: string,
+    comShift: boolean,
+): { dx: number; dy: number } | null {
+    const passo = comShift ? PASSO_DO_TECLADO_COM_SHIFT : PASSO_DO_TECLADO;
+
+    switch (tecla) {
+        case 'ArrowLeft':
+            return { dx: -passo, dy: 0 };
+        case 'ArrowRight':
+            return { dx: passo, dy: 0 };
+        case 'ArrowUp':
+            return { dx: 0, dy: -passo };
+        case 'ArrowDown':
+            return { dx: 0, dy: passo };
+        default:
+            return null;
+    }
+}
+
+/**
+ * Nova posição depois de um passo do teclado. Campo centralizado só anda na vertical, então não
+ * devolve `x`; as coordenadas ficam dentro da imagem, como no arraste.
+ */
+export function deslocarPosicao(
+    posicao: { x: number; y: number },
+    centralizado: boolean,
+    deslocamento: { dx: number; dy: number },
+): { x?: number; y: number } {
+    const y = limitarPosicao(posicao.y + deslocamento.dy);
+
+    return centralizado
+        ? { y }
+        : { x: limitarPosicao(posicao.x + deslocamento.dx), y };
+}
+
+/** Tira de um deslocamento pendente as chaves que outra mudança passou a definir. Centralizar o campo também tira `x`. */
+export function retirarMudancas(
+    pendentes: Partial<Campo>,
+    mudancas: Partial<Campo>,
+): Partial<Campo> {
+    const restantes: Partial<Campo> = { ...pendentes };
+
+    for (const chave of Object.keys(mudancas) as (keyof Campo)[]) {
+        delete restantes[chave];
+    }
+
+    if (mudancas.centralizado === true) {
+        delete restantes.x;
+    }
+
+    return restantes;
+}
+
+/** Só as chaves de `mudancas` que diferem do valor que o servidor confirmou. */
+export function mudancasDiferentes(
+    mudancas: Partial<Campo>,
+    confirmado: Campo,
+): Partial<Campo> {
+    const diferentes: Partial<Campo> = {};
+
+    for (const chave of Object.keys(mudancas) as (keyof Campo)[]) {
+        if (mudancas[chave] !== confirmado[chave]) {
+            Object.assign(diferentes, { [chave]: mudancas[chave] });
+        }
+    }
+
+    return diferentes;
+}
+
+/** Como `deslocamentoDaTecla`, mas ignora as combinações com Ctrl, Cmd ou Alt, que não são do editor. */
+export function deslocamentoDoEvento(evento: {
+    key: string;
+    shiftKey: boolean;
+    ctrlKey: boolean;
+    metaKey: boolean;
+    altKey: boolean;
+}): { dx: number; dy: number } | null {
+    if (evento.ctrlKey || evento.metaKey || evento.altKey) {
+        return null;
+    }
+
+    return deslocamentoDaTecla(evento.key, evento.shiftKey);
+}

@@ -134,6 +134,7 @@ class ModeloCertificadoController extends Controller
             'eh_dono' => $ehDono,
             'pode_editar' => $user->can('update', $modelo),
             'campos_count' => (int) $modelo->campos_count,
+            'atualizado_em' => $modelo->updated_at?->toIso8601String(),
             'compartilhamentos' => $ehDono
                 ? $modelo->compartilhamentos->map(fn (CompartilhamentoModelo $compartilhamento) => [
                     'id' => $compartilhamento->id,

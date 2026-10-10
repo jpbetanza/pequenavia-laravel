@@ -1,5 +1,4 @@
 import { Head } from '@inertiajs/react';
-import CabecalhoDaPagina from '@/components/cabecalho-da-pagina';
 import CamposEditor from '@/components/campos/campos-editor';
 import { index } from '@/routes/meus-certificados';
 import type {
@@ -28,11 +27,6 @@ export default function Campos({
         <>
             <Head title={`Campos: ${modelo.title}`} />
             <div className="p-4">
-                <CabecalhoDaPagina
-                    modelo={modelo.title}
-                    titulo="Campos do certificado"
-                    subtitulo="Defina onde cada campo de texto aparece sobre a imagem do modelo."
-                />
                 <CamposEditor
                     key={modelo.id}
                     modelo={modelo}
@@ -49,7 +43,7 @@ export default function Campos({
 Campos.layout = {
     breadcrumbs: [
         {
-            title: 'Meus certificados',
+            title: 'Modelos',
             href: index(),
         },
     ],

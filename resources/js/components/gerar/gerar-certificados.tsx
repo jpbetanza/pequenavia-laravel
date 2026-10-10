@@ -1,29 +1,38 @@
 import { Link } from '@inertiajs/react';
-import { Download, Eye, FileUp, Trash2 } from 'lucide-react';
+import { Download, FileUp, Trash2 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { store } from '@/actions/App/Http/Controllers/GeracaoCertificadoController';
-import PreviewDoModelo from '@/components/campos/preview-do-modelo';
+import CabecalhoDaPagina from '@/components/cabecalho-da-pagina';
+import BarraDeLote from '@/components/gerar/barra-de-lote';
 import ConfirmacaoDeSubstituicao from '@/components/gerar/confirmacao-de-substituicao';
 import DialogoDeImportacao from '@/components/gerar/dialogo-de-importacao';
-import PainelDePreview from '@/components/gerar/painel-de-preview';
+import PreviaDaLinha from '@/components/gerar/previa-da-linha';
 import TabelaDeGeracao from '@/components/gerar/tabela-de-geracao';
+import VisaoCelular from '@/components/gerar/visao-celular';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { Spinner } from '@/components/ui/spinner';
 import { useFontesDoCatalogo } from '@/hooks/use-fontes-do-catalogo';
+import { useIsMobile } from '@/hooks/use-mobile';
 import {
     editarCelula,
     ehCancelamento,
+    emAndamento,
     gerarCertificado,
+    linhaPreenchida,
+    linhasParaGerarTodas,
     marcarErro,
     marcarGerando,
     marcarPronto,
+    mudarStatus,
     novaLinha,
+    progresso,
     removerLinha,
     substituirLinhas,
     tabelaTemDados,
     urlsDasLinhas,
+    valoresVazios,
+    type ArquivoGerado,
     type LinhaDeGeracao,
 } from '@/lib/geracao';
 import { mensagemDoErro } from '@/lib/http';
@@ -35,12 +44,14 @@ import {
     lerPlanilhaComAviso,
     nomeDaPlanilhaModelo,
 } from '@/lib/planilha';
+import { nomeDoZip, zipar } from '@/lib/zip';
 import { campos as rotaDeCampos } from '@/routes/meus-certificados';
 import type {
     Campo,
     GruposFontes,
     ModeloBasico,
     PesosDasFontes,
+    ValoresIniciais,
 } from '@/types/certificados';
 
 type Props = {
@@ -48,6 +59,8 @@ type Props = {
     campos: Campo[];
     fontes: GruposFontes;
     pesos: PesosDasFontes;
+    /** Valores de uma geração anterior (`?geracao=`): a primeira linha já vem preenchida. */
+    valoresIniciais: ValoresIniciais;
 };
 
 function baixarArquivo(url: string, nome: string) {
@@ -70,33 +83,41 @@ export default function GerarCertificados({
     campos,
     fontes,
     pesos,
+    valoresIniciais,
 }: Props) {
     useFontesDoCatalogo(fontes, pesos);
+    // Celular e desktop montam uma só visão: a prévia não existe duas vezes na árvore.
+    const celular = useIsMobile();
 
     const [linhas, setLinhas] = useState<LinhaDeGeracao[]>(() => [
-        novaLinha(1, campos),
+        novaLinha(
+            1,
+            campos,
+            valoresIniciais
+                ? { ...valoresVazios(campos), ...valoresIniciais }
+                : undefined,
+        ),
     ]);
+    // Espelho síncrono de `linhas`: as gerações em sequência leem o valor atual sem esperar o render.
+    const linhasRef = useRef(linhas);
     const proximoId = useRef(2);
-    const [previewDaLinha, setPreviewDaLinha] = useState<number | null>(null);
-    const [previewDoModelo, setPreviewDoModelo] = useState(false);
+    const linhaParaFocar = useRef<number | null>(null);
+    const [selecionadaId, setSelecionadaId] = useState<number | null>(1);
     const [importando, setImportando] = useState(false);
     const [lendoPlanilha, setLendoPlanilha] = useState(false);
+    const [geradosNaSessao, setGeradosNaSessao] = useState(0);
     // Linhas importadas esperando a confirmação de que podem substituir a tabela atual.
     const [substituicaoPendente, setSubstituicaoPendente] =
         useState<LeituraDaPlanilha | null>(null);
+    const [gerandoLote, setGerandoLote] = useState(false);
 
     // Linhas em geração: impede o duplo clique de disparar a mesma requisição duas vezes.
     const geracoesEmAndamento = useRef(new Set<number>());
     const montado = useRef(false);
-    const linhasAtuais = useRef(linhas);
     // Um controlador por montagem: ao sair da página, cancela as gerações em andamento.
     const controle = useRef<AbortController | null>(null);
-
-    const algumGerando = linhas.some((linha) => linha.status === 'gerando');
-
-    useEffect(() => {
-        linhasAtuais.current = linhas;
-    });
+    // Controlador de "Gerar todos": "Parar" aborta só o lote, e sair da página aborta também.
+    const controleDoLote = useRef<AbortController | null>(null);
 
     useEffect(() => {
         montado.current = true;
@@ -107,27 +128,44 @@ export default function GerarCertificados({
         return () => {
             montado.current = false;
             controlador.abort();
-            urlsDasLinhas(linhasAtuais.current).forEach((url) =>
+            urlsDasLinhas(linhasRef.current).forEach((url) =>
                 URL.revokeObjectURL(url),
             );
         };
     }, []);
 
-    const linhaEmPreview =
-        linhas.find((linha) => linha.id === previewDaLinha) ?? null;
+    const atualizar = (
+        mudar: (atuais: LinhaDeGeracao[]) => LinhaDeGeracao[],
+    ) => {
+        const proximas = mudar(linhasRef.current);
 
-    const gerar = async (id: number) => {
-        const linha = linhas.find((atual) => atual.id === id);
+        linhasRef.current = proximas;
+        setLinhas(proximas);
+    };
+
+    const algumGerando = gerandoLote || linhas.some(emAndamento);
+    const linhaSelecionada =
+        linhas.find((linha) => linha.id === selecionadaId) ?? linhas[0] ?? null;
+    const indiceSelecionado = linhaSelecionada
+        ? linhas.indexOf(linhaSelecionada)
+        : -1;
+    const posicao = indiceSelecionado + 1;
+    const resumo = progresso(linhas);
+
+    /** Gera uma linha (uma requisição, com retry de 429) e devolve o arquivo, ou null se não saiu. */
+    const executar = async (
+        id: number,
+        sinal: AbortSignal | undefined,
+    ): Promise<ArquivoGerado | null> => {
+        const linha = linhasRef.current.find((atual) => atual.id === id);
 
         if (!linha || geracoesEmAndamento.current.has(id)) {
-            return;
+            return null;
         }
 
         geracoesEmAndamento.current.add(id);
         revogar(linha);
-        setPreviewDoModelo(false);
-        setPreviewDaLinha(id);
-        setLinhas((atuais) => marcarGerando(atuais, id));
+        atualizar((atuais) => marcarGerando(atuais, id));
 
         try {
             const arquivo = await gerarCertificado(
@@ -135,64 +173,211 @@ export default function GerarCertificados({
                 linha.valores,
                 {
                     nomePadrao: `${modelo.title}.png`,
-                    signal: controle.current?.signal,
+                    signal: sinal,
+                    aoEsperar: () => {
+                        if (montado.current) {
+                            atualizar((atuais) =>
+                                mudarStatus(atuais, id, 'aguardando'),
+                            );
+                        }
+                    },
+                    aoRetomar: () => {
+                        if (montado.current) {
+                            atualizar((atuais) =>
+                                mudarStatus(atuais, id, 'gerando'),
+                            );
+                        }
+                    },
                 },
             );
 
             // Se a página saiu do ar enquanto gerava, não cria a URL (ela nunca seria revogada).
             if (!montado.current) {
-                return;
+                return null;
             }
 
-            const url = URL.createObjectURL(arquivo.blob);
+            const pronto: ArquivoGerado = {
+                url: URL.createObjectURL(arquivo.blob),
+                nome: arquivo.nome,
+                tipo: arquivo.tipo,
+                blob: arquivo.blob,
+            };
 
-            setLinhas((atuais) =>
-                marcarPronto(atuais, id, {
-                    url,
-                    nome: arquivo.nome,
-                    tipo: arquivo.tipo,
-                }),
-            );
-            baixarArquivo(url, arquivo.nome);
+            atualizar((atuais) => marcarPronto(atuais, id, pronto));
+            setGeradosNaSessao((total) => total + 1);
+
+            return pronto;
         } catch (erro) {
-            // Cancelado (a página saiu): não mostra nada. Falhas ficam só na linha, sem toast duplicado.
-            if (ehCancelamento(erro)) {
-                return;
-            }
-
             if (montado.current) {
-                setLinhas((atuais) =>
-                    marcarErro(atuais, id, mensagemDoErro(erro)),
+                // Cancelado pelo "Parar": a linha volta ao estado anterior, sem mensagem de erro.
+                atualizar((atuais) =>
+                    ehCancelamento(erro)
+                        ? mudarStatus(atuais, id, 'ocioso')
+                        : marcarErro(atuais, id, mensagemDoErro(erro)),
                 );
             }
+
+            return null;
         } finally {
             geracoesEmAndamento.current.delete(id);
         }
     };
 
-    const baixar = (id: number) => {
-        const arquivo = linhas.find((linha) => linha.id === id)?.arquivo;
+    const gerar = async (id: number) => {
+        setSelecionadaId(id);
+
+        const arquivo = await executar(id, controle.current?.signal);
 
         if (arquivo) {
             baixarArquivo(arquivo.url, arquivo.nome);
         }
     };
 
+    const gerarTodos = async () => {
+        const mestre = controle.current;
+        const ids = linhasParaGerarTodas(linhasRef.current).map(
+            (linha) => linha.id,
+        );
+
+        if (!mestre || ids.length === 0 || controleDoLote.current) {
+            return;
+        }
+
+        const lote = new AbortController();
+        const sairDaPagina = () => lote.abort();
+
+        controleDoLote.current = lote;
+        mestre.signal.addEventListener('abort', sairDaPagina, { once: true });
+        setGerandoLote(true);
+        atualizar((atuais) =>
+            ids.reduce(
+                (proximas, id) => mudarStatus(proximas, id, 'na-fila'),
+                atuais,
+            ),
+        );
+
+        try {
+            for (const id of ids) {
+                if (lote.signal.aborted) {
+                    break;
+                }
+
+                const linha = linhasRef.current.find(
+                    (atual) => atual.id === id,
+                );
+
+                // Removida da tabela depois de entrar na fila: simplesmente sai do lote.
+                if (!linha) {
+                    continue;
+                }
+
+                // Esvaziada depois de entrar na fila: volta a ocioso, sem gerar.
+                if (!linhaPreenchida(linha)) {
+                    atualizar((atuais) => mudarStatus(atuais, id, 'ocioso'));
+                    continue;
+                }
+
+                await executar(id, lote.signal);
+            }
+        } finally {
+            mestre.signal.removeEventListener('abort', sairDaPagina);
+            controleDoLote.current = null;
+
+            if (montado.current) {
+                atualizar((atuais) =>
+                    atuais.map((linha) =>
+                        linha.status === 'na-fila'
+                            ? { ...linha, status: 'ocioso' }
+                            : linha,
+                    ),
+                );
+                setGerandoLote(false);
+            }
+        }
+    };
+
+    const pararLote = () => {
+        controleDoLote.current?.abort();
+    };
+
+    const baixarProntos = async () => {
+        const arquivos = linhasRef.current.flatMap((linha) =>
+            linha.status === 'pronto' && linha.arquivo ? [linha.arquivo] : [],
+        );
+
+        if (arquivos.length === 0) {
+            return;
+        }
+
+        try {
+            const zip = await zipar(
+                arquivos.map((arquivo) => ({
+                    nome: arquivo.nome,
+                    blob: arquivo.blob,
+                })),
+            );
+            const url = URL.createObjectURL(zip);
+
+            baixarArquivo(url, nomeDoZip(modelo.title));
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+        } catch {
+            toast.error(
+                'Não foi possível montar o arquivo .zip. Tente de novo.',
+            );
+        }
+    };
+
     const editar = (id: number, nome: string, valor: string) => {
-        revogar(linhas.find((linha) => linha.id === id));
-        setLinhas((atuais) => editarCelula(atuais, id, nome, valor));
+        revogar(linhasRef.current.find((linha) => linha.id === id));
+        atualizar((atuais) => editarCelula(atuais, id, nome, valor));
     };
 
     const adicionarLinha = () => {
         const id = proximoId.current++;
 
-        setLinhas((atuais) => [...atuais, novaLinha(id, campos)]);
+        atualizar((atuais) => [...atuais, novaLinha(id, campos)]);
+        setSelecionadaId(id);
+        linhaParaFocar.current = id;
     };
 
+    // Depois de "Adicionar linha", o foco vai para o primeiro campo do registro novo (tabela ou celular).
+    useEffect(() => {
+        const id = linhaParaFocar.current;
+
+        if (id === null) {
+            return;
+        }
+
+        linhaParaFocar.current = null;
+        document
+            .querySelector<HTMLInputElement>(`[data-linha-id="${id}"] input`)
+            ?.focus();
+    }, [linhas]);
+
     const remover = (id: number) => {
-        revogar(linhas.find((linha) => linha.id === id));
-        setPreviewDaLinha((atual) => (atual === id ? null : atual));
-        setLinhas((atuais) => removerLinha(atuais, id));
+        const atuais = linhasRef.current;
+        const indice = atuais.findIndex((linha) => linha.id === id);
+        const proximas = removerLinha(atuais, id);
+
+        revogar(atuais[indice]);
+        atualizar(() => proximas);
+
+        // Tirou a linha selecionada: a selação vai para a vizinha (mesma posição, ou a anterior se era a última).
+        if (linhaSelecionada?.id === id) {
+            const vizinha = proximas[Math.min(indice, proximas.length - 1)];
+
+            setSelecionadaId(vizinha?.id ?? null);
+        }
+    };
+
+    const baixar = (id: number) => {
+        const arquivo = linhasRef.current.find(
+            (linha) => linha.id === id,
+        )?.arquivo;
+
+        if (arquivo) {
+            baixarArquivo(arquivo.url, arquivo.nome);
+        }
     };
 
     const limpar = () => {
@@ -200,20 +385,27 @@ export default function GerarCertificados({
             return;
         }
 
-        urlsDasLinhas(linhas).forEach((url) => URL.revokeObjectURL(url));
-        setPreviewDaLinha(null);
-        setLinhas([novaLinha(proximoId.current++, campos)]);
+        urlsDasLinhas(linhasRef.current).forEach((url) =>
+            URL.revokeObjectURL(url),
+        );
+
+        const id = proximoId.current++;
+
+        atualizar(() => [novaLinha(id, campos)]);
+        setSelecionadaId(id);
     };
 
     const aplicarImportacao = (
         importadas: Record<string, string>[],
         truncada: boolean,
     ) => {
-        urlsDasLinhas(linhas).forEach((url) => URL.revokeObjectURL(url));
+        urlsDasLinhas(linhasRef.current).forEach((url) =>
+            URL.revokeObjectURL(url),
+        );
         const primeiro = proximoId.current;
         proximoId.current += importadas.length;
-        setLinhas(substituirLinhas(importadas, primeiro));
-        setPreviewDaLinha(null);
+        atualizar(() => substituirLinhas(importadas, primeiro));
+        setSelecionadaId(primeiro);
         toast.success(
             `${importadas.length} ${importadas.length === 1 ? 'linha importada' : 'linhas importadas'}.`,
         );
@@ -253,7 +445,7 @@ export default function GerarCertificados({
                 return;
             }
 
-            if (tabelaTemDados(linhas)) {
+            if (tabelaTemDados(linhasRef.current)) {
                 setImportando(false);
                 setSubstituicaoPendente(leitura);
 
@@ -294,13 +486,51 @@ export default function GerarCertificados({
         setTimeout(() => URL.revokeObjectURL(url), 1000);
     };
 
-    const fecharPreview = () => {
-        setPreviewDaLinha(null);
-        setPreviewDoModelo(false);
+    const irParaIndice = (indice: number) => {
+        const alvo = linhas[indice];
+
+        if (alvo) {
+            setSelecionadaId(alvo.id);
+        }
     };
 
     return (
         <div className="flex flex-col gap-4">
+            {!celular && (
+                <CabecalhoDaPagina
+                    modelo={modelo.title}
+                    titulo={`Gerar · ${modelo.title}`}
+                    acoes={
+                        <>
+                            <Button
+                                variant="secondary"
+                                onClick={baixarPlanilhaModelo}
+                            >
+                                <Download />
+                                Planilha em branco
+                            </Button>
+                            <Button
+                                variant="secondary"
+                                disabled={algumGerando}
+                                onClick={() => setImportando(true)}
+                            >
+                                <FileUp />
+                                Importar planilha
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                className="text-destructive hover:text-destructive"
+                                disabled={algumGerando}
+                                onClick={limpar}
+                            >
+                                <Trash2 />
+                                Limpar
+                            </Button>
+                        </>
+                    }
+                />
+            )}
+
             {campos.length === 0 && (
                 <Alert>
                     <AlertDescription>
@@ -316,56 +546,69 @@ export default function GerarCertificados({
                 </Alert>
             )}
 
-            <div className="flex flex-wrap items-center justify-between gap-2">
-                <Button
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => {
-                        setPreviewDoModelo(true);
-                        setPreviewDaLinha(null);
-                    }}
-                >
-                    <Eye />
-                    Ver pré-visualização
-                </Button>
-                <div className="flex items-center gap-2">
-                    <Button
-                        variant="secondary"
-                        size="sm"
-                        disabled={algumGerando}
-                        onClick={() => setImportando(true)}
+            {!celular && (
+                <div className="grid grid-cols-[minmax(0,1fr)_340px] items-start gap-6">
+                    <section
+                        aria-label="Registros"
+                        className="min-w-0 overflow-hidden rounded-2xl border bg-card"
                     >
-                        <FileUp />
-                        Importar dados
-                    </Button>
-                    <Button
-                        variant="destructive"
-                        size="sm"
-                        disabled={algumGerando}
-                        onClick={limpar}
-                    >
-                        <Trash2 />
-                        Limpar
-                    </Button>
+                        <div className="overflow-x-auto">
+                            <TabelaDeGeracao
+                                campos={campos}
+                                linhas={linhas}
+                                selecionadaId={linhaSelecionada?.id ?? null}
+                                geracaoBloqueada={gerandoLote}
+                                aoSelecionar={setSelecionadaId}
+                                aoEditar={editar}
+                                aoGerar={(id) => void gerar(id)}
+                                aoBaixar={baixar}
+                                aoRemover={remover}
+                                aoAdicionar={adicionarLinha}
+                            />
+                        </div>
+                        <BarraDeLote
+                            prontas={resumo.prontas}
+                            preenchidas={resumo.preenchidas}
+                            percentual={resumo.percentual}
+                            gerandoLote={gerandoLote}
+                            temParaGerar={
+                                linhasParaGerarTodas(linhas).length > 0
+                            }
+                            aoGerarTodos={() => void gerarTodos()}
+                            aoParar={pararLote}
+                            aoBaixarZip={() => void baixarProntos()}
+                        />
+                    </section>
+
+                    <PreviaDaLinha
+                        modelo={modelo}
+                        campos={campos}
+                        linha={linhaSelecionada}
+                        posicao={posicao}
+                    />
                 </div>
-            </div>
+            )}
 
-            <TabelaDeGeracao
-                campos={campos}
-                linhas={linhas}
-                aoEditar={editar}
-                aoGerar={(id) => void gerar(id)}
-                aoBaixar={baixar}
-                aoRemover={remover}
-            />
-
-            <button
-                type="button"
-                onClick={adicionarLinha}
-                className="w-full rounded border border-dashed py-2 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-primary"
-            >
-                + Adicionar linha
-            </button>
+            {celular && (
+                <VisaoCelular
+                    modelo={modelo}
+                    campos={campos}
+                    linha={linhaSelecionada}
+                    posicao={posicao}
+                    total={linhas.length}
+                    geradosNaSessao={geradosNaSessao}
+                    algumGerando={algumGerando}
+                    geracaoBloqueada={gerandoLote}
+                    aoEditar={editar}
+                    aoAnterior={() => irParaIndice(indiceSelecionado - 1)}
+                    aoProxima={() => irParaIndice(indiceSelecionado + 1)}
+                    aoAdicionar={adicionarLinha}
+                    aoGerarEBaixar={(id) => void gerar(id)}
+                    aoBaixar={baixar}
+                    aoImportar={() => setImportando(true)}
+                    aoLimpar={limpar}
+                />
+            )}
 
             <DialogoDeImportacao
                 aberto={importando}
@@ -381,57 +624,6 @@ export default function GerarCertificados({
                 aoConfirmar={confirmarSubstituicao}
                 aoCancelar={() => setSubstituicaoPendente(null)}
             />
-
-            <PainelDePreview
-                aberto={previewDoModelo || previewDaLinha !== null}
-                aoFechar={fecharPreview}
-                titulo={
-                    previewDoModelo
-                        ? 'Pré-visualização do modelo'
-                        : 'Pré-visualização do certificado'
-                }
-                rodape={
-                    !previewDoModelo && linhaEmPreview?.status === 'pronto' ? (
-                        <Button
-                            className="w-full"
-                            onClick={() => baixar(linhaEmPreview.id)}
-                        >
-                            <Download />
-                            Baixar
-                        </Button>
-                    ) : undefined
-                }
-            >
-                {previewDoModelo && (
-                    <PreviewDoModelo
-                        modelo={modelo}
-                        campos={campos}
-                        somenteLeitura
-                        arrastando={null}
-                        aoIniciarArraste={() => undefined}
-                    />
-                )}
-                {!previewDoModelo && linhaEmPreview?.status === 'gerando' && (
-                    <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Spinner />
-                        Gerando certificado…
-                    </p>
-                )}
-                {!previewDoModelo && linhaEmPreview?.status === 'erro' && (
-                    <p className="text-sm text-destructive">
-                        {linhaEmPreview.erro ?? 'Erro ao gerar o certificado.'}
-                    </p>
-                )}
-                {!previewDoModelo &&
-                    linhaEmPreview?.status === 'pronto' &&
-                    linhaEmPreview.arquivo && (
-                        <img
-                            src={linhaEmPreview.arquivo.url}
-                            alt="Pré-visualização do certificado"
-                            className="max-h-full w-full rounded object-contain"
-                        />
-                    )}
-            </PainelDePreview>
         </div>
     );
 }

@@ -13,6 +13,9 @@ export type Campo = {
     centralizado: boolean;
 };
 
+/** Como o editor mostra os textos dos campos: o nome da coluna ou um exemplo. */
+export type ModoDeExibicao = 'nomes' | 'exemplo';
+
 /** Grupo => (família exibida => pasta dos arquivos de fonte). */
 export type GruposFontes = Record<string, Record<string, string>>;
 
@@ -40,6 +43,7 @@ export type ModeloResumo = {
     eh_dono: boolean;
     pode_editar: boolean;
     campos_count: number;
+    atualizado_em: string | null;
     compartilhamentos: Compartilhamento[];
 };
 
@@ -49,5 +53,23 @@ export type Geracao = {
     modelo_title: string;
     campos_valores: Record<string, string>;
     ordem_campos: string[];
+    gerado_por: string;
+    /** Se o usuário ainda pode gerar com o modelo (existe e tem a permissão de gerar). */
+    modelo_acessivel: boolean;
     created_at: string;
 };
+
+/** Filtros aplicados na página de histórico. `modelo` é o id do modelo ou null. */
+export type FiltrosHistorico = {
+    busca: string;
+    modelo: string | null;
+};
+
+/** Modelo que aparece no histórico do usuário, para o filtro por modelo. */
+export type ModeloHistorico = {
+    id: string;
+    title: string;
+};
+
+/** Valores para "gerar de novo": campo => valor. Null quando não há geração válida na URL. */
+export type ValoresIniciais = Record<string, string> | null;

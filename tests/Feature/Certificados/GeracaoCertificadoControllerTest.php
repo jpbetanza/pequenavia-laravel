@@ -2,6 +2,7 @@
 
 use App\Models\CampoCertificado;
 use App\Models\CompartilhamentoModelo;
+use App\Models\GeracaoCertificado;
 use App\Models\ModeloCertificado;
 use App\Models\User;
 use App\Services\GeradorCertificado;
@@ -277,4 +278,61 @@ it('redireciona o visitante da página de geração para o login', function () {
     $modelo = ModeloCertificado::factory()->create();
 
     $this->get(route('meus-certificados.gerar', $modelo))->assertRedirect(route('login'));
+});
+
+it('preenche a página de geração com os valores de uma geração própria do mesmo modelo', function () {
+    $modelo = ModeloCertificado::factory()->create();
+    CampoCertificado::factory()->for($modelo, 'modelo')->count(2)->sequence(
+        ['nome' => 'Nome', 'created_at' => now()->subMinute()],
+        ['nome' => 'Data', 'created_at' => now()],
+    )->create();
+    $geracao = GeracaoCertificado::factory()->for($modelo->user)->for($modelo, 'modelo')->create([
+        'campos_valores' => ['Nome' => 'Maria', 'Data' => '2024', 'Removido' => 'antigo'],
+    ]);
+
+    $this->actingAs($modelo->user)->get(route('meus-certificados.gerar', ['modelo' => $modelo, 'geracao' => $geracao->id]))
+        ->assertInertia(fn ($page) => $page
+            ->component('meus-certificados/gerar')
+            ->where('valores_iniciais', ['Nome' => 'Maria', 'Data' => '2024']));
+});
+
+it('deixa valores_iniciais nulo quando não há geração na URL', function () {
+    $modelo = ModeloCertificado::factory()->create();
+
+    $this->actingAs($modelo->user)->get(route('meus-certificados.gerar', $modelo))
+        ->assertInertia(fn ($page) => $page->where('valores_iniciais', null)->etc());
+});
+
+it('ignora a geração de outro usuário sem erro', function () {
+    $modelo = modeloGeravel();
+    $geracaoDeOutro = GeracaoCertificado::factory()->for($modelo, 'modelo')->create([
+        'campos_valores' => ['Nome' => 'Alheia'],
+    ]);
+
+    $this->actingAs($modelo->user)
+        ->get(route('meus-certificados.gerar', ['modelo' => $modelo, 'geracao' => $geracaoDeOutro->id]))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->where('valores_iniciais', null)->etc());
+});
+
+it('ignora a geração de outro modelo do mesmo usuário sem erro', function () {
+    $modelo = modeloGeravel();
+    $outroModelo = modeloGeravel($modelo->user, 'Crisma');
+    $geracaoDoOutro = GeracaoCertificado::factory()->for($modelo->user)->for($outroModelo, 'modelo')->create([
+        'campos_valores' => ['Nome' => 'Maria'],
+    ]);
+
+    $this->actingAs($modelo->user)
+        ->get(route('meus-certificados.gerar', ['modelo' => $modelo, 'geracao' => $geracaoDoOutro->id]))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->where('valores_iniciais', null)->etc());
+});
+
+it('ignora um identificador de geração que não é um uuid', function () {
+    $modelo = modeloGeravel();
+
+    $this->actingAs($modelo->user)
+        ->get(route('meus-certificados.gerar', ['modelo' => $modelo, 'geracao' => 'nao-e-uuid']))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->where('valores_iniciais', null)->etc());
 });

@@ -4,10 +4,14 @@ import {
     ehCancelamento,
     esperarComSinal,
     gerarCertificado,
+    linhaPreenchida,
+    linhasParaGerarTodas,
     marcarErro,
     marcarGerando,
     marcarPronto,
+    mudarStatus,
     novaLinha,
+    progresso,
     removerLinha,
     substituirLinhas,
     tabelaTemDados,
@@ -16,7 +20,12 @@ import {
 } from './geracao';
 
 const campos = [{ nome: 'Nome' }, { nome: 'Data' }];
-const arquivo = { url: 'blob:1', nome: 'a.png', tipo: 'image/png' };
+const arquivo = {
+    url: 'blob:1',
+    nome: 'a.png',
+    tipo: 'image/png',
+    blob: new Blob(['png'], { type: 'image/png' }),
+};
 
 afterEach(() => {
     vi.unstubAllGlobals();
@@ -116,6 +125,68 @@ describe('linhas de geração', () => {
         );
     });
 
+    it('troca só o status da linha, sem tocar no arquivo nem no erro', () => {
+        const linhas = marcarErro([novaLinha(1, campos)], 1, 'falhou');
+
+        expect(mudarStatus(linhas, 1, 'na-fila')[0]).toMatchObject({
+            status: 'na-fila',
+            erro: 'falhou',
+        });
+    });
+
+    it('considera preenchida a linha com algum valor que não seja só espaço', () => {
+        expect(linhaPreenchida(novaLinha(1, campos))).toBe(false);
+        expect(
+            linhaPreenchida(
+                editarCelula([novaLinha(1, campos)], 1, 'Data', '2026')[0],
+            ),
+        ).toBe(true);
+    });
+
+    it('seleciona para "Gerar todos" só as linhas preenchidas, não prontas e fora de andamento', () => {
+        const linhas = [
+            editarCelula([novaLinha(1, campos)], 1, 'Nome', 'Maria')[0],
+            novaLinha(2, campos),
+            marcarPronto(
+                [editarCelula([novaLinha(3, campos)], 3, 'Nome', 'Ana')[0]],
+                3,
+                arquivo,
+            )[0],
+            marcarGerando(
+                [editarCelula([novaLinha(4, campos)], 4, 'Nome', 'João')[0]],
+                4,
+            )[0],
+            marcarErro(
+                [editarCelula([novaLinha(5, campos)], 5, 'Nome', 'Rita')[0]],
+                5,
+                'falhou',
+            )[0],
+        ];
+
+        expect(linhasParaGerarTodas(linhas).map((l) => l.id)).toEqual([1, 5]);
+    });
+
+    it('calcula o progresso entre as linhas preenchidas', () => {
+        const preenchida = (id: number) =>
+            editarCelula([novaLinha(id, campos)], id, 'Nome', 'x')[0];
+        const linhas = [
+            marcarPronto([preenchida(1)], 1, arquivo)[0],
+            preenchida(2),
+            novaLinha(3, campos),
+        ];
+
+        expect(progresso(linhas)).toEqual({
+            prontas: 1,
+            preenchidas: 2,
+            percentual: 50,
+        });
+        expect(progresso([novaLinha(1, campos)])).toEqual({
+            prontas: 0,
+            preenchidas: 0,
+            percentual: 0,
+        });
+    });
+
     it('lista as URLs dos arquivos gerados, para revogá-las', () => {
         const linhas = [
             marcarPronto([novaLinha(1, campos)], 1, arquivo)[0],
@@ -191,6 +262,28 @@ describe('gerarCertificado', () => {
         expect(esperar.mock.calls[0][0]).toBe(7000);
         expect(falso).toHaveBeenCalledTimes(2);
         expect(resultado.nome).toBe('a.png');
+    });
+
+    it('avisa quando começa e quando termina a espera do 429', async () => {
+        fingir(limite(), png());
+        const esperar = vi.fn().mockResolvedValue(undefined);
+        const aoEsperar = vi.fn();
+        const aoRetomar = vi.fn();
+
+        await gerarCertificado(
+            '/gerar',
+            {},
+            { nomePadrao: 'x.png', esperar, aoEsperar, aoRetomar },
+        );
+
+        expect(aoEsperar).toHaveBeenCalledWith(7);
+        expect(aoRetomar).toHaveBeenCalledTimes(1);
+        expect(aoEsperar.mock.invocationCallOrder[0]).toBeLessThan(
+            esperar.mock.invocationCallOrder[0],
+        );
+        expect(esperar.mock.invocationCallOrder[0]).toBeLessThan(
+            aoRetomar.mock.invocationCallOrder[0],
+        );
     });
 
     it('desiste depois do número máximo de tentativas', async () => {

@@ -9,6 +9,8 @@ type Props = {
     obrigatorio?: boolean;
     desabilitado?: boolean;
     tamanhoMaximo?: number;
+    id?: string;
+    descricaoId?: string;
 };
 
 export default function CampoDeTexto({
@@ -19,6 +21,8 @@ export default function CampoDeTexto({
     obrigatorio,
     desabilitado,
     tamanhoMaximo,
+    id,
+    descricaoId,
 }: Props) {
     const [rascunho, setRascunho] = useState<string | null>(null);
 
@@ -39,6 +43,8 @@ export default function CampoDeTexto({
 
     return (
         <Input
+            id={id}
+            aria-describedby={descricaoId}
             aria-label={rotulo}
             className="h-8 flex-1 px-2 text-xs"
             placeholder={placeholder}

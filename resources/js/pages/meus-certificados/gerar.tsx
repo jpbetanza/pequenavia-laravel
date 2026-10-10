@@ -1,5 +1,4 @@
 import { Head } from '@inertiajs/react';
-import CabecalhoDaPagina from '@/components/cabecalho-da-pagina';
 import GerarCertificados from '@/components/gerar/gerar-certificados';
 import { index } from '@/routes/meus-certificados';
 import type {
@@ -7,6 +6,7 @@ import type {
     GruposFontes,
     ModeloBasico,
     PesosDasFontes,
+    ValoresIniciais,
 } from '@/types/certificados';
 
 type Props = {
@@ -14,6 +14,7 @@ type Props = {
     campos: Campo[];
     fontes: GruposFontes;
     pesos_das_fontes: PesosDasFontes;
+    valores_iniciais: ValoresIniciais;
 };
 
 export default function Gerar({
@@ -21,21 +22,19 @@ export default function Gerar({
     campos,
     fontes,
     pesos_das_fontes,
+    valores_iniciais,
 }: Props) {
     return (
         <>
             <Head title={`Gerar certificados: ${modelo.title}`} />
             <div className="p-4">
-                <CabecalhoDaPagina
-                    modelo={modelo.title}
-                    titulo="Gerar certificados"
-                />
                 <GerarCertificados
                     key={modelo.id}
                     modelo={modelo}
                     campos={campos}
                     fontes={fontes}
                     pesos={pesos_das_fontes}
+                    valoresIniciais={valores_iniciais}
                 />
             </div>
         </>
@@ -45,7 +44,7 @@ export default function Gerar({
 Gerar.layout = {
     breadcrumbs: [
         {
-            title: 'Meus certificados',
+            title: 'Modelos',
             href: index(),
         },
     ],
