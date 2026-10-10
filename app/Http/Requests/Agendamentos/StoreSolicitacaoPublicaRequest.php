@@ -90,7 +90,7 @@ class StoreSolicitacaoPublicaRequest extends FormRequest
                     ->where('ativo', true)
                     ->where('aceita_solicitacoes', true),
             ],
-            'pessoas' => ['nullable', 'integer', 'min:1'],
+            'pessoas' => ['nullable', 'integer', 'min:1', 'max:2000'],
             'equipamentos' => ['nullable', 'array'],
             'equipamentos.*' => [
                 'required',
@@ -212,6 +212,7 @@ class StoreSolicitacaoPublicaRequest extends FormRequest
             'espaco_id.exists' => 'O espaço escolhido não aceita solicitações.',
             'pessoas.integer' => 'O número de pessoas deve ser um número inteiro.',
             'pessoas.min' => 'O número de pessoas deve ser de pelo menos 1.',
+            'pessoas.max' => 'O número de pessoas pode ser no máximo 2000.',
             'equipamentos.array' => 'Os equipamentos devem ser uma lista.',
             'equipamentos.*.required' => 'Um dos equipamentos está vazio.',
             'equipamentos.*.uuid' => 'Um dos equipamentos é inválido.',

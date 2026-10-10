@@ -31,10 +31,10 @@ class UpdateSolicitacaoRequest extends FormRequest
             'data' => ['required', 'date_format:Y-m-d'],
             'inicio' => ['required', 'date_format:H:i,H:i:s'],
             'fim' => ['required', 'date_format:H:i,H:i:s'],
-            'pessoas' => ['nullable', 'integer', 'min:1'],
+            'pessoas' => ['nullable', 'integer', 'min:1', 'max:2000'],
             'equipamentos' => ['present', 'array'],
             'equipamentos.*.id' => ['required', 'uuid', 'distinct'],
-            'equipamentos.*.quantidade' => ['required', 'integer', 'min:1'],
+            'equipamentos.*.quantidade' => ['required', 'integer', 'min:1', 'max:1000'],
         ];
     }
 
@@ -68,6 +68,7 @@ class UpdateSolicitacaoRequest extends FormRequest
             'fim.required' => 'Informe o horário de fim.',
             'fim.date_format' => 'O horário de fim deve estar no formato HH:MM.',
             'pessoas.integer' => 'O número de pessoas deve ser um número inteiro.',
+            'pessoas.max' => 'O número de pessoas pode ser no máximo 2000.',
             'pessoas.min' => 'O número de pessoas deve ser de pelo menos 1.',
             'equipamentos.present' => 'Informe a lista de equipamentos, mesmo que vazia.',
             'equipamentos.*.id.required' => 'Escolha o equipamento.',
@@ -76,6 +77,7 @@ class UpdateSolicitacaoRequest extends FormRequest
             'equipamentos.*.quantidade.required' => 'Informe a quantidade.',
             'equipamentos.*.quantidade.integer' => 'A quantidade deve ser um número inteiro.',
             'equipamentos.*.quantidade.min' => 'A quantidade deve ser de pelo menos 1.',
+            'equipamentos.*.quantidade.max' => 'A quantidade pode ser no máximo 1000.',
         ];
     }
 }

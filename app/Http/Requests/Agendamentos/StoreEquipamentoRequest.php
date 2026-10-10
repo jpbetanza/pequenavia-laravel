@@ -34,7 +34,7 @@ class StoreEquipamentoRequest extends FormRequest
         return [
             'nome' => ['required', 'string', 'max:120', $nomeUnico],
             'descricao' => ['nullable', 'string', 'max:160'],
-            'quantidade' => ['required', 'integer', 'min:1'],
+            'quantidade' => ['required', 'integer', 'min:1', 'max:1000'],
             'local_guarda' => ['nullable', 'string', 'max:120'],
             'manutencao_ate' => ['nullable', 'date_format:Y-m-d'],
         ];
@@ -53,6 +53,7 @@ class StoreEquipamentoRequest extends FormRequest
             'quantidade.required' => 'Informe quantas unidades existem.',
             'quantidade.integer' => 'A quantidade precisa ser um número inteiro.',
             'quantidade.min' => 'Informe pelo menos uma unidade.',
+            'quantidade.max' => 'A quantidade pode ser no máximo 1000.',
             'local_guarda.max' => 'O local de guarda pode ter no máximo 120 caracteres.',
             'manutencao_ate.date_format' => 'Informe a data de manutenção no formato dia/mês/ano.',
         ];

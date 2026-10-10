@@ -38,7 +38,7 @@ class StoreReservaRequest extends FormRequest
         return [
             'titulo' => ['required', 'string', 'max:160'],
             'grupo_id' => ['nullable', 'uuid'],
-            'pessoas' => ['nullable', 'integer', 'min:1'],
+            'pessoas' => ['nullable', 'integer', 'min:1', 'max:2000'],
             'espaco_id' => ['required', 'uuid'],
             'data' => ['required', 'date_format:Y-m-d'],
             'inicio' => ['required', 'date_format:H:i,H:i:s'],
@@ -46,7 +46,7 @@ class StoreReservaRequest extends FormRequest
             'observacoes' => ['nullable', 'string', 'max:2000'],
             'equipamentos' => ['present', 'array'],
             'equipamentos.*.id' => ['required', 'uuid', 'distinct'],
-            'equipamentos.*.quantidade' => ['required', 'integer', 'min:1'],
+            'equipamentos.*.quantidade' => ['required', 'integer', 'min:1', 'max:1000'],
         ];
     }
 
@@ -77,6 +77,7 @@ class StoreReservaRequest extends FormRequest
             'grupo_id.uuid' => 'O grupo escolhido é inválido.',
             'pessoas.integer' => 'O número de pessoas deve ser um número inteiro.',
             'pessoas.min' => 'O número de pessoas deve ser de pelo menos 1.',
+            'pessoas.max' => 'O número de pessoas pode ser no máximo 2000.',
             'espaco_id.required' => 'Escolha o espaço.',
             'espaco_id.uuid' => 'O espaço escolhido é inválido.',
             'data.required' => 'Informe a data.',
@@ -93,6 +94,7 @@ class StoreReservaRequest extends FormRequest
             'equipamentos.*.quantidade.required' => 'Informe a quantidade.',
             'equipamentos.*.quantidade.integer' => 'A quantidade deve ser um número inteiro.',
             'equipamentos.*.quantidade.min' => 'A quantidade deve ser de pelo menos 1.',
+            'equipamentos.*.quantidade.max' => 'A quantidade pode ser no máximo 1000.',
             'repetir.required' => 'Escolha se a reserva repete.',
             'repetir.in' => 'A repetição deve ser: não repete, toda semana ou todo mês.',
             'ate.required_unless' => 'Informe até quando a reserva repete.',
