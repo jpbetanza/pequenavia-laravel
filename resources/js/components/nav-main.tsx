@@ -110,7 +110,7 @@ function SecaoDoMenu({ secao }: { secao: NavSecao }) {
                                         asChild
                                         isActive={ativo}
                                         className={cn(
-                                            'h-10 px-3 text-[14px]',
+                                            'h-11 px-3 text-[14px]',
                                             ativo &&
                                                 'bg-card font-semibold text-primary shadow-xs',
                                         )}
