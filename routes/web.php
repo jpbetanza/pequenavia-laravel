@@ -6,6 +6,8 @@ use App\Http\Controllers\Agendamentos\EspacoController;
 use App\Http\Controllers\Agendamentos\GrupoController;
 use App\Http\Controllers\Agendamentos\ReservaController;
 use App\Http\Controllers\Agendamentos\ReservaEquipamentoController;
+use App\Http\Controllers\Agendamentos\SolicitacaoController;
+use App\Http\Controllers\Agendamentos\SolicitacaoPublicaController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\CampoCertificadoController;
 use App\Http\Controllers\CompartilhamentoController;
@@ -21,6 +23,12 @@ Route::get('fontes/{pasta}/{peso}.ttf', [FonteController::class, 'show'])
     ->where('pasta', '[a-z0-9-]+')
     ->where('peso', '[1-9]00')
     ->name('fontes.show');
+
+Route::get('reservar/{slug}', [SolicitacaoPublicaController::class, 'create'])->name('reservar.create');
+Route::post('reservar/{slug}', [SolicitacaoPublicaController::class, 'store'])
+    ->middleware('throttle:solicitacoes')
+    ->name('reservar.store');
+Route::get('reservar/{slug}/enviado', [SolicitacaoPublicaController::class, 'enviado'])->name('reservar.enviado');
 
 Route::middleware('guest')->group(function () {
     Route::get('auth/google', [GoogleController::class, 'redirect'])->name('auth.google');
@@ -61,7 +69,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('reservas', [ReservaController::class, 'store'])->name('reservas.store');
             Route::put('reservas/{reserva}', [ReservaController::class, 'update'])->name('reservas.update');
             Route::delete('reservas/{reserva}', [ReservaController::class, 'destroy'])->name('reservas.destroy');
-            Route::inertia('solicitacoes', 'agendamentos/solicitacoes')->name('solicitacoes.index');
+            Route::get('solicitacoes', [SolicitacaoController::class, 'index'])->name('solicitacoes.index');
+            Route::put('solicitacoes/{solicitacao}', [SolicitacaoController::class, 'update'])->name('solicitacoes.update');
+            Route::post('solicitacoes/{solicitacao}/aprovar', [SolicitacaoController::class, 'aprovar'])->name('solicitacoes.aprovar');
+            Route::post('solicitacoes/{solicitacao}/recusar', [SolicitacaoController::class, 'recusar'])->name('solicitacoes.recusar');
             Route::get('espacos', [EspacoController::class, 'index'])->name('espacos.index');
             Route::get('espacos/novo', [EspacoController::class, 'create'])->name('espacos.create');
             Route::post('espacos', [EspacoController::class, 'store'])->name('espacos.store');

@@ -28,6 +28,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
         $this->configureRateLimiting();
+        $this->configureSolicitacoesRateLimiting();
     }
 
     /**
@@ -42,6 +43,18 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute($geracoesPorMinuto > 0 ? $geracoesPorMinuto : 60)
                 ->by($request->user()?->id ?: $request->ip());
         });
+    }
+
+    /**
+     * Limita os envios do formulário público por IP: 5 por minuto e 20 por hora. Cada janela tem a própria chave,
+     * senão o throttle conta os dois limites num contador só.
+     */
+    protected function configureSolicitacoesRateLimiting(): void
+    {
+        RateLimiter::for('solicitacoes', fn (Request $request): array => [
+            Limit::perMinute(5)->by('minuto:'.$request->ip()),
+            Limit::perHour(20)->by('hora:'.$request->ip()),
+        ]);
     }
 
     /**
