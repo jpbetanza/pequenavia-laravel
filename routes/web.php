@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Agendamentos\DisponibilidadeController;
+use App\Http\Controllers\Agendamentos\GrupoController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\CampoCertificadoController;
 use App\Http\Controllers\CompartilhamentoController;
@@ -56,7 +57,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::inertia('solicitacoes', 'agendamentos/solicitacoes')->name('solicitacoes.index');
             Route::inertia('espacos', 'agendamentos/espacos/index')->name('espacos.index');
             Route::inertia('equipamentos', 'agendamentos/equipamentos/index')->name('equipamentos.index');
-            Route::inertia('grupos', 'agendamentos/grupos/index')->name('grupos.index');
+            Route::get('grupos', [GrupoController::class, 'index'])->name('grupos.index');
+            Route::post('grupos', [GrupoController::class, 'store'])->name('grupos.store');
+            Route::put('grupos/{grupo}', [GrupoController::class, 'update'])->name('grupos.update');
+            Route::delete('grupos/{grupo}', [GrupoController::class, 'destroy'])->name('grupos.destroy');
             Route::post('disponibilidade', DisponibilidadeController::class)->name('disponibilidade');
         });
     });
