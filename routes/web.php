@@ -4,6 +4,7 @@ use App\Http\Controllers\Agendamentos\DisponibilidadeController;
 use App\Http\Controllers\Agendamentos\EquipamentoController;
 use App\Http\Controllers\Agendamentos\EspacoController;
 use App\Http\Controllers\Agendamentos\GrupoController;
+use App\Http\Controllers\Agendamentos\ReservaController;
 use App\Http\Controllers\Agendamentos\ReservaEquipamentoController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\CampoCertificadoController;
@@ -56,7 +57,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/', fn () => to_route('agendamentos.calendario'));
 
         Route::name('.')->group(function () {
-            Route::inertia('calendario', 'agendamentos/calendario')->name('calendario');
+            Route::get('calendario', [ReservaController::class, 'calendario'])->name('calendario');
+            Route::post('reservas', [ReservaController::class, 'store'])->name('reservas.store');
+            Route::put('reservas/{reserva}', [ReservaController::class, 'update'])->name('reservas.update');
+            Route::delete('reservas/{reserva}', [ReservaController::class, 'destroy'])->name('reservas.destroy');
             Route::inertia('solicitacoes', 'agendamentos/solicitacoes')->name('solicitacoes.index');
             Route::get('espacos', [EspacoController::class, 'index'])->name('espacos.index');
             Route::get('espacos/novo', [EspacoController::class, 'create'])->name('espacos.create');
