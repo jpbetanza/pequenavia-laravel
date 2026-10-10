@@ -1,5 +1,5 @@
 import { Link } from '@inertiajs/react';
-import { FileText, History } from 'lucide-react';
+import { FileText, History, Settings } from 'lucide-react';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -14,11 +14,12 @@ import {
 } from '@/components/ui/sidebar';
 import { index as historico } from '@/routes/historico';
 import { index as meusCertificados } from '@/routes/meus-certificados';
+import { edit as editarPerfil } from '@/routes/profile';
 import type { NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
     {
-        title: 'Meus certificados',
+        title: 'Modelos',
         href: meusCertificados(),
         icon: FileText,
     },
@@ -35,7 +36,11 @@ export function AppSidebar() {
             <SidebarHeader>
                 <SidebarMenu>
                     <SidebarMenuItem>
-                        <SidebarMenuButton size="lg" asChild>
+                        <SidebarMenuButton
+                            size="lg"
+                            className="h-auto px-2 py-1"
+                            asChild
+                        >
                             <Link href={meusCertificados()} prefetch>
                                 <AppLogo />
                             </Link>
@@ -49,6 +54,20 @@ export function AppSidebar() {
             </SidebarContent>
 
             <SidebarFooter>
+                <SidebarMenu>
+                    <SidebarMenuItem>
+                        <SidebarMenuButton
+                            asChild
+                            tooltip={{ children: 'Configurações' }}
+                            className="h-11 gap-3 px-3 text-[15px] font-medium"
+                        >
+                            <Link href={editarPerfil()} prefetch>
+                                <Settings />
+                                <span>Configurações</span>
+                            </Link>
+                        </SidebarMenuButton>
+                    </SidebarMenuItem>
+                </SidebarMenu>
                 <NavUser />
             </SidebarFooter>
         </Sidebar>

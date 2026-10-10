@@ -16,8 +16,8 @@ export default defineConfig({
                 bunny('Instrument Sans', {
                     weights: [400, 500, 600],
                 }),
-                bunny('Playfair Display', {
-                    weights: [600, 700],
+                bunny('Cormorant Garamond', {
+                    weights: [500, 600, 700],
                 }),
             ],
         }),
@@ -71,6 +71,7 @@ export default defineConfig({
             'composer.json',
             'resources/js/components/ui/*',
             'resources/views/mail/*',
+            'docs/superpowers/**',
         ],
         sortTailwindcss: {
             functions: ['clsx', 'cn', 'cva'],
