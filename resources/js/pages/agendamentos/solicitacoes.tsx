@@ -33,67 +33,71 @@ export default function Solicitacoes({
     return (
         <>
             <Head title="Solicitações" />
-            <CabecalhoDaPagina
-                titulo="Solicitações"
-                subtitulo="Pedidos feitos pelo formulário aberto. Confira, ajuste o que precisar e decida. Só entra no calendário o que você aprovar."
-            />
+            <div className="flex flex-col gap-10 p-4">
+                <CabecalhoDaPagina
+                    titulo="Solicitações"
+                    subtitulo="Pedidos feitos pelo formulário aberto. Confira, ajuste o que precisar e decida. Só entra no calendário o que você aprovar."
+                />
 
-            <div className="flex flex-col gap-6">
-                <LinkDoFormulario endereco={link_do_formulario} />
+                <div className="flex flex-col gap-6">
+                    <LinkDoFormulario endereco={link_do_formulario} />
 
-                <nav
-                    aria-label="Situação das solicitações"
-                    className="flex gap-1 overflow-x-auto border-b"
-                >
-                    {ABAS.map((aba) => {
-                        const ativa = aba.valor === status;
+                    <nav
+                        aria-label="Situação das solicitações"
+                        className="flex gap-1 overflow-x-auto border-b"
+                    >
+                        {ABAS.map((aba) => {
+                            const ativa = aba.valor === status;
 
-                        return (
-                            <Link
-                                key={aba.valor}
-                                href={rota({ query: { status: aba.valor } })}
-                                preserveScroll
-                                aria-current={ativa ? 'page' : undefined}
-                                className={cn(
-                                    '-mb-px inline-flex min-h-11 shrink-0 items-center gap-2 border-b-2 px-4 text-sm font-medium transition-colors',
-                                    ativa
-                                        ? 'border-primary text-primary'
-                                        : 'border-transparent text-muted-foreground hover:text-foreground',
-                                )}
-                            >
-                                {aba.rotulo}
-                                <span
+                            return (
+                                <Link
+                                    key={aba.valor}
+                                    href={rota({
+                                        query: { status: aba.valor },
+                                    })}
+                                    preserveScroll
+                                    aria-current={ativa ? 'page' : undefined}
                                     className={cn(
-                                        'rounded-full px-2 text-xs tabular-nums',
+                                        '-mb-px inline-flex min-h-11 shrink-0 items-center gap-2 border-b-2 px-4 text-sm font-medium transition-colors',
                                         ativa
-                                            ? 'bg-primary text-primary-foreground'
-                                            : 'bg-secondary text-secondary-foreground',
+                                            ? 'border-primary text-primary'
+                                            : 'border-transparent text-muted-foreground hover:text-foreground',
                                     )}
                                 >
-                                    {contagens[aba.valor]}
-                                </span>
-                            </Link>
-                        );
-                    })}
-                </nav>
+                                    {aba.rotulo}
+                                    <span
+                                        className={cn(
+                                            'rounded-full px-2 text-xs tabular-nums',
+                                            ativa
+                                                ? 'bg-primary text-primary-foreground'
+                                                : 'bg-secondary text-secondary-foreground',
+                                        )}
+                                    >
+                                        {contagens[aba.valor]}
+                                    </span>
+                                </Link>
+                            );
+                        })}
+                    </nav>
 
-                {solicitacoes.length === 0 ? (
-                    <p className="rounded-2xl border bg-card p-6 text-muted-foreground">
-                        {VAZIO_POR_ABA[status]}
-                    </p>
-                ) : (
-                    <ul className="flex flex-col gap-4">
-                        {solicitacoes.map((cartao) => (
-                            <li key={JSON.stringify(cartao)}>
-                                <CartaoDeSolicitacao
-                                    cartao={cartao}
-                                    espacos={espacos}
-                                    equipamentos={equipamentos}
-                                />
-                            </li>
-                        ))}
-                    </ul>
-                )}
+                    {solicitacoes.length === 0 ? (
+                        <p className="rounded-2xl border bg-card p-6 text-muted-foreground">
+                            {VAZIO_POR_ABA[status]}
+                        </p>
+                    ) : (
+                        <ul className="flex flex-col gap-4">
+                            {solicitacoes.map((cartao) => (
+                                <li key={JSON.stringify(cartao)}>
+                                    <CartaoDeSolicitacao
+                                        cartao={cartao}
+                                        espacos={espacos}
+                                        equipamentos={equipamentos}
+                                    />
+                                </li>
+                            ))}
+                        </ul>
+                    )}
+                </div>
             </div>
         </>
     );
