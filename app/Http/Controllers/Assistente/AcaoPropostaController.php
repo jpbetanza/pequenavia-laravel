@@ -10,6 +10,7 @@ use App\Models\Espaco;
 use App\Models\Grupo;
 use App\Models\User;
 use App\Services\Agenda\CriadorDeReservas;
+use App\Services\Assistente\Cadastros\ExecutorDeCadastro;
 use App\Services\Assistente\ResumoDaAcao;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
@@ -27,6 +28,7 @@ class AcaoPropostaController extends Controller
     public function __construct(
         private readonly CriadorDeReservas $criador,
         private readonly ResumoDaAcao $resumo,
+        private readonly ExecutorDeCadastro $cadastros,
     ) {}
 
     public function confirmar(Request $request, AcaoProposta $acao): JsonResponse
@@ -36,6 +38,19 @@ class AcaoPropostaController extends Controller
         DB::transaction(function () use ($request, $acao): void {
             $pendente = $this->pendenteTravada($acao);
             $usuario = $request->user();
+
+            if ($pendente->tipo !== 'criar_reserva') {
+                $cadastroId = $this->cadastros->executar($usuario, $pendente);
+
+                $pendente->update([
+                    'status' => StatusDaAcao::Confirmada,
+                    'resultado_id' => $cadastroId,
+                    'confirmada_em' => now(),
+                ]);
+
+                return;
+            }
+
             $dados = $pendente->dados;
 
             $espaco = Espaco::query()->where('user_id', $usuario->id)->whereKey($dados['espaco_id'])->first()
