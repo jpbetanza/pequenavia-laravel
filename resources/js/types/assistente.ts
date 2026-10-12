@@ -88,6 +88,8 @@ export type AcaoPropostaDeReserva = {
     id: string;
     status: StatusDaAcao;
     tipo: 'criar_reserva';
+    /** Chave que decide quais propostas se substituem na conversa. Ausente em cartão antigo. */
+    chave?: string;
     resumo: {
         titulo: string;
         grupo_id: string | null;
@@ -109,6 +111,8 @@ export type AcaoPropostaDeCadastro = {
     id: string;
     status: StatusDaAcao;
     tipo: TipoDeAcaoDeCadastro;
+    /** Chave que decide quais propostas se substituem na conversa. Ausente em cartão antigo. */
+    chave?: string;
     cadastro: {
         entidade: EntidadeDeCadastro;
         operacao: OperacaoDeCadastro;

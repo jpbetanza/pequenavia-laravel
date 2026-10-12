@@ -48,7 +48,7 @@ export function CartaoDeCadastroProposto({ acao, aoAtualizar }: Props) {
     const { cadastro, resultado } = acao;
     const excluir = cadastro.operacao === 'excluir';
     const proposta = acao.status === 'proposta';
-    const { processando, executar } = useConfirmacaoDeAcao({
+    const { processando, recusa, executar } = useConfirmacaoDeAcao({
         id: acao.id,
         aoAtualizar,
         mensagemDeSucesso: excluir ? 'Cadastro excluído.' : 'Cadastro salvo.',
@@ -75,8 +75,8 @@ export function CartaoDeCadastroProposto({ acao, aoAtualizar }: Props) {
 
             {cadastro.linhas.length > 0 && (
                 <dl className="grid grid-cols-[6rem_minmax(0,1fr)] gap-x-3 gap-y-1.5">
-                    {cadastro.linhas.map((linha) => (
-                        <div key={linha.rotulo} className="contents">
+                    {cadastro.linhas.map((linha, i) => (
+                        <div key={`${linha.rotulo}-${i}`} className="contents">
                             <dt className="text-muted-foreground">
                                 {linha.rotulo}
                             </dt>
@@ -93,10 +93,16 @@ export function CartaoDeCadastroProposto({ acao, aoAtualizar }: Props) {
 
             {cadastro.avisos.length > 0 && (
                 <ul className="flex list-disc flex-col gap-1 rounded-lg bg-aviso-fundo p-2.5 pl-7 text-aviso">
-                    {cadastro.avisos.map((aviso) => (
-                        <li key={aviso}>{aviso}</li>
+                    {cadastro.avisos.map((aviso, i) => (
+                        <li key={`${aviso}-${i}`}>{aviso}</li>
                     ))}
                 </ul>
+            )}
+
+            {recusa !== null && (
+                <p role="alert" className="font-medium text-destructive">
+                    {recusa}
+                </p>
             )}
 
             {proposta && (

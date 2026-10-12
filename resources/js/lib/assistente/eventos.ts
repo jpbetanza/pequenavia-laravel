@@ -111,19 +111,34 @@ export function iniciarTroca(
 }
 
 /**
- * Com uma proposta nova, as propostas pendentes anteriores do mesmo chat já estão expiradas no servidor:
- * marca-as aqui também, para o cartão não oferecer Confirmar. Não toca na proposta nova nem nos outros cartões.
+ * Chave da proposta: a que o servidor manda em `chave`. Sem ela (cartão antigo), reserva vale 'reserva'
+ * e cadastro vale o próprio id, para que um cartão antigo de cadastro nunca expire outro.
+ */
+function chaveDaAcao(acao: AcaoProposta): string {
+    if (acao.chave !== undefined) {
+        return acao.chave;
+    }
+
+    return acao.tipo === 'criar_reserva' ? 'reserva' : acao.id;
+}
+
+/**
+ * Com uma proposta nova, as propostas pendentes anteriores com a mesma chave já estão expiradas no servidor:
+ * marca-as aqui também, para o cartão não oferecer Confirmar. Propostas de outra chave e a própria nova ficam como estão.
  */
 function expirarPropostasAnteriores(
     mensagens: MensagemDoPainel[],
-    novaId: string,
+    nova: AcaoProposta,
 ): MensagemDoPainel[] {
+    const chave = chaveDaAcao(nova);
+
     return mensagens.map((mensagem) => ({
         ...mensagem,
         cartoes: mensagem.cartoes.map((cartao) =>
             cartao.tipo === 'acao_proposta' &&
             cartao.dados.status === 'proposta' &&
-            cartao.dados.id !== novaId
+            cartao.dados.id !== nova.id &&
+            chaveDaAcao(cartao.dados) === chave
                 ? {
                       tipo: 'acao_proposta',
                       dados: { ...cartao.dados, status: 'expirada' },
@@ -140,10 +155,7 @@ export function aplicarEvento(
 ): MensagemDoPainel[] {
     const mensagens =
         evento.tipo === 'cartao' && evento.cartao.tipo === 'acao_proposta'
-            ? expirarPropostasAnteriores(
-                  mensagensAntigas,
-                  evento.cartao.dados.id,
-              )
+            ? expirarPropostasAnteriores(mensagensAntigas, evento.cartao.dados)
             : mensagensAntigas;
     const indice = mensagens.findLastIndex(
         (mensagem) => mensagem.papel === 'assistente',
@@ -227,4 +239,11 @@ export function acaoDoCorpoDeErro(
         typeof acao.status === 'string'
         ? (acao as unknown as AcaoProposta)
         : null;
+}
+
+/** Mensagem de um erro do servidor (ex.: "O cadastro mudou desde a proposta."). Devolve null se não houver texto. */
+export function mensagemDoCorpoDeErro(
+    corpo: Record<string, unknown> | null,
+): string | null {
+    return typeof corpo?.message === 'string' ? corpo.message : null;
 }

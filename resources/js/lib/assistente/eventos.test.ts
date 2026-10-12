@@ -9,6 +9,7 @@ import {
     aplicarEvento,
     eventoDoAssistente,
     iniciarTroca,
+    mensagemDoCorpoDeErro,
     substituirCartaoDeAcao,
 } from './eventos';
 import type { EventoSse } from './sse';
@@ -284,8 +285,14 @@ const acaoDeCadastro = (
     resultado: null,
 });
 
+const acaoDeCadastroComChave = (
+    id: string,
+    chave: string,
+    status: AcaoProposta['status'] = 'proposta',
+): AcaoProposta => ({ ...acaoDeCadastro(id, status), chave });
+
 describe('cartão de cadastro e de reserva juntos', () => {
-    it('uma proposta nova de reserva expira a proposta de cadastro ainda pendente', () => {
+    it('uma proposta nova de reserva não expira a proposta de cadastro pendente', () => {
         const mensagens: MensagemDoPainel[] = [
             assistente('a1', { cartoes: [cartaoAcao(acaoDeCadastro('c1'))] }),
         ];
@@ -296,8 +303,89 @@ describe('cartão de cadastro e de reserva juntos', () => {
         });
 
         expect(resultado[0].cartoes).toEqual([
-            cartaoAcao(acaoDeCadastro('c1', 'expirada')),
+            cartaoAcao(acaoDeCadastro('c1')),
             cartaoAcao(acao('r1', 'Festa')),
+        ]);
+    });
+
+    it('propostas de cadastros com chaves diferentes ficam pendentes juntas', () => {
+        const mensagens: MensagemDoPainel[] = [
+            assistente('a1', {
+                cartoes: [cartaoAcao(acaoDeCadastroComChave('c1', 'grupo:g1'))],
+            }),
+        ];
+
+        const resultado = aplicarEvento(mensagens, {
+            tipo: 'cartao',
+            cartao: cartaoAcao(acaoDeCadastroComChave('c2', 'grupo:g2')),
+        });
+
+        expect(resultado[0].cartoes).toEqual([
+            cartaoAcao(acaoDeCadastroComChave('c1', 'grupo:g1')),
+            cartaoAcao(acaoDeCadastroComChave('c2', 'grupo:g2')),
+        ]);
+    });
+
+    it('proposta com a mesma chave expira a anterior ainda pendente', () => {
+        const mensagens: MensagemDoPainel[] = [
+            assistente('a1', {
+                cartoes: [
+                    cartaoAcao(acaoDeCadastroComChave('c1', 'grupo:g1')),
+                    cartaoAcao(acaoDeCadastroComChave('c3', 'grupo:g2')),
+                ],
+            }),
+        ];
+
+        const resultado = aplicarEvento(mensagens, {
+            tipo: 'cartao',
+            cartao: cartaoAcao(acaoDeCadastroComChave('c2', 'grupo:g1')),
+        });
+
+        expect(resultado[0].cartoes).toEqual([
+            cartaoAcao(acaoDeCadastroComChave('c1', 'grupo:g1', 'expirada')),
+            cartaoAcao(acaoDeCadastroComChave('c3', 'grupo:g2')),
+            cartaoAcao(acaoDeCadastroComChave('c2', 'grupo:g1')),
+        ]);
+    });
+
+    it('reserva com chave reserva expira a reserva anterior e não toca no cadastro', () => {
+        const mensagens: MensagemDoPainel[] = [
+            assistente('a1', {
+                cartoes: [
+                    cartaoAcao(acaoDeCadastroComChave('c1', 'grupo:g1')),
+                    cartaoAcao({ ...acao('r1', 'Festa'), chave: 'reserva' }),
+                ],
+            }),
+        ];
+
+        const resultado = aplicarEvento(mensagens, {
+            tipo: 'cartao',
+            cartao: cartaoAcao({ ...acao('r2', 'Festa 2'), chave: 'reserva' }),
+        });
+
+        expect(resultado[0].cartoes).toEqual([
+            cartaoAcao(acaoDeCadastroComChave('c1', 'grupo:g1')),
+            cartaoAcao({
+                ...acao('r1', 'Festa', 'expirada'),
+                chave: 'reserva',
+            }),
+            cartaoAcao({ ...acao('r2', 'Festa 2'), chave: 'reserva' }),
+        ]);
+    });
+
+    it('sem chave, reserva é a chave reserva e cadastro vale só o próprio id', () => {
+        const mensagens: MensagemDoPainel[] = [
+            assistente('a1', { cartoes: [cartaoAcao(acaoDeCadastro('c1'))] }),
+        ];
+
+        const resultado = aplicarEvento(mensagens, {
+            tipo: 'cartao',
+            cartao: cartaoAcao(acaoDeCadastro('c2')),
+        });
+
+        expect(resultado[0].cartoes).toEqual([
+            cartaoAcao(acaoDeCadastro('c1')),
+            cartaoAcao(acaoDeCadastro('c2')),
         ]);
     });
 
@@ -339,5 +427,21 @@ describe('acaoDoCorpoDeErro', () => {
         expect(acaoDoCorpoDeErro({ message: 'Erro' })).toBeNull();
         expect(acaoDoCorpoDeErro({ acao: { status: 'proposta' } })).toBeNull();
         expect(acaoDoCorpoDeErro({ acao: 'texto' })).toBeNull();
+    });
+});
+
+describe('mensagemDoCorpoDeErro', () => {
+    it('devolve a mensagem do 422 quando ela é texto', () => {
+        expect(
+            mensagemDoCorpoDeErro({
+                message: 'O cadastro mudou desde a proposta. Peça de novo.',
+            }),
+        ).toBe('O cadastro mudou desde a proposta. Peça de novo.');
+    });
+
+    it('devolve null sem mensagem, com corpo nulo ou com mensagem que não é texto', () => {
+        expect(mensagemDoCorpoDeErro(null)).toBeNull();
+        expect(mensagemDoCorpoDeErro({ acao: {} })).toBeNull();
+        expect(mensagemDoCorpoDeErro({ message: 42 })).toBeNull();
     });
 });

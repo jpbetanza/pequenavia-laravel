@@ -5,7 +5,10 @@ import {
     confirmar,
     descartar,
 } from '@/actions/App/Http/Controllers/Assistente/AcaoPropostaController';
-import { acaoDoCorpoDeErro } from '@/lib/assistente/eventos';
+import {
+    acaoDoCorpoDeErro,
+    mensagemDoCorpoDeErro,
+} from '@/lib/assistente/eventos';
 import { ErroHttp, enviarJson, mensagemDoErro } from '@/lib/http';
 import type { AcaoProposta } from '@/types/assistente';
 import { rotuloDoDia } from './formatos';
@@ -63,6 +66,8 @@ export function useConfirmacaoDeAcao({
 }: Opcoes) {
     const [processando, setProcessando] = useState<OperacaoDeAcao | null>(null);
     const [conflitos, setConflitos] = useState<string[]>([]);
+    // Mensagem do 422 de confirmar (ex.: "O cadastro mudou desde a proposta."), mostrada no próprio cartão.
+    const [recusa, setRecusa] = useState<string | null>(null);
     const emAndamento = useRef(false);
 
     async function executar(operacao: OperacaoDeAcao) {
@@ -73,6 +78,7 @@ export function useConfirmacaoDeAcao({
         emAndamento.current = true;
         setProcessando(operacao);
         setConflitos([]);
+        setRecusa(null);
 
         try {
             const url =
@@ -96,6 +102,7 @@ export function useConfirmacaoDeAcao({
         } catch (erro) {
             if (erro instanceof ErroHttp && erro.status === 422) {
                 setConflitos(motivosDoConflito(erro.corpo));
+                setRecusa(mensagemDoCorpoDeErro(erro.corpo));
 
                 // "Não está mais pendente": o 422 traz o cartão atual, que substitui o antigo (ex.: expirado).
                 const atual = acaoDoCorpoDeErro(erro.corpo);
@@ -112,5 +119,5 @@ export function useConfirmacaoDeAcao({
         }
     }
 
-    return { processando, conflitos, executar };
+    return { processando, conflitos, recusa, executar };
 }
