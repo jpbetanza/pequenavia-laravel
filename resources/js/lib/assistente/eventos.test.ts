@@ -5,6 +5,7 @@ import type {
     MensagemDoPainel,
 } from '@/types/assistente';
 import {
+    acaoDoCorpoDeErro,
     aplicarEvento,
     eventoDoAssistente,
     iniciarTroca,
@@ -220,5 +221,66 @@ describe('substituirCartaoDeAcao', () => {
         ]);
         expect(resultado[1].cartoes).toEqual([cartaoAcao(outra)]);
         expect(mensagens[0].cartoes[0]).toEqual(cartaoAcao(proposta));
+    });
+});
+
+describe('aplicarEvento com cartão de ação nova', () => {
+    it('marca como expirada a proposta anterior ainda pendente, em qualquer mensagem', () => {
+        const antiga = acao('ac1', 'Reunião antiga');
+        const confirmada = acao('ac2', 'Já criada', 'confirmada');
+        const mensagens: MensagemDoPainel[] = [
+            assistente('a1', { cartoes: [cartaoAcao(antiga)] }),
+            assistente('a2', { cartoes: [cartaoAcao(confirmada)] }),
+        ];
+
+        const nova = acao('ac3', 'Reunião nova');
+        const resultado = aplicarEvento(mensagens, {
+            tipo: 'cartao',
+            cartao: cartaoAcao(nova),
+        });
+
+        expect(resultado[0].cartoes).toEqual([
+            cartaoAcao(acao('ac1', 'Reunião antiga', 'expirada')),
+        ]);
+        expect(resultado[1].cartoes).toEqual([
+            cartaoAcao(confirmada),
+            cartaoAcao(nova),
+        ]);
+    });
+
+    it('não mexe em outros tipos de cartão nem na própria proposta nova', () => {
+        const mensagens: MensagemDoPainel[] = [
+            assistente('a1', { cartoes: [cartaoReservas] }),
+        ];
+
+        const resultado = aplicarEvento(mensagens, {
+            tipo: 'cartao',
+            cartao: cartaoAcao(acao('ac1', 'Única')),
+        });
+
+        expect(resultado[0].cartoes).toEqual([
+            cartaoReservas,
+            cartaoAcao(acao('ac1', 'Única')),
+        ]);
+    });
+});
+
+describe('acaoDoCorpoDeErro', () => {
+    it('devolve o cartão atual quando o 422 traz acao', () => {
+        const atual = acao('ac1', 'Reunião', 'descartada');
+
+        expect(
+            acaoDoCorpoDeErro({
+                message: 'Esta ação não está mais pendente.',
+                acao: atual,
+            }),
+        ).toEqual(atual);
+    });
+
+    it('devolve null sem acao, com corpo nulo ou com acao sem id', () => {
+        expect(acaoDoCorpoDeErro(null)).toBeNull();
+        expect(acaoDoCorpoDeErro({ message: 'Erro' })).toBeNull();
+        expect(acaoDoCorpoDeErro({ acao: { status: 'proposta' } })).toBeNull();
+        expect(acaoDoCorpoDeErro({ acao: 'texto' })).toBeNull();
     });
 });

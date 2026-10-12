@@ -30,6 +30,9 @@ function caminhoDe(url: string): string {
  * Se o painel deve fechar numa navegação. Só fecha quando o caminho muda: um reload da própria página
  * (ex.: depois de confirmar uma reserva no cartão) não tira o painel do caminho do usuário.
  */
-export function deveFecharAoNavegar(urlAtual: string, urlDestino: string): boolean {
+export function deveFecharAoNavegar(
+    urlAtual: string,
+    urlDestino: string,
+): boolean {
     return caminhoDe(urlAtual) !== caminhoDe(urlDestino);
 }

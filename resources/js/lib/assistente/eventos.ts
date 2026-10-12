@@ -110,11 +110,41 @@ export function iniciarTroca(
     ];
 }
 
+/**
+ * Com uma proposta nova, as propostas pendentes anteriores do mesmo chat já estão expiradas no servidor:
+ * marca-as aqui também, para o cartão não oferecer Confirmar. Não toca na proposta nova nem nos outros cartões.
+ */
+function expirarPropostasAnteriores(
+    mensagens: MensagemDoPainel[],
+    novaId: string,
+): MensagemDoPainel[] {
+    return mensagens.map((mensagem) => ({
+        ...mensagem,
+        cartoes: mensagem.cartoes.map((cartao) =>
+            cartao.tipo === 'acao_proposta' &&
+            cartao.dados.status === 'proposta' &&
+            cartao.dados.id !== novaId
+                ? {
+                      tipo: 'acao_proposta',
+                      dados: { ...cartao.dados, status: 'expirada' },
+                  }
+                : cartao,
+        ),
+    }));
+}
+
 /** Aplica um evento do stream na última resposta do assistente. Devolve um array novo. */
 export function aplicarEvento(
-    mensagens: MensagemDoPainel[],
+    mensagensAntigas: MensagemDoPainel[],
     evento: EventoDoAssistente,
 ): MensagemDoPainel[] {
+    const mensagens =
+        evento.tipo === 'cartao' && evento.cartao.tipo === 'acao_proposta'
+            ? expirarPropostasAnteriores(
+                  mensagensAntigas,
+                  evento.cartao.dados.id,
+              )
+            : mensagensAntigas;
     const indice = mensagens.findLastIndex(
         (mensagem) => mensagem.papel === 'assistente',
     );
@@ -185,3 +215,16 @@ export function substituirCartaoDeAcao(
 
 /** Mensagem única para falhas do assistente, igual à do servidor. */
 export const MENSAGEM_DE_FALHA = 'Não consegui responder agora. Tente de novo.';
+
+/** Cartão de ação atual que o 422 de confirmar ou descartar traz em `acao`. Devolve null se não houver um válido. */
+export function acaoDoCorpoDeErro(
+    corpo: Record<string, unknown> | null,
+): AcaoProposta | null {
+    const acao = corpo?.acao;
+
+    return ehObjeto(acao) &&
+        typeof acao.id === 'string' &&
+        typeof acao.status === 'string'
+        ? (acao as unknown as AcaoProposta)
+        : null;
+}

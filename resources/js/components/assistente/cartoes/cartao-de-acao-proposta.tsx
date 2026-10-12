@@ -8,6 +8,7 @@ import {
 } from '@/actions/App/Http/Controllers/Assistente/AcaoPropostaController';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { acaoDoCorpoDeErro } from '@/lib/assistente/eventos';
 import { ErroHttp, enviarJson, mensagemDoErro } from '@/lib/http';
 import { cn } from '@/lib/utils';
 import { calendario } from '@/routes/agendamentos';
@@ -113,6 +114,13 @@ export function CartaoDeAcaoProposta({ acao, aoAtualizar }: Props) {
         } catch (erro) {
             if (erro instanceof ErroHttp && erro.status === 422) {
                 setConflitos(motivosDoConflito(erro.corpo));
+
+                // "Não está mais pendente": o 422 traz o cartão atual, que substitui o antigo (ex.: expirado).
+                const atual = acaoDoCorpoDeErro(erro.corpo);
+
+                if (atual !== null) {
+                    aoAtualizar(atual);
+                }
             }
 
             toast.error(mensagemDoErro(erro));

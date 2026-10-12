@@ -47,7 +47,17 @@ describe('deveFecharAoNavegar', () => {
     });
 
     it('compara caminhos relativos também', () => {
-        expect(deveFecharAoNavegar('/agendamentos/calendario', '/agendamentos/calendario?x=1')).toBe(false);
-        expect(deveFecharAoNavegar('/agendamentos/calendario', '/agendamentos/solicitacoes')).toBe(true);
+        expect(
+            deveFecharAoNavegar(
+                '/agendamentos/calendario',
+                '/agendamentos/calendario?x=1',
+            ),
+        ).toBe(false);
+        expect(
+            deveFecharAoNavegar(
+                '/agendamentos/calendario',
+                '/agendamentos/solicitacoes',
+            ),
+        ).toBe(true);
     });
 });
