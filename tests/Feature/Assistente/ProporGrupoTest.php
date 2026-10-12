@@ -1,11 +1,9 @@
 <?php
 
 use App\Models\AcaoProposta;
-use App\Models\Conversa;
 use App\Models\Espaco;
 use App\Models\Grupo;
 use App\Models\Reserva;
-use App\Models\User;
 use App\Services\Assistente\Ferramentas\ArgumentoInvalido;
 use App\Services\Assistente\Ferramentas\ProporGrupo;
 use Carbon\CarbonImmutable;
@@ -14,13 +12,6 @@ beforeEach(function () {
     config(['assistente.chave' => 'chave-de-teste']);
     $this->travelTo(CarbonImmutable::parse('2026-10-13 10:00', 'America/Sao_Paulo'));
 });
-
-function usuarioComConversa(): array
-{
-    $usuario = User::factory()->create();
-
-    return [$usuario, Conversa::factory()->for($usuario)->create()];
-}
 
 test('criar propõe o grupo sem gravar e devolve o cartão com as linhas', function () {
     [$usuario, $conversa] = usuarioComConversa();

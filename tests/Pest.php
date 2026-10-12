@@ -1,6 +1,10 @@
 <?php
 
+use App\Models\AcaoProposta;
 use App\Models\CampoCertificado;
+use App\Models\Conversa;
+use App\Models\User;
+use App\Services\Assistente\Ferramentas\ResultadoDeFerramenta;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -143,4 +147,32 @@ function chunkDeFerramenta(int $indice, ?string $id, ?string $nome, string $argu
 function chunkDeUso(int $entrada, int $saida): array
 {
     return ['choices' => [], 'usage' => ['prompt_tokens' => $entrada, 'completion_tokens' => $saida]];
+}
+
+/** Usuário com uma conversa nova, para as ferramentas do assistente. @return array{0: User, 1: Conversa} */
+function usuarioComConversa(): array
+{
+    $usuario = User::factory()->create();
+
+    return [$usuario, Conversa::factory()->for($usuario)->create()];
+}
+
+/** Conversa nova do usuário. */
+function conversaDe(User $usuario): Conversa
+{
+    return Conversa::factory()->for($usuario)->create();
+}
+
+/** Executa a ferramenta com uma conversa nova e devolve o resultado. */
+function executar(string $classe, User $usuario, array $argumentos): ResultadoDeFerramenta
+{
+    return app($classe)->executar($usuario, conversaDe($usuario), $argumentos);
+}
+
+/** Executa a ferramenta de proposta e devolve a AcaoProposta criada. */
+function propostaDeCadastro(string $ferramenta, User $usuario, array $argumentos): AcaoProposta
+{
+    app($ferramenta)->executar($usuario, conversaDe($usuario), $argumentos);
+
+    return AcaoProposta::latest('created_at')->firstOrFail();
 }

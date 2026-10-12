@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\AcaoProposta;
-use App\Models\Conversa;
 use App\Models\Equipamento;
 use App\Models\Espaco;
 use App\Models\Reserva;
@@ -14,11 +13,6 @@ beforeEach(function () {
     config(['assistente.chave' => 'chave-de-teste']);
     $this->travelTo(CarbonImmutable::parse('2026-10-13 10:00', 'America/Sao_Paulo'));
 });
-
-function conversaDe(User $usuario): Conversa
-{
-    return Conversa::factory()->for($usuario)->create();
-}
 
 test('criar exige a quantidade', function () {
     $usuario = User::factory()->create();

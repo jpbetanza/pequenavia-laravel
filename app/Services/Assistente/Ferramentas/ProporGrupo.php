@@ -5,7 +5,7 @@ namespace App\Services\Assistente\Ferramentas;
 use App\Models\Grupo;
 use App\Models\User;
 use App\Services\Agenda\Cadastros\GravadorDeGrupo;
-use App\Services\Agenda\Cadastros\RegrasDeGrupo;
+use App\Services\Assistente\Cadastros\CadastrosDoAssistente;
 use App\Services\Assistente\ResumoDaAcao;
 use Illuminate\Database\Eloquent\Model;
 
@@ -17,9 +17,10 @@ final class ProporGrupo extends PropoeCadastro
     public function __construct(
         ResolvedorDeCadastros $resolvedor,
         ResumoDaAcao $resumo,
+        CadastrosDoAssistente $cadastros,
         private readonly GravadorDeGrupo $gravador,
     ) {
-        parent::__construct($resolvedor, $resumo);
+        parent::__construct($resolvedor, $resumo, $cadastros);
     }
 
     public function nome(): string
@@ -73,16 +74,6 @@ final class ProporGrupo extends PropoeCadastro
             'observacao' => ['rotulo' => 'Observação', 'tipo' => 'texto'],
             'ativo' => ['rotulo' => 'Ativo', 'tipo' => 'booleano'],
         ];
-    }
-
-    protected function regras(User $dono, ?Model $atual = null): array
-    {
-        return RegrasDeGrupo::regras($dono, $atual instanceof Grupo ? $atual : null);
-    }
-
-    protected function mensagens(): array
-    {
-        return RegrasDeGrupo::mensagens();
     }
 
     protected function resolverAlvo(User $usuario, string $idOuNome): Model

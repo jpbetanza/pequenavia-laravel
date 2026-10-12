@@ -1,8 +1,6 @@
 <?php
 
 use App\Enums\StatusDaAcao;
-use App\Models\AcaoProposta;
-use App\Models\Conversa;
 use App\Models\Equipamento;
 use App\Models\Espaco;
 use App\Models\Grupo;
@@ -16,13 +14,6 @@ beforeEach(function () {
     config(['assistente.chave' => 'chave-de-teste']);
     $this->travelTo(CarbonImmutable::parse('2026-10-13 10:00', 'America/Sao_Paulo'));
 });
-
-function propostaDeCadastro(string $ferramenta, User $usuario, array $argumentos): AcaoProposta
-{
-    app($ferramenta)->executar($usuario, Conversa::factory()->for($usuario)->create(), $argumentos);
-
-    return AcaoProposta::latest('created_at')->firstOrFail();
-}
 
 test('confirmar criar_grupo cria o grupo e devolve o cartão confirmado', function () {
     $usuario = User::factory()->create();

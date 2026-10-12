@@ -4,13 +4,14 @@ namespace App\Services\Assistente\Ferramentas;
 
 use App\Models\Conversa;
 use App\Models\User;
+use App\Services\Assistente\Cadastros\CadastrosDoAssistente;
 use App\Services\Assistente\Cadastros\PropostaDeCadastro;
 use App\Services\Assistente\ResumoDaAcao;
 use Carbon\Carbon;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Base das ferramentas que propõem criar, alterar ou excluir um cadastro (grupo, espaço, equipamento).
@@ -26,6 +27,7 @@ abstract class PropoeCadastro implements Ferramenta
     public function __construct(
         protected readonly ResolvedorDeCadastros $resolvedor,
         protected readonly ResumoDaAcao $resumo,
+        protected readonly CadastrosDoAssistente $cadastros,
     ) {}
 
     /** Chave do cadastro nas ações: 'grupo', 'espaco' ou 'equipamento'. */
@@ -40,16 +42,6 @@ abstract class PropoeCadastro implements Ferramenta
      * @return array<string, array{rotulo: string, tipo: 'texto'|'inteiro'|'booleano'|'data'}>
      */
     abstract protected function campos(): array;
-
-    /**
-     * @return array<string, mixed>
-     */
-    abstract protected function regras(User $dono, ?Model $atual = null): array;
-
-    /**
-     * @return array<string, string>
-     */
-    abstract protected function mensagens(): array;
 
     /**
      * Acha o cadastro do usuário pelo nome ou id.
@@ -192,13 +184,11 @@ abstract class PropoeCadastro implements Ferramenta
      */
     private function validarFinal(User $usuario, array $final, ?Model $alvo): array
     {
-        $validador = Validator::make($final, $this->regras($usuario, $alvo), $this->mensagens());
-
-        if ($validador->fails()) {
-            throw new ArgumentoInvalido($validador->errors()->first());
+        try {
+            return $this->cadastros->validar($this->entidade(), $usuario, $final, $alvo);
+        } catch (ValidationException $erro) {
+            throw new ArgumentoInvalido(collect($erro->errors())->flatten()->first());
         }
-
-        return $validador->validated();
     }
 
     /**

@@ -5,7 +5,7 @@ namespace App\Services\Assistente\Ferramentas;
 use App\Models\Equipamento;
 use App\Models\User;
 use App\Services\Agenda\Cadastros\GravadorDeEquipamento;
-use App\Services\Agenda\Cadastros\RegrasDeEquipamento;
+use App\Services\Assistente\Cadastros\CadastrosDoAssistente;
 use App\Services\Assistente\ResumoDaAcao;
 use Illuminate\Database\Eloquent\Model;
 
@@ -17,9 +17,10 @@ final class ProporEquipamento extends PropoeCadastro
     public function __construct(
         ResolvedorDeCadastros $resolvedor,
         ResumoDaAcao $resumo,
+        CadastrosDoAssistente $cadastros,
         private readonly GravadorDeEquipamento $gravador,
     ) {
-        parent::__construct($resolvedor, $resumo);
+        parent::__construct($resolvedor, $resumo, $cadastros);
     }
 
     public function nome(): string
@@ -73,16 +74,6 @@ final class ProporEquipamento extends PropoeCadastro
             'local_guarda' => ['rotulo' => 'Local de guarda', 'tipo' => 'texto'],
             'manutencao_ate' => ['rotulo' => 'Manutenção até', 'tipo' => 'data'],
         ];
-    }
-
-    protected function regras(User $dono, ?Model $atual = null): array
-    {
-        return RegrasDeEquipamento::regras($dono, $atual instanceof Equipamento ? $atual : null);
-    }
-
-    protected function mensagens(): array
-    {
-        return RegrasDeEquipamento::mensagens();
     }
 
     protected function resolverAlvo(User $usuario, string $idOuNome): Model

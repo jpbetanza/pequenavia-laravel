@@ -3,16 +3,9 @@
 namespace App\Services\Assistente\Cadastros;
 
 use App\Models\AcaoProposta;
-use App\Models\Equipamento;
-use App\Models\Grupo;
 use App\Models\User;
-use App\Services\Agenda\Cadastros\GravadorDeEquipamento;
-use App\Services\Agenda\Cadastros\GravadorDeGrupo;
-use App\Services\Agenda\Cadastros\RegrasDeEquipamento;
-use App\Services\Agenda\Cadastros\RegrasDeGrupo;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpResponseException;
 
@@ -22,10 +15,7 @@ use Symfony\Component\HttpKernel\Exception\HttpResponseException;
  */
 final class ExecutorDeCadastro
 {
-    public function __construct(
-        private readonly GravadorDeGrupo $grupos,
-        private readonly GravadorDeEquipamento $equipamentos,
-    ) {}
+    public function __construct(private readonly CadastrosDoAssistente $cadastros) {}
 
     /**
      * Grava a ação de cadastro e devolve o id do cadastro criado ou alterado (null na exclusão).
@@ -38,14 +28,17 @@ final class ExecutorDeCadastro
         $entidade = $proposta['entidade'];
 
         if ($proposta['operacao'] === 'criar') {
-            return (string) $this->gravarNovo($usuario, $entidade, $proposta['final'])->getKey();
+            $dados = $this->validarFinal($usuario, $entidade, $proposta['final'], null);
+
+            return (string) $this->cadastros->gravador($entidade)->criar($usuario, $dados)->getKey();
         }
 
         $alvo = $this->alvoAtual($usuario, $entidade, $proposta['alvo_id'] ?? null);
         $this->conferirVersao($alvo, $proposta['alvo_atualizado_em'] ?? null);
 
         if ($proposta['operacao'] === 'alterar') {
-            $this->gravarAlteracao($usuario, $entidade, $alvo, $proposta['final']);
+            $dados = $this->validarFinal($usuario, $entidade, $proposta['final'], $alvo);
+            $this->cadastros->gravador($entidade)->atualizar($alvo, $dados);
 
             return (string) $alvo->getKey();
         }
@@ -55,55 +48,23 @@ final class ExecutorDeCadastro
         return null;
     }
 
-    /**
-     * @param  array<string, mixed>  $final
-     */
-    private function gravarNovo(User $usuario, string $entidade, array $final): Model
-    {
-        $dados = $this->validarFinal($usuario, $entidade, $final, null);
-
-        return match ($entidade) {
-            'grupo' => $this->grupos->criar($usuario, $dados),
-            'equipamento' => $this->equipamentos->criar($usuario, $dados),
-        };
-    }
-
-    /**
-     * @param  array<string, mixed>  $final
-     */
-    private function gravarAlteracao(User $usuario, string $entidade, Model $alvo, array $final): void
-    {
-        $dados = $this->validarFinal($usuario, $entidade, $final, $alvo);
-
-        match ($entidade) {
-            'grupo' => $this->grupos->atualizar($alvo, $dados),
-            'equipamento' => $this->equipamentos->atualizar($alvo, $dados),
-        };
-    }
-
     private function gravarExclusao(string $entidade, Model $alvo): void
     {
         try {
-            match ($entidade) {
-                'grupo' => $this->grupos->excluir($alvo),
-                'equipamento' => $this->equipamentos->excluir($alvo),
-            };
+            $this->cadastros->gravador($entidade)->excluir($alvo);
         } catch (ValidationException $erro) {
             $this->recusar(collect($erro->errors())->flatten()->first());
         }
     }
 
     /**
-     * @return Grupo|Equipamento
+     * O alvo é travado para a gravação: a conferência de versão e a escrita acontecem sem outra alteração no meio.
      */
     private function alvoAtual(User $usuario, string $entidade, ?string $id): Model
     {
-        $classe = match ($entidade) {
-            'grupo' => Grupo::class,
-            'equipamento' => Equipamento::class,
-        };
+        $classe = $this->cadastros->modelo($entidade);
 
-        $alvo = $id === null ? null : $classe::query()->where('user_id', $usuario->id)->whereKey($id)->first();
+        $alvo = $id === null ? null : $classe::query()->where('user_id', $usuario->id)->whereKey($id)->lockForUpdate()->first();
 
         return $alvo ?? $this->recusar('O cadastro não existe mais.');
     }
@@ -121,18 +82,11 @@ final class ExecutorDeCadastro
      */
     private function validarFinal(User $usuario, string $entidade, array $final, ?Model $alvo): array
     {
-        [$regras, $mensagens] = match ($entidade) {
-            'grupo' => [RegrasDeGrupo::regras($usuario, $alvo instanceof Grupo ? $alvo : null), RegrasDeGrupo::mensagens()],
-            'equipamento' => [RegrasDeEquipamento::regras($usuario, $alvo instanceof Equipamento ? $alvo : null), RegrasDeEquipamento::mensagens()],
-        };
-
-        $validador = Validator::make($final, $regras, $mensagens);
-
-        if ($validador->fails()) {
-            $this->recusar($validador->errors()->first());
+        try {
+            return $this->cadastros->validar($entidade, $usuario, $final, $alvo);
+        } catch (ValidationException $erro) {
+            $this->recusar(collect($erro->errors())->flatten()->first());
         }
-
-        return $validador->validated();
     }
 
     private function recusar(string $mensagem): never

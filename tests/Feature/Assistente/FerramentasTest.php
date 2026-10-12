@@ -1,7 +1,6 @@
 <?php
 
 use App\Enums\StatusSolicitacao;
-use App\Models\Conversa;
 use App\Models\Equipamento;
 use App\Models\Espaco;
 use App\Models\GeracaoCertificado;
@@ -14,17 +13,11 @@ use App\Services\Assistente\Ferramentas\ConsultarAgenda;
 use App\Services\Assistente\Ferramentas\ListarCadastros;
 use App\Services\Assistente\Ferramentas\ListarSolicitacoes;
 use App\Services\Assistente\Ferramentas\ResolvedorDeCadastros;
-use App\Services\Assistente\Ferramentas\ResultadoDeFerramenta;
 use App\Services\Assistente\Ferramentas\ResumoDeCertificados;
 use App\Services\Assistente\Ferramentas\VerificarDisponibilidade;
 use Carbon\CarbonImmutable;
 
 beforeEach(fn () => $this->travelTo(CarbonImmutable::parse('2026-10-13 10:00', 'America/Sao_Paulo')));
-
-function executar(string $classe, User $usuario, array $argumentos): ResultadoDeFerramenta
-{
-    return app($classe)->executar($usuario, Conversa::factory()->for($usuario)->create(), $argumentos);
-}
 
 test('consultar_agenda lista só as reservas do usuário no período, com cartão', function () {
     $usuario = User::factory()->create();
