@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useAssistente } from '@/hooks/use-assistente';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { chaveDaConversaSalva } from '@/lib/assistente/conversa-salva';
+import { deveFecharAoNavegar } from '@/lib/assistente/painel';
 import { cn } from '@/lib/utils';
 import { ConversaDoAssistente } from './conversa-do-assistente';
 import { ListaDeConversas } from './lista-de-conversas';
@@ -140,10 +141,17 @@ export function PainelDoAssistente() {
     const userId = auth.user.id;
 
     // No celular, a tela cheia taparia o destino de uma navegação (um link de cartão): fecha ao sair da página.
+    // Um reload da própria página (ex.: depois de confirmar um cartão) não fecha.
     useEffect(
         () =>
-            router.on('start', () => {
-                if (celular) {
+            router.on('start', (evento) => {
+                if (
+                    celular &&
+                    deveFecharAoNavegar(
+                        window.location.href,
+                        evento.detail.visit.url.href,
+                    )
+                ) {
                     fechar();
                 }
             }),

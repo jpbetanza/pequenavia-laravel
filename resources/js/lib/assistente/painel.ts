@@ -16,3 +16,20 @@ export function abertoAoCarregar(
 export function deveGravarPreferencia(celular: boolean): boolean {
     return !celular;
 }
+
+/** Caminho da URL, sem query nem hash. Aceita URL absoluta ou relativa. */
+function caminhoDe(url: string): string {
+    try {
+        return new URL(url, 'http://localhost').pathname;
+    } catch {
+        return url;
+    }
+}
+
+/**
+ * Se o painel deve fechar numa navegação. Só fecha quando o caminho muda: um reload da própria página
+ * (ex.: depois de confirmar uma reserva no cartão) não tira o painel do caminho do usuário.
+ */
+export function deveFecharAoNavegar(urlAtual: string, urlDestino: string): boolean {
+    return caminhoDe(urlAtual) !== caminhoDe(urlDestino);
+}

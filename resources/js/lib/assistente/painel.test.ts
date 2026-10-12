@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { abertoAoCarregar, deveGravarPreferencia } from './painel';
+import {
+    abertoAoCarregar,
+    deveFecharAoNavegar,
+    deveGravarPreferencia,
+} from './painel';
 
 describe('abertoAoCarregar', () => {
     it('reabre no desktop quando a última escolha foi deixar aberto', () => {
@@ -20,5 +24,30 @@ describe('deveGravarPreferencia', () => {
     it('grava só no desktop, para o celular não apagar a escolha do desktop', () => {
         expect(deveGravarPreferencia(false)).toBe(true);
         expect(deveGravarPreferencia(true)).toBe(false);
+    });
+});
+
+describe('deveFecharAoNavegar', () => {
+    it('não fecha quando o destino é a própria página (reload)', () => {
+        expect(
+            deveFecharAoNavegar(
+                'https://app.test/agendamentos/calendario?data=2026-10-18',
+                'https://app.test/agendamentos/calendario?data=2026-10-18',
+            ),
+        ).toBe(false);
+    });
+
+    it('fecha quando o destino tem outro caminho', () => {
+        expect(
+            deveFecharAoNavegar(
+                'https://app.test/agendamentos/calendario',
+                'https://app.test/agendamentos/solicitacoes',
+            ),
+        ).toBe(true);
+    });
+
+    it('compara caminhos relativos também', () => {
+        expect(deveFecharAoNavegar('/agendamentos/calendario', '/agendamentos/calendario?x=1')).toBe(false);
+        expect(deveFecharAoNavegar('/agendamentos/calendario', '/agendamentos/solicitacoes')).toBe(true);
     });
 });
