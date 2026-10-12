@@ -228,3 +228,13 @@ it('recusa data ou visão inválidas', function () {
         ->get(route('agendamentos.calendario', ['data' => '10/10/2026', 'visao' => 'mes']))
         ->assertSessionHasErrors(['data', 'visao']);
 });
+
+it('aceita e ignora os parâmetros de nova reserva vindos do painel do assistente', function () {
+    $this->actingAs($this->dono)
+        ->get(route('agendamentos.calendario', ['data' => '2026-10-06', 'visao' => 'dia', 'nova_reserva' => 1, 'espaco' => $this->salao->id, 'inicio' => '14:00']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $pagina) => $pagina
+            ->component('agendamentos/calendario')
+            ->where('data', '2026-10-06')
+            ->where('visao', 'dia'));
+});

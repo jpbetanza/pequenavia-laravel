@@ -103,7 +103,7 @@ export function mensagemDoErro(erro: unknown): string {
     return 'Não foi possível concluir a ação.';
 }
 
-function cabecalhos(
+export function cabecalhos(
     extras: Record<string, string> = {},
 ): Record<string, string> {
     const cookies = typeof document === 'undefined' ? '' : document.cookie;
@@ -116,7 +116,7 @@ function cabecalhos(
     };
 }
 
-async function erroDaResposta(resposta: Response): Promise<ErroHttp> {
+export async function erroDaResposta(resposta: Response): Promise<ErroHttp> {
     let dados: { message?: string; errors?: Record<string, string[]> } & Record<
         string,
         unknown

@@ -1,6 +1,6 @@
-import { Head, router } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { ChevronLeft, ChevronRight, Plus, Printer } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import AgendaCelular from '@/components/agenda/agenda-celular';
 import FiltroDeEspacos from '@/components/agenda/filtro-de-espacos';
 import GradeDaSemana from '@/components/agenda/grade-da-semana';
@@ -18,6 +18,10 @@ import {
     reconciliarSelecao,
     type FiltroSalvo,
 } from '@/lib/agenda/filtro';
+import {
+    lerPedidoDeNovaReserva,
+    removerParametrosDeNovaReserva,
+} from '@/lib/agenda/abrir-reserva';
 import {
     dataPorExtenso,
     diasDaSemana,
@@ -96,6 +100,28 @@ export default function Calendario({
         // Recarrega com a mesma URL, então `data` e `visao` continuam os mesmos.
         router.reload();
     }
+
+    // O painel do assistente leva até aqui com `nova_reserva=1` na URL. Abre a reserva uma vez por visita e limpa a URL.
+    const { url: urlDaPagina } = usePage();
+
+    useEffect(() => {
+        const pedido = lerPedidoDeNovaReserva(window.location.search);
+
+        if (pedido === null) {
+            return;
+        }
+
+        abrirNovaReserva(
+            data,
+            pedido.inicio ?? undefined,
+            pedido.espacoId ?? undefined,
+        );
+        window.history.replaceState(
+            window.history.state,
+            '',
+            removerParametrosDeNovaReserva(window.location.href),
+        );
+    }, [urlDaPagina]);
 
     const passo = PASSO_DA_NAVEGACAO[visao];
 
