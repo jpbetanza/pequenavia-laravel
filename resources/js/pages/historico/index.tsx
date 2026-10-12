@@ -190,7 +190,7 @@ export default function Historico({ geracoes, filtros, modelos }: Props) {
 
                         <aside
                             aria-label="Detalhes do certificado selecionado"
-                            className="sticky top-6 hidden w-80 shrink-0 rounded-2xl border border-border bg-card p-6 lg:block"
+                            className="sticky top-22 hidden w-80 shrink-0 rounded-2xl border border-border bg-card p-6 lg:block"
                         >
                             {selecionada && (
                                 <PainelDeDetalhes

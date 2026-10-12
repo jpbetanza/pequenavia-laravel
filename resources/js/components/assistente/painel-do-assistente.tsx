@@ -230,7 +230,7 @@ export function PainelDoAssistente() {
                 aberto ? 'flex' : 'hidden',
                 celular
                     ? 'fixed inset-0 z-50 h-svh flex-col bg-background outline-none'
-                    : 'sticky top-0 h-svh w-[420px] shrink-0 flex-col self-start border-l bg-card print:hidden',
+                    : 'sticky top-16 h-[calc(100svh-4rem)] w-[420px] shrink-0 flex-col self-start border-l bg-card print:hidden',
             )}
         >
             <ConteudoDoAssistente
