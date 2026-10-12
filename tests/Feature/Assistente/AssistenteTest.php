@@ -3,6 +3,7 @@
 use App\Enums\PapelDaMensagem;
 use App\Models\Conversa;
 use App\Models\Espaco;
+use App\Models\Grupo;
 use App\Models\Mensagem;
 use App\Models\User;
 use App\Services\Assistente\Assistente;
@@ -175,4 +176,21 @@ test('erro inesperado grava a mensagem de erro e emite o evento erro, sem deixar
         ->and($conversa->mensagens()->where('papel', PapelDaMensagem::Assistente)->where('erro', true)->count())->toBe(1);
 
     Exceptions::assertReported(RuntimeException::class);
+});
+
+test('ciclo com proposta de cadastro: cartão de ação proposta e nenhum grupo gravado', function () {
+    $usuario = User::factory()->create();
+    Http::fake(['openrouter.ai/*' => Http::sequence()
+        ->push(sseDoOpenRouter([chunkDeFerramenta(0, 'c1', 'propor_grupo', json_encode(['operacao' => 'criar', 'nome' => 'Coral']))]))
+        ->push(sseDoOpenRouter([chunkDeTexto('Preparei o cadastro do Coral. Confira o cartão e clique em Confirmar.')]))]);
+    $conversa = Conversa::factory()->for($usuario)->create();
+
+    $eventos = eventos($usuario, $conversa, 'Cadastra o grupo Coral');
+
+    expect(array_map(fn ($e) => $e->tipo, $eventos))->toBe(['status', 'cartao', 'texto', 'fim'])
+        ->and($eventos[1]->dados['tipo'])->toBe('acao_proposta')
+        ->and($eventos[1]->dados['dados']['tipo'])->toBe('criar_grupo')
+        ->and(Grupo::count())->toBe(0);
+
+    Http::assertSentCount(2);
 });
