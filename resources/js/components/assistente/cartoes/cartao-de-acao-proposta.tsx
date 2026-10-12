@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { Check } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -107,6 +107,8 @@ export function CartaoDeAcaoProposta({ acao, aoAtualizar }: Props) {
 
             if (operacao === 'confirmar') {
                 toast.success('Reserva criada.');
+                // A reserva nova aparece no calendário ao lado: recarrega as props da página atual.
+                router.reload();
             }
         } catch (erro) {
             if (erro instanceof ErroHttp && erro.status === 422) {

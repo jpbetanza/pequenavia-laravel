@@ -21,9 +21,9 @@ export default function AppSidebarLayout({
                     <AppSidebarHeader breadcrumbs={breadcrumbs} />
                     <div className="flex min-h-0 flex-1">
                         <div className="min-w-0 flex-1">{children}</div>
-                        <PainelDoAssistente />
                     </div>
                 </AppContent>
+                <PainelDoAssistente />
             </AppShell>
         </ProvedorDoAssistente>
     );

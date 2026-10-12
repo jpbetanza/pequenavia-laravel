@@ -48,7 +48,7 @@ export function ListaDeConversas({
     const [conversas, setConversas] = useState<ResumoDeConversa[] | null>(null);
     const [falhou, setFalhou] = useState(false);
     const [busca, setBusca] = useState('');
-    const [agora] = useState(() => new Date().toISOString());
+    const [agora, setAgora] = useState(() => new Date().toISOString());
     const [paraExcluir, setParaExcluir] = useState<ResumoDeConversa | null>(
         null,
     );
@@ -66,7 +66,9 @@ export function ListaDeConversas({
             controle.signal,
         )
             .then((dados) => {
+                // "agora" vem da hora da busca, para o tempo relativo não congelar na montagem.
                 setFalhou(false);
+                setAgora(new Date().toISOString());
                 setConversas(dados.conversas);
             })
             .catch((erro: unknown) => {

@@ -1,4 +1,9 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
+import {
+    abertoAoCarregar,
+    CONSULTA_CELULAR,
+    deveGravarPreferencia,
+} from '@/lib/assistente/painel';
 
 const CHAVE_ABERTO = 'assistente-aberto';
 
@@ -10,10 +15,21 @@ type ValorDoAssistente = {
 
 const ContextoDoAssistente = createContext<ValorDoAssistente | null>(null);
 
+function ehCelular(): boolean {
+    try {
+        return window.matchMedia(CONSULTA_CELULAR).matches;
+    } catch {
+        return false;
+    }
+}
+
 /** Lembra se o painel estava aberto. Sem localStorage (janela privada, dados bloqueados), começa fechado. */
 function lerAberto(): boolean {
     try {
-        return window.localStorage.getItem(CHAVE_ABERTO) === '1';
+        return abertoAoCarregar(
+            window.localStorage.getItem(CHAVE_ABERTO),
+            ehCelular(),
+        );
     } catch {
         return false;
     }
@@ -32,7 +48,10 @@ export function ProvedorDoAssistente({ children }: { children: ReactNode }) {
 
     function definir(novo: boolean) {
         setAberto(novo);
-        gravarAberto(novo);
+
+        if (deveGravarPreferencia(ehCelular())) {
+            gravarAberto(novo);
+        }
     }
 
     return (

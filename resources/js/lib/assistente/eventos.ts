@@ -182,3 +182,6 @@ export function substituirCartaoDeAcao(
         ),
     }));
 }
+
+/** Mensagem única para falhas do assistente, igual à do servidor. */
+export const MENSAGEM_DE_FALHA = 'Não consegui responder agora. Tente de novo.';

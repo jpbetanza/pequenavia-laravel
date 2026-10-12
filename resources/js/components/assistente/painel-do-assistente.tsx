@@ -35,6 +35,35 @@ type ConteudoProps = {
 };
 
 /**
+ * Torna inertes os irmãos de cada ancestral do painel, para o foco e os cliques não chegarem ao fundo. Devolve a função que desfaz.
+ */
+function isolarFundo(painel: HTMLElement): () => void {
+    const inertes: HTMLElement[] = [];
+    let atual: HTMLElement = painel;
+
+    while (atual.parentElement !== null && atual !== document.body) {
+        for (const irmao of Array.from(atual.parentElement.children)) {
+            if (
+                irmao !== atual &&
+                irmao instanceof HTMLElement &&
+                !irmao.inert
+            ) {
+                irmao.inert = true;
+                inertes.push(irmao);
+            }
+        }
+
+        atual = atual.parentElement;
+    }
+
+    return () => {
+        for (const elemento of inertes) {
+            elemento.inert = false;
+        }
+    };
+}
+
+/**
  * Conversa e lista ficam montadas o tempo todo; a inativa só some (`hidden`). Assim uma resposta em
  * andamento termina mesmo com o painel fechado ou na lista. A `sessao` remonta a conversa ao abrir outra ou uma nova.
  */
@@ -121,11 +150,29 @@ export function PainelDoAssistente() {
         [celular, fechar],
     );
 
-    // Ao abrir no celular, o foco vai para o painel. Painel escondido não recebe foco.
+    // No celular o painel é um diálogo modal: o foco entra nele, o fundo fica inerte e a rolagem trava.
+    // Ao fechar, o foco volta para o botão "Assistente", que abriu o painel.
     useEffect(() => {
-        if (celular && aberto) {
-            painelCelular.current?.focus();
+        if (!celular || !aberto) {
+            return;
         }
+
+        const painel = painelCelular.current;
+        const rolagemAnterior = document.body.style.overflow;
+        const soltarFundo = painel === null ? () => {} : isolarFundo(painel);
+
+        document.body.style.overflow = 'hidden';
+        painel?.focus();
+
+        return () => {
+            soltarFundo();
+            document.body.style.overflow = rolagemAnterior;
+            document
+                .querySelector<HTMLElement>(
+                    '[aria-controls="painel-assistente"]',
+                )
+                ?.focus();
+        };
     }, [celular, aberto]);
 
     if (!assistente?.disponivel) {
@@ -138,7 +185,7 @@ export function PainelDoAssistente() {
                 id="painel-assistente"
                 aria-label="Assistente"
                 className={cn(
-                    'sticky top-0 h-svh w-[420px] shrink-0 flex-col border-l bg-card print:hidden',
+                    'sticky top-0 h-svh w-[420px] shrink-0 flex-col self-start border-l bg-card print:hidden',
                     aberto ? 'flex' : 'hidden',
                 )}
             >
@@ -160,6 +207,11 @@ export function PainelDoAssistente() {
             aria-label="Assistente"
             tabIndex={-1}
             onKeyDown={(evento) => {
+                // Escape já tratado por outra camada (ex.: o diálogo de excluir conversa) não fecha o painel também.
+                if (evento.defaultPrevented) {
+                    return;
+                }
+
                 if (evento.key === 'Escape') {
                     fechar();
                 }

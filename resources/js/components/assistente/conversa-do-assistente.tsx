@@ -13,6 +13,7 @@ import { deveDescartarConversa } from '@/lib/assistente/conversa-salva';
 import {
     aplicarEvento,
     iniciarTroca,
+    MENSAGEM_DE_FALHA,
     substituirCartaoDeAcao,
 } from '@/lib/assistente/eventos';
 import { enviarJson, mensagemDoErro } from '@/lib/http';
@@ -169,6 +170,7 @@ export function ConversaDoAssistente({
             assistente: crypto.randomUUID(),
         };
         let recebeuEvento = false;
+        let desfecho = false;
         controleRef.current = controle;
         setMensagens((atuais) => iniciarTroca(atuais, limpa, ids));
 
@@ -195,6 +197,10 @@ export function ConversaDoAssistente({
                 (evento) => {
                     recebeuEvento = true;
 
+                    if (evento.tipo === 'fim' || evento.tipo === 'erro') {
+                        desfecho = true;
+                    }
+
                     if (evento.tipo === 'fim') {
                         setTitulo(evento.conversa.titulo);
                     }
@@ -204,7 +210,15 @@ export function ConversaDoAssistente({
                 controle.signal,
             );
 
-            setMensagens(encerrarPendente);
+            if (!desfecho) {
+                // O stream acabou sem `fim` nem `erro`: a falha aparece na resposta, com o botão de tentar de novo.
+                setMensagens((atuais) =>
+                    aplicarEvento(atuais, {
+                        tipo: 'erro',
+                        mensagem: MENSAGEM_DE_FALHA,
+                    }),
+                );
+            }
         } catch (erro) {
             if (controle.signal.aborted && recebeuEvento) {
                 setMensagens(encerrarPendente);
@@ -263,6 +277,7 @@ export function ConversaDoAssistente({
     }
 
     const vazia = mensagens.length === 0;
+    const ultimaId = mensagens.at(-1)?.id;
 
     return (
         <div className="flex min-h-0 flex-1 flex-col">
@@ -314,6 +329,7 @@ export function ConversaDoAssistente({
                 ref={registroRef}
                 role="log"
                 aria-live="polite"
+                aria-busy={enviando}
                 className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-4 py-5"
             >
                 {carregando && (
@@ -346,15 +362,17 @@ export function ConversaDoAssistente({
                                     <p className="whitespace-pre-wrap text-destructive">
                                         {mensagem.conteudo}
                                     </p>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        disabled={enviando}
-                                        onClick={tentarDeNovo}
-                                        className="min-h-11"
-                                    >
-                                        Tentar de novo
-                                    </Button>
+                                    {mensagem.id === ultimaId && (
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            disabled={enviando}
+                                            onClick={tentarDeNovo}
+                                            className="min-h-11"
+                                        >
+                                            Tentar de novo
+                                        </Button>
+                                    )}
                                 </div>
                             ) : (
                                 mensagem.conteudo !== '' && (
