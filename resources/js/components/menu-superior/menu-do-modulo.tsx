@@ -105,7 +105,7 @@ export function MenuDoModulo({ secao, ativa, icone: Icone, acaoFinal }: Props) {
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                             asChild
-                            className="font-semibold text-primary"
+                            className="min-h-11 font-semibold text-primary"
                         >
                             <Link href={acaoFinal.href} prefetch>
                                 + {acaoFinal.titulo}

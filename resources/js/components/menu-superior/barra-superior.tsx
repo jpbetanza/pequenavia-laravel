@@ -1,12 +1,16 @@
 import { Link, usePage } from '@inertiajs/react';
-import { CalendarDays, FileText, House } from 'lucide-react';
+import { CalendarDays, FileText, House, Menu, Sparkles, X } from 'lucide-react';
+import { useState } from 'react';
 import AppLogo from '@/components/app-logo';
 import { BotaoDoAssistente } from '@/components/assistente/botao-do-assistente';
+import { Button } from '@/components/ui/button';
 import { MenuDaConta } from '@/components/menu-superior/menu-da-conta';
+import { MenuDoCelular } from '@/components/menu-superior/menu-do-celular';
 import {
     classeDaAba,
     MenuDoModulo,
 } from '@/components/menu-superior/menu-do-modulo';
+import { useAssistente } from '@/hooks/use-assistente';
 import { abaAtiva, secoesDoMenu } from '@/lib/menu/secoes';
 import { calendario } from '@/routes/agendamentos';
 import { inicio } from '@/routes';
@@ -17,6 +21,9 @@ export function BarraSuperior() {
     const secoes = secoesDoMenu(agenda?.solicitacoes_pendentes ?? 0);
     const ativa = abaAtiva(url, secoes);
     const [secaoAgendamentos, secaoCertificados] = secoes;
+    const [menuAberto, setMenuAberto] = useState(false);
+    const { alternar } = useAssistente();
+    const assistenteDisponivel = Boolean(assistente?.disponivel);
 
     return (
         <header className="sticky top-0 z-40 h-16 border-b border-border bg-background print:hidden">
@@ -59,10 +66,54 @@ export function BarraSuperior() {
                 </nav>
 
                 <div className="ml-auto flex items-center gap-3">
-                    {assistente?.disponivel && <BotaoDoAssistente />}
-                    <MenuDaConta />
+                    {assistenteDisponivel && (
+                        <>
+                            <BotaoDoAssistente />
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                aria-label="Abrir o assistente"
+                                aria-controls="painel-assistente"
+                                onClick={alternar}
+                                className="size-11 rounded-full md:hidden"
+                            >
+                                <Sparkles
+                                    aria-hidden="true"
+                                    className="size-4"
+                                />
+                            </Button>
+                        </>
+                    )}
+                    <div className="hidden md:block">
+                        <MenuDaConta />
+                    </div>
+                    <Button
+                        type="button"
+                        variant="default"
+                        size="icon"
+                        aria-label={menuAberto ? 'Fechar menu' : 'Abrir menu'}
+                        aria-expanded={menuAberto}
+                        aria-controls="menu-do-celular"
+                        onClick={() => setMenuAberto((aberto) => !aberto)}
+                        className="size-11 rounded-xl md:hidden"
+                    >
+                        {menuAberto ? (
+                            <X aria-hidden="true" className="size-[22px]" />
+                        ) : (
+                            <Menu aria-hidden="true" className="size-[22px]" />
+                        )}
+                    </Button>
                 </div>
             </div>
+
+            <MenuDoCelular
+                aberto={menuAberto}
+                onAbertoChange={setMenuAberto}
+                secoes={secoes}
+                ativa={ativa}
+                assistenteDisponivel={assistenteDisponivel}
+            />
         </header>
     );
 }
