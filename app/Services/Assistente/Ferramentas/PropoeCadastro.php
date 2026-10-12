@@ -127,7 +127,7 @@ abstract class PropoeCadastro implements Ferramenta
         $nome = $criacao ? (string) ($final['nome'] ?? '') : (string) $alvo->getAttribute('nome');
         $titulo = $this->verboDoTitulo($operacao)." {$this->nomeNaFrase()}: {$nome}";
 
-        $acao = PropostaDeCadastro::criar(
+        $proposta = PropostaDeCadastro::criar(
             $usuario,
             $conversa,
             $this->entidade(),
@@ -139,12 +139,14 @@ abstract class PropoeCadastro implements Ferramenta
             $titulo,
             $alvo === null ? null : $this->cadastros->impressao($alvo),
         );
+        $acao = $proposta['acao'];
 
         return new ResultadoDeFerramenta(
             paraOModelo: [
                 'criada' => true,
                 'acao_id' => $acao->id,
                 'mensagem' => 'Proposta pronta. A secretaria precisa clicar em Confirmar.',
+                ...($proposta['substituiu'] !== [] ? ['substituiu' => $proposta['substituiu']] : []),
             ],
             cartao: ['tipo' => 'acao_proposta', 'dados' => $this->resumo->paraCartao($acao)],
         );

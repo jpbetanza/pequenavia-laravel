@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Grava a proposta de um cadastro (criar, alterar ou excluir) como AcaoProposta pendente.
- * Como em ProporReserva, uma proposta nova expira a pendente anterior da mesma conversa.
+ * Uma proposta nova expira só as pendentes da conversa com a mesma chave (ver ChaveDaProposta).
  */
 final class PropostaDeCadastro
 {
@@ -19,6 +19,7 @@ final class PropostaDeCadastro
      * @param  array<string, mixed>  $final  estado final validado (vazio na exclusão)
      * @param  list<array{rotulo: string, antes: ?string, depois: ?string}>  $linhas
      * @param  list<string>  $avisos
+     * @return array{acao: AcaoProposta, substituiu: list<string>} títulos das propostas que a nova expirou
      */
     public static function criar(
         User $usuario,
@@ -31,32 +32,34 @@ final class PropostaDeCadastro
         array $avisos,
         string $titulo,
         ?string $alvoImpressao = null,
-    ): AcaoProposta {
-        return DB::transaction(function () use ($usuario, $conversa, $entidade, $operacao, $alvo, $final, $linhas, $avisos, $titulo, $alvoImpressao): AcaoProposta {
-            AcaoProposta::query()
-                ->where('conversa_id', $conversa->id)
-                ->where('status', StatusDaAcao::Proposta->value)
-                ->update(['status' => StatusDaAcao::Expirada->value]);
+    ): array {
+        $tipo = "{$operacao}_{$entidade}";
+        $dados = [
+            'entidade' => $entidade,
+            'operacao' => $operacao,
+            'alvo_id' => $alvo?->getKey(),
+            // Microssegundos: a alteração feita logo depois da proposta precisa ser percebida.
+            'alvo_atualizado_em' => $alvo?->updated_at?->format('Y-m-d\TH:i:s.uP'),
+            // Impressão digital do estado completo do alvo. É ela que decide se a proposta ainda vale.
+            'alvo_impressao' => $alvoImpressao,
+            'final' => $final,
+            'linhas' => $linhas,
+            'avisos' => $avisos,
+            'titulo' => $titulo,
+        ];
 
-            return AcaoProposta::create([
+        return DB::transaction(function () use ($usuario, $conversa, $tipo, $dados): array {
+            $substituiu = ExpiracaoDePropostas::expirarPendentesComMesmaChave($conversa, ChaveDaProposta::de($tipo, $dados));
+
+            $acao = AcaoProposta::create([
                 'conversa_id' => $conversa->id,
                 'user_id' => $usuario->id,
-                'tipo' => "{$operacao}_{$entidade}",
-                'dados' => [
-                    'entidade' => $entidade,
-                    'operacao' => $operacao,
-                    'alvo_id' => $alvo?->getKey(),
-                    // Microssegundos: a alteração feita logo depois da proposta precisa ser percebida.
-                    'alvo_atualizado_em' => $alvo?->updated_at?->format('Y-m-d\TH:i:s.uP'),
-                    // Impressão digital do estado completo do alvo. É ela que decide se a proposta ainda vale.
-                    'alvo_impressao' => $alvoImpressao,
-                    'final' => $final,
-                    'linhas' => $linhas,
-                    'avisos' => $avisos,
-                    'titulo' => $titulo,
-                ],
+                'tipo' => $tipo,
+                'dados' => $dados,
                 'status' => StatusDaAcao::Proposta,
             ]);
+
+            return ['acao' => $acao, 'substituiu' => $substituiu];
         });
     }
 }

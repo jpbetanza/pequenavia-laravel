@@ -126,5 +126,6 @@ test('o prompt de sistema apresenta as ferramentas de cadastro e a regra de conf
         ->toContain('Nunca diga que algo foi cadastrado, alterado ou excluído antes disso.')
         ->toContain('Para alterar, envie só os campos que mudam.')
         ->toContain('use fechado: true para fechar um dia')
-        ->toContain('use listar_cadastros e pergunte antes de propor');
+        ->toContain('use listar_cadastros e pergunte antes de propor')
+        ->toContain('Junte numa única chamada todas as mudanças do mesmo cadastro');
 });

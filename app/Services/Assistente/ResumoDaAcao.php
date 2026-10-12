@@ -7,6 +7,7 @@ use App\Models\AcaoProposta;
 use App\Models\Equipamento;
 use App\Models\Espaco;
 use App\Models\Grupo;
+use App\Services\Assistente\Cadastros\ChaveDaProposta;
 
 /**
  * Monta o cartão `acao_proposta` com os nomes atuais dos cadastros. Cadastro apagado aparece como "removido".
@@ -34,6 +35,7 @@ final class ResumoDaAcao
             'id' => $acao->id,
             'status' => $acao->status->value,
             'tipo' => $acao->tipo,
+            'chave' => ChaveDaProposta::de($acao->tipo, $dados),
             'resumo' => [
                 'titulo' => $dados['titulo'],
                 'grupo_id' => $dados['grupo_id'] ?? null,
@@ -64,7 +66,7 @@ final class ResumoDaAcao
     /**
      * Cartão de criar, alterar ou excluir um cadastro. Só mostra o resultado depois de confirmada.
      *
-     * @return array{id: string, status: string, tipo: string, cadastro: array<string, mixed>, resultado: array{cadastro_id: string|null, entidade: string}|null}
+     * @return array{id: string, status: string, tipo: string, chave: string, cadastro: array<string, mixed>, resultado: array{cadastro_id: string|null, entidade: string}|null}
      */
     private function paraCadastro(AcaoProposta $acao): array
     {
@@ -74,6 +76,7 @@ final class ResumoDaAcao
             'id' => $acao->id,
             'status' => $acao->status->value,
             'tipo' => $acao->tipo,
+            'chave' => ChaveDaProposta::de($acao->tipo, $dados),
             'cadastro' => [
                 'entidade' => $dados['entidade'],
                 'operacao' => $dados['operacao'],
