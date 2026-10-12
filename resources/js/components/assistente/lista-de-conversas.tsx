@@ -256,6 +256,17 @@ export function ListaDeConversas({
                                             variant="ghost"
                                             size="icon"
                                             aria-label={`Excluir conversa “${conversa.titulo}”`}
+                                            // Excluir a conversa que está respondendo faria o painel trocar de conversa no meio do stream.
+                                            disabled={
+                                                enviando &&
+                                                conversa.id === conversaAtualId
+                                            }
+                                            title={
+                                                enviando &&
+                                                conversa.id === conversaAtualId
+                                                    ? DICA_AGUARDE_RESPOSTA
+                                                    : undefined
+                                            }
                                             onClick={() =>
                                                 setParaExcluir(conversa)
                                             }
