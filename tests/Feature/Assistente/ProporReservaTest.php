@@ -57,9 +57,12 @@ test('nova proposta expira a anterior ainda pendente na mesma conversa', functio
     $argumentos = ['titulo' => 'X', 'espaco' => $salao->id, 'data' => '2026-10-16', 'inicio' => '14:00', 'fim' => '15:00'];
 
     app(ProporReserva::class)->executar($usuario, $conversa, $argumentos);
+    $primeira = AcaoProposta::sole()->id;
+
     app(ProporReserva::class)->executar($usuario, $conversa, [...$argumentos, 'inicio' => '16:00', 'fim' => '17:00']);
 
-    expect(AcaoProposta::orderBy('created_at')->pluck('status')->all())->toBe([StatusDaAcao::Expirada, StatusDaAcao::Proposta]);
+    expect(AcaoProposta::find($primeira)->status)->toBe(StatusDaAcao::Expirada)
+        ->and(AcaoProposta::whereKeyNot($primeira)->sole()->status)->toBe(StatusDaAcao::Proposta);
 });
 
 test('argumentos ruins viram ArgumentoInvalido', function (array $argumentos) {
