@@ -70,12 +70,26 @@ function isolarFundo(painel: HTMLElement): () => void {
  */
 function ConteudoDoAssistente({ userId, aberto, aoFechar }: ConteudoProps) {
     const chave = chaveDaConversaSalva(userId);
+    const { perguntaPendente, consumirPergunta } = useAssistente();
     const [vista, setVista] = useState<'conversa' | 'lista'>('conversa');
     const [enviando, setEnviando] = useState(false);
     const [conversaId, setConversaId] = useState<string | null>(() =>
         lerConversaSalva(chave),
     );
     const [sessao, setSessao] = useState(0);
+    const [perguntaInicial, setPerguntaInicial] = useState<string | null>(null);
+
+    // Pergunta vinda de fora (ex.: Início) abre uma conversa nova. Espera a resposta em andamento terminar.
+    useEffect(() => {
+        if (perguntaPendente === null || enviando) {
+            return;
+        }
+
+        setPerguntaInicial(perguntaPendente);
+        consumirPergunta();
+        abrirConversa(null);
+        // abrirConversa muda a cada render; só a pergunta e o envio em andamento disparam o efeito.
+    }, [perguntaPendente, enviando]);
 
     function gravar(id: string | null) {
         setConversaId(id);
@@ -105,6 +119,8 @@ function ConteudoDoAssistente({ userId, aberto, aoFechar }: ConteudoProps) {
                     aoNovaConversa={() => abrirConversa(null)}
                     aoFechar={aoFechar}
                     aoMudarEnviando={setEnviando}
+                    perguntaInicial={perguntaInicial}
+                    aoPerguntaEnviada={() => setPerguntaInicial(null)}
                 />
             </div>
             <div
