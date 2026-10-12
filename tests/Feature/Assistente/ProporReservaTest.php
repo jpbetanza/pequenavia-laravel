@@ -87,3 +87,29 @@ test('equipamentos repetidos, por nome e por id, viram um item com a soma das qu
 
     expect(AcaoProposta::sole()->dados['equipamentos'])->toBe([['id' => $projetor->id, 'quantidade' => 3]]);
 });
+
+test('o cartão traz os ids do espaço, do grupo e dos equipamentos para abrir a reserva no painel', function () {
+    [$usuario, $conversa, $salao, $projetor, $grupo] = cenario();
+
+    $resultado = app(ProporReserva::class)->executar($usuario, $conversa, [
+        'titulo' => 'Catequese', 'espaco' => 'Salão paroquial', 'grupo' => 'Catequese infantil',
+        'data' => '2026-10-16', 'inicio' => '14:00', 'fim' => '17:00',
+        'equipamentos' => [['equipamento' => 'Projetor', 'quantidade' => 1]],
+    ]);
+
+    expect($resultado->cartao['dados']['resumo'])
+        ->toMatchArray(['espaco_id' => $salao->id, 'grupo_id' => $grupo->id])
+        ->and($resultado->cartao['dados']['resumo']['equipamentos'])
+        ->toEqual([['id' => $projetor->id, 'nome' => 'Projetor', 'quantidade' => 1]]);
+});
+
+test('sem grupo, o cartão traz grupo_id nulo', function () {
+    [$usuario, $conversa] = cenario();
+
+    $resultado = app(ProporReserva::class)->executar($usuario, $conversa, [
+        'titulo' => 'Reunião', 'espaco' => 'Salão paroquial',
+        'data' => '2026-10-16', 'inicio' => '14:00', 'fim' => '15:00',
+    ]);
+
+    expect($resultado->cartao['dados']['resumo'])->toMatchArray(['grupo_id' => null, 'equipamentos' => []]);
+});

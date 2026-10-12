@@ -30,6 +30,7 @@ final class ResumoDaAcao
             'status' => $acao->status->value,
             'resumo' => [
                 'titulo' => $dados['titulo'],
+                'grupo_id' => $dados['grupo_id'] ?? null,
                 'grupo_nome' => isset($dados['grupo_id']) ? ($grupo?->nome ?? 'Grupo removido') : null,
                 'espaco_id' => $dados['espaco_id'],
                 'espaco_nome' => $espaco?->nome ?? 'Espaço removido',
@@ -39,6 +40,7 @@ final class ResumoDaAcao
                 'pessoas' => $dados['pessoas'] ?? null,
                 'equipamentos' => collect($dados['equipamentos'] ?? [])
                     ->map(fn (array $pedido) => [
+                        'id' => $pedido['id'],
                         'nome' => $equipamentos->get($pedido['id'])?->nome ?? 'Equipamento removido',
                         'quantidade' => $pedido['quantidade'],
                     ])
