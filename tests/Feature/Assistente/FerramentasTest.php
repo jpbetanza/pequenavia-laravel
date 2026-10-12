@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\StatusSolicitacao;
 use App\Models\Conversa;
 use App\Models\Equipamento;
 use App\Models\Espaco;
@@ -155,4 +156,44 @@ test('listar_cadastros dá o nome do dia da semana junto do número', function (
     $resultado = executar(ListarCadastros::class, $usuario, []);
 
     expect($resultado->paraOModelo['espacos'][0]['horarios'][0])->toBe(['dia_semana' => 1, 'dia' => 'segunda', 'abre' => '08:00', 'fecha' => '12:00']);
+});
+
+test('listar_solicitacoes com status aprovada devolve só as aprovadas do usuário', function () {
+    $usuario = User::factory()->create();
+    Solicitacao::factory()->for($usuario)->create(['titulo' => 'Coral aprovado', 'status' => StatusSolicitacao::Aprovada, 'espaco_id' => null]);
+    Solicitacao::factory()->pendente()->for($usuario)->create(['titulo' => 'Coral pendente', 'espaco_id' => null]);
+
+    $resultado = executar(ListarSolicitacoes::class, $usuario, ['status' => 'aprovada']);
+
+    expect($resultado->cartao['dados']['status'])->toBe('aprovada')
+        ->and(collect($resultado->cartao['dados']['solicitacoes'])->pluck('titulo')->all())->toBe(['Coral aprovado']);
+});
+
+test('listar_solicitacoes recusa status fora da lista', function () {
+    expect(fn () => executar(ListarSolicitacoes::class, User::factory()->create(), ['status' => 'cancelada']))->toThrow(ArgumentoInvalido::class);
+});
+
+test('verificar_disponibilidade acha o equipamento pelo nome e deixa o pedido livre quando há unidade', function () {
+    $usuario = User::factory()->create();
+    $salao = Espaco::factory()->comHorarioComercial()->for($usuario)->create(['nome' => 'Salão paroquial']);
+    Equipamento::factory()->for($usuario)->create(['nome' => 'Projetor', 'quantidade' => 1]);
+
+    $resultado = executar(VerificarDisponibilidade::class, $usuario, ['espaco' => $salao->id, 'data' => '2026-10-16', 'inicio' => '10:00', 'fim' => '11:00', 'equipamentos' => [['equipamento' => 'projetor', 'quantidade' => 1]]]);
+
+    expect($resultado->paraOModelo['livre'])->toBeTrue()
+        ->and($resultado->cartao['dados']['pedido']['conflitos'])->toBe([]);
+});
+
+test('verificar_disponibilidade com equipamento esgotado aponta equipamento_indisponivel', function () {
+    $usuario = User::factory()->create();
+    $salao = Espaco::factory()->comHorarioComercial()->for($usuario)->create(['nome' => 'Salão paroquial']);
+    $outroEspaco = Espaco::factory()->comHorarioComercial()->for($usuario)->create(['nome' => 'Sala 2']);
+    $projetor = Equipamento::factory()->for($usuario)->create(['nome' => 'Projetor', 'quantidade' => 1]);
+    $reservaComProjetor = Reserva::factory()->for($usuario)->create(['espaco_id' => $outroEspaco->id, 'data' => '2026-10-16', 'inicio' => '09:00', 'fim' => '12:00']);
+    $reservaComProjetor->equipamentos()->attach($projetor->id, ['quantidade' => 1]);
+
+    $resultado = executar(VerificarDisponibilidade::class, $usuario, ['espaco' => $salao->id, 'data' => '2026-10-16', 'inicio' => '10:00', 'fim' => '11:00', 'equipamentos' => [['equipamento' => 'Projetor', 'quantidade' => 1]]]);
+
+    expect($resultado->paraOModelo['livre'])->toBeFalse()
+        ->and($resultado->cartao['dados']['pedido']['conflitos'][0]['tipo'])->toBe('equipamento_indisponivel');
 });

@@ -93,3 +93,33 @@ test('sem chave configurada as rotas respondem 503', function () {
 
     $this->actingAs(User::factory()->create())->getJson(route('assistente.conversas.index'))->assertServiceUnavailable();
 });
+
+test('índice traz a prévia da última resposta válida e a data da última mensagem', function () {
+    $usuario = User::factory()->create();
+    $conversa = Conversa::factory()->for($usuario)->create(['titulo' => 'Certificados', 'ultima_mensagem_em' => '2026-10-10 15:30:00']);
+    Mensagem::factory()->for($conversa)->create(['papel' => PapelDaMensagem::Usuario, 'conteudo' => 'Quantos certificados saíram?', 'created_at' => now()->subMinutes(10)]);
+    Mensagem::factory()->for($conversa)->create(['papel' => PapelDaMensagem::Assistente, 'conteudo' => 'Resposta antiga', 'created_at' => now()->subMinutes(9)]);
+    Mensagem::factory()->for($conversa)->create(['papel' => PapelDaMensagem::Assistente, 'conteudo' => null, 'chamadas' => [['id' => 'c1', 'nome' => 'resumo_de_certificados', 'argumentos' => '{}']], 'created_at' => now()->subMinutes(8)]);
+    Mensagem::factory()->for($conversa)->create(['papel' => PapelDaMensagem::Assistente, 'conteudo' => 'Falhou', 'erro' => true, 'created_at' => now()->subMinutes(7)]);
+    Mensagem::factory()->for($conversa)->create(['papel' => PapelDaMensagem::Assistente, 'conteudo' => 'Saíram 4 certificados em outubro.', 'created_at' => now()->subMinutes(5)]);
+    $semResposta = Conversa::factory()->for($usuario)->create(['titulo' => 'Sem resposta ainda']);
+    Mensagem::factory()->for($semResposta)->create(['papel' => PapelDaMensagem::Usuario, 'conteudo' => 'Oi']);
+
+    $this->actingAs($usuario)->getJson(route('assistente.conversas.index'))
+        ->assertOk()
+        ->assertJsonPath('conversas.0.id', $conversa->id)
+        ->assertJsonPath('conversas.0.previa', 'Saíram 4 certificados em outubro.')
+        ->assertJsonPath('conversas.0.ultima_mensagem_em', $conversa->ultima_mensagem_em->toIso8601String())
+        ->assertJsonPath('conversas.1.previa', null)
+        ->assertJsonPath('conversas.1.ultima_mensagem_em', null);
+});
+
+test('mostra não traz cartão de ação de outro usuário', function () {
+    $conversa = Conversa::factory()->create();
+    $alheia = AcaoProposta::factory()->create(['status' => StatusDaAcao::Proposta]);
+    Mensagem::factory()->for($conversa)->create(['papel' => PapelDaMensagem::Assistente, 'conteudo' => 'Confira a proposta.', 'cartoes' => [['tipo' => 'acao_proposta', 'dados' => ['id' => $alheia->id, 'status' => 'proposta']]]]);
+
+    $this->actingAs($conversa->user)->getJson(route('assistente.conversas.show', $conversa))
+        ->assertOk()
+        ->assertJsonPath('mensagens.0.cartoes', []);
+});
