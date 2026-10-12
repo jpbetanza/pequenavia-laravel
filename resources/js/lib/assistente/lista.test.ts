@@ -33,13 +33,14 @@ describe('agruparConversas', () => {
     });
 
     it('usa o dia de São Paulo, não o de UTC, na fronteira da meia-noite', () => {
-        // 2026-10-16T01:30Z é 22:30 de 15/10 em São Paulo: ainda é "Hoje" (UTC já marcaria 16/10).
+        // Agora é 15/10 às 20:30 em SP (23:30Z, ainda dia 15 em UTC). A conversa é de 14/10 às 22:30 em SP
+        // (01:30Z de 15/10): é "Esta semana". Em UTC seria dia 15 = hoje, então um código em UTC falharia aqui.
         const conversas = [
-            conversa('c1', 'Noite de quinta', '2026-10-16T01:30:00Z'),
+            conversa('c1', 'Noite de quarta', '2026-10-15T01:30:00Z'),
         ];
 
-        expect(agruparConversas(conversas, '2026-10-16T01:00:00Z')).toEqual([
-            { rotulo: 'Hoje', conversas },
+        expect(agruparConversas(conversas, '2026-10-15T23:30:00Z')).toEqual([
+            { rotulo: 'Esta semana', conversas },
         ]);
     });
 
