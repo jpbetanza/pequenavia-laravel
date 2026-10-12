@@ -84,6 +84,10 @@ final class Assistente
             $concluido = true;
             Log::warning('assistente.falha', ['conversa' => $conversa->id, 'motivo' => $falha->motivo]);
 
+            if ($textoVisivel !== '') {
+                $this->gravarResposta($conversa, $textoVisivel, $cartoes, $tokensEntrada, $tokensSaida);
+            }
+
             $conversa->mensagens()->create([
                 'papel' => PapelDaMensagem::Assistente,
                 'conteudo' => $falha->getMessage(),

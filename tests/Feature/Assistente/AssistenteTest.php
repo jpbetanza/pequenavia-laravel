@@ -69,6 +69,22 @@ test('falha do modelo grava a pergunta e emite erro', function () {
         ->and($conversa->mensagens()->where('erro', true)->count())->toBe(1);
 });
 
+test('falha numa rodada posterior grava o texto já transmitido antes da mensagem de erro', function () {
+    $usuario = User::factory()->create();
+    $salao = Espaco::factory()->comHorarioComercial()->for($usuario)->create(['nome' => 'Salão paroquial']);
+    Http::fake(['openrouter.ai/*' => Http::sequence()
+        ->push(sseDoOpenRouter([chunkDeTexto('Vou consultar. '), chunkDeFerramenta(0, 'c1', 'verificar_disponibilidade', json_encode(['espaco' => $salao->id, 'data' => now()->addDays(3)->toDateString()]))]))
+        ->push('', 500)]);
+    $conversa = Conversa::factory()->for($usuario)->create();
+
+    $eventos = eventos($usuario, $conversa, 'O salão está livre?');
+
+    $respostas = $conversa->mensagens()->where('papel', PapelDaMensagem::Assistente)->whereNull('chamadas')->orderBy('created_at')->get();
+    expect(end($eventos)->tipo)->toBe('erro')
+        ->and($respostas->pluck('conteudo')->all())->toBe(['Vou consultar. ', 'Não consegui responder agora. Tente de novo.'])
+        ->and($respostas->pluck('erro')->all())->toBe([false, true]);
+});
+
 test('limite de rodadas de ferramenta encerra com mensagem fixa', function () {
     config(['assistente.max_rodadas_de_ferramenta' => 2]);
     $chamada = sseDoOpenRouter([chunkDeFerramenta(0, 'c1', 'listar_cadastros', '{}')]);
