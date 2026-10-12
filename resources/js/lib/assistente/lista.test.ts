@@ -32,6 +32,28 @@ describe('agruparConversas', () => {
         ]);
     });
 
+    it('usa o dia de São Paulo, não o de UTC, na fronteira da meia-noite', () => {
+        // 2026-10-16T01:30Z é 22:30 de 15/10 em São Paulo: ainda é "Hoje" (UTC já marcaria 16/10).
+        const conversas = [
+            conversa('c1', 'Noite de quinta', '2026-10-16T01:30:00Z'),
+        ];
+
+        expect(agruparConversas(conversas, '2026-10-16T01:00:00Z')).toEqual([
+            { rotulo: 'Hoje', conversas },
+        ]);
+    });
+
+    it('um domingo à noite em São Paulo cai em "Mais antigas" para uma busca na semana seguinte', () => {
+        // 2026-10-12T02:00Z é domingo 11/10 às 23:00 em São Paulo, então é de outra semana (começa na segunda 12/10).
+        const conversas = [
+            conversa('c1', 'Domingo à noite', '2026-10-12T02:00:00Z'),
+        ];
+
+        expect(agruparConversas(conversas, AGORA)).toEqual([
+            { rotulo: 'Mais antigas', conversas },
+        ]);
+    });
+
     it('não devolve grupos vazios', () => {
         const conversas = [
             conversa('c1', 'Antiga', '2026-09-01T10:00:00-03:00'),
