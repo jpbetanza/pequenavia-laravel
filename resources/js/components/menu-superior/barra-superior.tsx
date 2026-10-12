@@ -38,7 +38,7 @@ export function BarraSuperior() {
 
                 <nav
                     aria-label="Navegação do app"
-                    className="hidden h-full items-center md:flex"
+                    className="hidden h-full items-center lg:flex"
                 >
                     <Link
                         href={inicio()}
@@ -76,7 +76,7 @@ export function BarraSuperior() {
                                 aria-label="Abrir o assistente"
                                 aria-controls="painel-assistente"
                                 onClick={alternar}
-                                className="size-11 rounded-full md:hidden"
+                                className="size-11 rounded-full lg:hidden"
                             >
                                 <Sparkles
                                     aria-hidden="true"
@@ -85,7 +85,7 @@ export function BarraSuperior() {
                             </Button>
                         </>
                     )}
-                    <div className="hidden md:block">
+                    <div className="hidden lg:block">
                         <MenuDaConta />
                     </div>
                     <Button
@@ -96,7 +96,7 @@ export function BarraSuperior() {
                         aria-expanded={menuAberto}
                         aria-controls="menu-do-celular"
                         onClick={() => setMenuAberto((aberto) => !aberto)}
-                        className="size-11 rounded-xl md:hidden"
+                        className="size-11 rounded-xl lg:hidden"
                     >
                         {menuAberto ? (
                             <X aria-hidden="true" className="size-[22px]" />

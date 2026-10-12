@@ -15,7 +15,7 @@ export function BotaoDoAssistente() {
             aria-controls="painel-assistente"
             onClick={alternar}
             className={cn(
-                'hidden min-h-11 rounded-full px-4 md:inline-flex',
+                'hidden min-h-11 rounded-full px-4 lg:inline-flex',
                 aberto && 'border-primary bg-primary/10 text-primary',
             )}
         >
