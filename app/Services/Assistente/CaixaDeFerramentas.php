@@ -10,7 +10,7 @@ use App\Services\Assistente\Ferramentas\ResultadoDeFerramenta;
 
 /**
  * Ferramentas que o assistente pode chamar, indexadas pelo nome. Nunca lança: qualquer erro de chamada
- * volta para o modelo como ['erro' => mensagem], para ele corrigir e tentar de novo.
+ * volta para o modelo como ['erro' => mensagem], para ele corrigir e tentar de novo. Falhas inesperadas são reportadas.
  */
 final class CaixaDeFerramentas
 {
@@ -67,6 +67,10 @@ final class CaixaDeFerramentas
             return $ferramenta->executar($usuario, $conversa, $argumentos);
         } catch (ArgumentoInvalido $erro) {
             return new ResultadoDeFerramenta(['erro' => $erro->getMessage()]);
+        } catch (\Throwable $erro) {
+            report($erro);
+
+            return new ResultadoDeFerramenta(['erro' => 'Não consegui executar essa consulta.']);
         }
     }
 }

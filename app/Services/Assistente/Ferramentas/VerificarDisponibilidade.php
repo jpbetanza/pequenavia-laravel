@@ -65,11 +65,17 @@ final class VerificarDisponibilidade implements Ferramenta
 
     public function executar(User $usuario, Conversa $conversa, array $argumentos): ResultadoDeFerramenta
     {
+        foreach (['inicio', 'fim'] as $campo) {
+            if (($argumentos[$campo] ?? null) === '') {
+                $argumentos[$campo] = null;
+            }
+        }
+
         $dados = $this->validar($argumentos, [
             'espaco' => ['required', 'string'],
             'data' => ['required', 'date_format:Y-m-d'],
-            'inicio' => ['required_with:fim', 'date_format:H:i'],
-            'fim' => ['required_with:inicio', 'date_format:H:i'],
+            'inicio' => ['nullable', 'date_format:H:i'],
+            'fim' => ['nullable', 'date_format:H:i'],
             'equipamentos' => ['nullable', 'array'],
             'equipamentos.*.equipamento' => ['required', 'string'],
             'equipamentos.*.quantidade' => ['required', 'integer', 'min:1'],
@@ -104,7 +110,13 @@ final class VerificarDisponibilidade implements Ferramenta
             'reservas' => $reservas,
         ];
 
-        if (isset($dados['inicio'], $dados['fim'])) {
+        $comHorario = filled($dados['inicio'] ?? null);
+
+        if ($comHorario !== filled($dados['fim'] ?? null)) {
+            throw new ArgumentoInvalido('Informe início e fim, ou nenhum dos dois.');
+        }
+
+        if ($comHorario) {
             $conflitos = $this->verificador->verificar($espaco, $dia, $dados['inicio'], $dados['fim'], $equipamentos);
             $sugestoes = $conflitos === []
                 ? ['espacos' => [], 'horario' => null]

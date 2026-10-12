@@ -129,3 +129,20 @@ test('resumo_de_certificados recusa período maior que 366 dias', function () {
     expect(fn () => executar(ResumoDeCertificados::class, User::factory()->create(), ['inicio' => '2025-01-01', 'fim' => '2026-12-31']))
         ->toThrow(ArgumentoInvalido::class, 'no máximo 366 dias');
 });
+
+test('verificar_disponibilidade trata inicio e fim vazios como ausentes', function () {
+    $usuario = User::factory()->create();
+    $salao = Espaco::factory()->comHorarioComercial()->for($usuario)->create(['nome' => 'Salão paroquial']);
+
+    $resultado = executar(VerificarDisponibilidade::class, $usuario, ['espaco' => $salao->id, 'data' => '2026-10-16', 'inicio' => '', 'fim' => '']);
+
+    expect($resultado->cartao['dados']['pedido'])->toBeNull();
+});
+
+test('verificar_disponibilidade exige início e fim juntos', function () {
+    $usuario = User::factory()->create();
+    $salao = Espaco::factory()->comHorarioComercial()->for($usuario)->create(['nome' => 'Salão paroquial']);
+
+    expect(fn () => executar(VerificarDisponibilidade::class, $usuario, ['espaco' => $salao->id, 'data' => '2026-10-16', 'inicio' => '10:00', 'fim' => '']))
+        ->toThrow(ArgumentoInvalido::class, 'Informe início e fim, ou nenhum dos dois.');
+});
