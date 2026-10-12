@@ -12,12 +12,13 @@ import { cn } from '@/lib/utils';
 import type { SecaoDoMenu } from '@/lib/menu/secoes';
 
 /**
- * Classes da aba do topo (Link ou gatilho do NavigationMenu). Sem cantos, sem fundo
- * e sem contorno no clique; só o teclado ganha um fundo suave (focus-visible).
+ * Classes da aba do topo, aplicadas ao próprio NavigationMenuLink ou ao gatilho
+ * (ambos passam por cn/tailwind-merge). Sem cantos, sem fundo e sem contorno no clique;
+ * só o teclado ganha um fundo suave (focus-visible:bg-secondary).
  */
 export const classeDaAba = (ativa: boolean) =>
     cn(
-        'inline-flex h-16 items-center gap-2 rounded-none border-b-2 bg-transparent px-3.5 text-[15px] font-semibold outline-none hover:bg-transparent focus:bg-transparent focus-visible:bg-secondary focus-visible:ring-0 focus-visible:outline-0 data-[active=true]:bg-transparent data-[state=open]:bg-transparent',
+        'inline-flex h-16 flex-row items-center gap-2 rounded-none border-b-2 bg-transparent p-0 px-3.5 text-[15px] font-semibold outline-none hover:bg-transparent focus:bg-transparent focus-visible:bg-secondary focus-visible:ring-0 focus-visible:outline-0 focus-visible:outline-none data-[active=true]:bg-transparent data-[state=open]:bg-transparent data-[state=open]:focus-visible:bg-secondary',
         ativa
             ? 'border-primary text-primary focus:text-primary'
             : 'border-transparent text-foreground/80 hover:text-foreground focus:text-foreground/80',
@@ -41,7 +42,14 @@ export function MenuDoModulo({ secao, ativa, icone: Icone, acaoFinal }: Props) {
 
     return (
         <NavigationMenuItem>
-            <NavigationMenuTrigger className={classeDaAba(ativa)}>
+            <NavigationMenuTrigger
+                aria-current={ativa ? 'page' : undefined}
+                className={cn(
+                    classeDaAba(ativa),
+                    // Seta do próprio gatilho com 14 px (o componente shadcn fixa size-3).
+                    '[&>svg:last-child]:size-3.5',
+                )}
+            >
                 <Icone aria-hidden="true" className="size-[18px]" />
                 {secao.titulo}
                 {pendentes > 0 && (
@@ -61,17 +69,19 @@ export function MenuDoModulo({ secao, ativa, icone: Icone, acaoFinal }: Props) {
 
                         return (
                             <li key={item.titulo}>
-                                <NavigationMenuLink asChild>
+                                <NavigationMenuLink
+                                    asChild
+                                    className={cn(
+                                        'flex-col items-start gap-0.5 rounded-[10px] px-3 py-2.5',
+                                        atual && 'bg-secondary',
+                                    )}
+                                >
                                     <Link
                                         href={item.href}
                                         prefetch
                                         aria-current={
                                             atual ? 'page' : undefined
                                         }
-                                        className={cn(
-                                            'flex-col items-start gap-0.5 rounded-[10px] px-3 py-2.5',
-                                            atual && 'bg-secondary',
-                                        )}
                                     >
                                         <span className="flex items-center gap-2 font-semibold">
                                             {item.titulo}
@@ -99,12 +109,11 @@ export function MenuDoModulo({ secao, ativa, icone: Icone, acaoFinal }: Props) {
                 {acaoFinal && (
                     <>
                         <Separator className="my-1" />
-                        <NavigationMenuLink asChild>
-                            <Link
-                                href={acaoFinal.href}
-                                prefetch
-                                className="min-h-11 flex-row items-center font-semibold text-primary"
-                            >
+                        <NavigationMenuLink
+                            asChild
+                            className="min-h-11 flex-row items-center font-semibold text-primary"
+                        >
+                            <Link href={acaoFinal.href} prefetch>
                                 + {acaoFinal.titulo}
                             </Link>
                         </NavigationMenuLink>
