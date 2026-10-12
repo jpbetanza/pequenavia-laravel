@@ -122,6 +122,28 @@
     body {
         @apply bg-background text-foreground;
     }
+
+    button:not(:disabled),
+    [role='button']:not([aria-disabled='true']),
+    [role='tab']:not([aria-disabled='true']),
+    [role='menuitem']:not([data-disabled]),
+    [role='menuitemradio']:not([data-disabled]),
+    [role='menuitemcheckbox']:not([data-disabled]),
+    [role='option']:not([data-disabled]),
+    select:not(:disabled),
+    summary,
+    label[for],
+    input[type='checkbox']:not(:disabled),
+    input[type='radio']:not(:disabled),
+    input[type='file']:not(:disabled) {
+        cursor: pointer;
+    }
+
+    :disabled,
+    [aria-disabled='true'],
+    [data-disabled] {
+        cursor: not-allowed;
+    }
 }
 
 /* Imprimir a semana: só a área do calendário sai no papel, em paisagem. */
