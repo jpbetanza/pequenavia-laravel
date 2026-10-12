@@ -10,7 +10,6 @@ use App\Services\Assistente\ClienteOpenRouter;
 use App\Services\Assistente\EventoDoAssistente;
 use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Http;
-use RuntimeException;
 
 beforeEach(function () {
     Http::preventStrayRequests();

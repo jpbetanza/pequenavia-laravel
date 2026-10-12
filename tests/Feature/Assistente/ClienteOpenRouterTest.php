@@ -7,7 +7,6 @@ use GuzzleHttp\Psr7\FnStream;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
-use RuntimeException;
 
 beforeEach(function () {
     Http::preventStrayRequests();
