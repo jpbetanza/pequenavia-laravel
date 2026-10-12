@@ -36,7 +36,7 @@ function Bloco({
 
     return (
         <div
-            className="absolute inset-x-0 rounded-md border-l-[3px] px-2 py-1.5 text-xs"
+            className="absolute inset-x-0 overflow-hidden rounded-md border-l-[3px] px-2 py-1.5 text-xs leading-tight"
             style={estilo}
         >
             <b className="block text-xs">{titulo}</b>
@@ -60,7 +60,7 @@ export function ExemploDoDia() {
     return (
         <figure
             aria-label="Exemplo: ocupação de sábado por sala"
-            className="m-0 box-border w-full rounded-[18px] border border-border bg-card p-5 shadow-[0_30px_60px_-34px_rgba(60,30,20,0.45)] lg:absolute lg:top-0 lg:left-0 lg:w-[88%]"
+            className="m-0 box-border w-full rounded-[18px] border border-border bg-card p-5 shadow-[0_30px_60px_-34px_rgba(60,30,20,0.45)] md:absolute md:top-0 md:left-0 md:w-[88%]"
         >
             <div className="mb-3.5 flex items-baseline justify-between">
                 <p className="font-serif text-[26px] leading-none font-semibold">
@@ -99,7 +99,7 @@ export function ExemploDoDia() {
 
                 <div
                     aria-hidden="true"
-                    className="absolute inset-y-0 right-0 left-[42px] bg-[repeating-linear-gradient(#EDE4D3_0_1px,transparent_1px_48px)]"
+                    className="absolute inset-y-0 right-0 left-[42px] bg-[repeating-linear-gradient(var(--border)_0_1px,transparent_1px_48px)]"
                 />
 
                 <div className="relative">

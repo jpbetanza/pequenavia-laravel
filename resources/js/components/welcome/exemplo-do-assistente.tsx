@@ -1,6 +1,14 @@
 import { ArrowUp, Sparkles } from 'lucide-react';
 import { type CorDoEspaco, corDoEspaco } from '@/lib/agenda/cores';
 
+function BalaoDoUsuario({ children }: { children: string }) {
+    return (
+        <p className="max-w-[80%] self-end rounded-[14px_14px_4px_14px] bg-primary px-3.5 py-2.5 text-primary-foreground">
+            {children}
+        </p>
+    );
+}
+
 function Quadrado({ cor }: { cor: CorDoEspaco }) {
     return (
         <span
@@ -46,16 +54,16 @@ export function ExemploDoAssistente() {
     return (
         <figure
             aria-label="Exemplo: conversa com o assistente"
-            className="m-0 ml-auto flex w-full max-w-[340px] flex-col gap-2.5 rounded-[18px] border border-input bg-card p-4 text-sm shadow-[0_34px_70px_-30px_rgba(40,20,15,0.55)] lg:absolute lg:right-0 lg:bottom-0 lg:w-[340px] lg:max-w-none"
+            className="m-0 ml-auto flex w-full max-w-[340px] flex-col gap-2.5 rounded-[18px] border border-input bg-card p-4 text-sm shadow-[0_34px_70px_-30px_rgba(40,20,15,0.55)] md:absolute md:right-0 md:bottom-0 md:w-[340px] md:max-w-none"
         >
             <div className="flex items-center gap-2 text-[13px] font-semibold text-primary">
                 <IconeDoAssistente className="size-[26px]" />
                 Assistente
             </div>
 
-            <p className="max-w-[85%] self-end rounded-[14px_14px_4px_14px] bg-primary px-3.5 py-2.5 text-primary-foreground">
+            <BalaoDoUsuario>
                 Tem sala livre sábado às 15h para uns 30 catequizandos?
-            </p>
+            </BalaoDoUsuario>
 
             <p className="text-foreground">
                 O Salão São José já está com a Crisma. A{' '}
@@ -142,9 +150,7 @@ export function PainelDoAssistente() {
             </div>
 
             <div className="flex flex-col gap-3.5 p-5">
-                <p className="max-w-[80%] self-end rounded-[14px_14px_4px_14px] bg-primary px-3.5 py-2.5 text-primary-foreground">
-                    Tem pedido esperando resposta?
-                </p>
+                <BalaoDoUsuario>Tem pedido esperando resposta?</BalaoDoUsuario>
                 <p>Sim, 3 pedidos pendentes. Um deles tem conflito:</p>
 
                 <div className="overflow-hidden rounded-[14px] border border-border">
@@ -178,9 +184,9 @@ export function PainelDoAssistente() {
                     ))}
                 </div>
 
-                <p className="max-w-[80%] self-end rounded-[14px_14px_4px_14px] bg-primary px-3.5 py-2.5 text-primary-foreground">
+                <BalaoDoUsuario>
                     Cadastra a sala nova do 2º andar, 25 lugares, com TV.
-                </p>
+                </BalaoDoUsuario>
 
                 <div className="flex flex-col gap-2.5 rounded-[14px] border border-border bg-background p-3.5">
                     <span className="text-[11px] font-semibold tracking-[0.12em] text-dourado uppercase">

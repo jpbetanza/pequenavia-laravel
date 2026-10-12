@@ -108,7 +108,7 @@ export default function Welcome() {
             <Head title="Salas, horários e certificados da paróquia">
                 <link
                     rel="stylesheet"
-                    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Instrument+Sans:wght@400;500;600&family=Pinyon+Script&display=swap"
+                    href="https://fonts.googleapis.com/css2?family=Pinyon+Script&display=swap"
                 />
             </Head>
             <div className="min-h-screen bg-background text-foreground">
@@ -229,7 +229,7 @@ export default function Welcome() {
                             </ul>
                         </div>
 
-                        <div className="relative flex flex-col gap-5 lg:block lg:h-[560px]">
+                        <div className="relative flex flex-col gap-5 md:block md:h-[560px]">
                             <ExemploDoDia />
                             <ExemploDoAssistente />
                         </div>

@@ -10,8 +10,8 @@ export function ExemploDeCertificado() {
                 className="absolute top-0 left-[10%] m-0 h-[350px] w-[70%] rounded-md bg-card p-3.5 shadow-[0_30px_60px_-30px_rgba(60,30,20,0.45)]"
             >
                 <div className="h-full border-2 border-primary p-[5px]">
-                    <div className="flex h-full flex-col items-center justify-center gap-2.5 border border-[#B8955A] px-5 py-5 text-center">
-                        <p className="font-serif text-[22px] font-bold tracking-[0.14em] text-primary uppercase">
+                    <div className="flex h-full flex-col items-center justify-center gap-2.5 border border-dourado px-5 py-5 text-center">
+                        <p className="font-serif text-lg font-bold tracking-[0.14em] text-primary uppercase sm:text-[22px]">
                             Certificado de Batismo
                         </p>
                         <p className="font-serif text-[15px] text-foreground/80 italic">
@@ -23,7 +23,7 @@ export function ExemploDeCertificado() {
                         >
                             Maria Clara Souza
                         </p>
-                        <div className="h-px w-3/5 bg-[#B8955A]" />
+                        <div className="h-px w-3/5 bg-dourado" />
                         <p className="max-w-[260px] font-serif text-sm text-foreground/80">
                             recebeu o Sacramento do Batismo em 17 de outubro de
                             2026.
