@@ -92,7 +92,7 @@ export function SaudacaoDoInicio({ hoje, nome, resumo }: Props) {
     return (
         <section
             aria-labelledby="saudacao-do-inicio"
-            className="grid items-center gap-7 rounded-[22px] bg-foreground p-6 text-background sm:p-7 lg:grid-cols-2"
+            className="grid min-w-0 grid-cols-1 items-center gap-7 rounded-[22px] bg-foreground p-6 text-background sm:p-7 @4xl:grid-cols-2"
         >
             <div className="flex flex-col gap-2">
                 <p className="text-[13px] font-semibold tracking-[0.14em] text-background/70 uppercase">

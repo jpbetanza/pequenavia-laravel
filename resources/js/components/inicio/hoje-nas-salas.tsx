@@ -54,7 +54,7 @@ export function HojeNasSalas({ reservas }: Props) {
     return (
         <section
             aria-labelledby="hoje-nas-salas"
-            className="flex flex-col gap-4 rounded-[18px] border border-border bg-card p-5 sm:p-6"
+            className="flex min-w-0 flex-col gap-4 rounded-[18px] border border-border bg-card p-5 sm:p-6"
         >
             <div className="flex items-baseline justify-between gap-3">
                 <h2
@@ -105,12 +105,12 @@ export function HojeNasSalas({ reservas }: Props) {
                             <li
                                 key={reserva.id}
                                 className={cn(
-                                    'grid grid-cols-[72px_minmax(0,1fr)_auto] items-center gap-3 border-t border-border py-3',
+                                    'grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 border-t border-border py-3',
                                     encerrada &&
                                         'text-muted-foreground opacity-60',
                                 )}
                             >
-                                <span className="font-semibold">
+                                <span className="font-semibold whitespace-nowrap">
                                     {faixa(reserva)}
                                 </span>
                                 <span className="flex min-w-0 items-center gap-2.5">

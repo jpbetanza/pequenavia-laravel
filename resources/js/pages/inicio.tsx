@@ -26,17 +26,17 @@ export default function Inicio({
     return (
         <>
             <Head title="Início" />
-            <div className="flex flex-col gap-6 p-4 md:p-7">
+            <div className="@container flex min-w-0 flex-col gap-6 p-4 md:p-7">
                 <SaudacaoDoInicio
                     hoje={hoje}
                     nome={auth.user.name}
                     resumo={resumo}
                 />
 
-                <div className="grid items-start gap-6 lg:grid-cols-2">
+                <div className="grid grid-cols-1 items-start gap-6 @4xl:grid-cols-2">
                     <HojeNasSalas reservas={reservas} />
 
-                    <div className="flex flex-col gap-6">
+                    <div className="flex min-w-0 flex-col gap-6">
                         <PedidosDoInicio
                             total={solicitacoes.total}
                             primeiras={solicitacoes.primeiras}
@@ -44,7 +44,7 @@ export default function Inicio({
 
                         <section
                             aria-labelledby="separar-do-inicio"
-                            className="flex flex-col gap-3 rounded-[18px] border border-border bg-card p-5 sm:p-6"
+                            className="flex min-w-0 flex-col gap-3 rounded-[18px] border border-border bg-card p-5 sm:p-6"
                         >
                             <div className="flex items-baseline justify-between gap-3">
                                 <h2

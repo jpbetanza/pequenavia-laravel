@@ -45,7 +45,7 @@ export function PedidosDoInicio({ total, primeiras }: Props) {
     return (
         <section
             aria-labelledby="pedidos-do-inicio"
-            className="flex flex-col gap-3 rounded-[18px] border border-border bg-card p-5 sm:p-6"
+            className="flex min-w-0 flex-col gap-3 rounded-[18px] border border-border bg-card p-5 sm:p-6"
         >
             <div className="flex items-baseline justify-between gap-3">
                 <h2

@@ -14,7 +14,7 @@ export function AtalhoDeCertificados({ emitidos, dataHoje, ultimo }: Props) {
     return (
         <section
             aria-labelledby="certificados-do-inicio"
-            className="flex flex-wrap items-center gap-4 rounded-[18px] border border-border p-5 sm:px-6"
+            className="flex min-w-0 flex-wrap items-center gap-4 rounded-[18px] border border-border p-5 sm:px-6"
         >
             <div className="flex min-w-[200px] flex-1 flex-col gap-0.5">
                 <h2
