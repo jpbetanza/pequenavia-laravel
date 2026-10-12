@@ -24,4 +24,20 @@ describe('LeitorDeSse', () => {
             { evento: 'message', dados: 'x' },
         ]);
     });
+
+    it('junta CRLF partido entre pedaços sem vazar \\r nem perder o fim do evento', () => {
+        const leitor = new LeitorDeSse();
+        const stream =
+            ': ping\r\n\r\nevent: texto\r\ndata: {"pedaco":"Oi"}\r\n\r\nevent: fim\r\ndata: {}\r\n\r\n';
+        const eventos = [];
+
+        for (const caractere of stream) {
+            eventos.push(...leitor.ler(caractere));
+        }
+
+        expect(eventos).toEqual([
+            { evento: 'texto', dados: '{"pedaco":"Oi"}' },
+            { evento: 'fim', dados: '{}' },
+        ]);
+    });
 });

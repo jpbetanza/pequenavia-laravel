@@ -2,16 +2,23 @@ export type EventoSse = { evento: string; dados: string };
 
 /** Lê um stream `text/event-stream` em pedaços arbitrários e devolve só os eventos completos. */
 export class LeitorDeSse {
+    /** Sobra do último pedaço: texto sem terminador de evento, normalizado, mais um \r final retido. */
     private resto = '';
 
     ler(pedaco: string): EventoSse[] {
-        this.resto += pedaco.replace(/\r\n/g, '\n');
+        // Um \r no fim pode ser o início de um \r\n partido entre pedaços: guarda para o próximo.
+        const bruto = this.resto + pedaco;
+        const retido = bruto.endsWith('\r') ? '\r' : '';
+        let buffer = (retido ? bruto.slice(0, -1) : bruto).replace(
+            /\r\n/g,
+            '\n',
+        );
         const eventos: EventoSse[] = [];
-        let fim = this.resto.indexOf('\n\n');
+        let fim = buffer.indexOf('\n\n');
 
         while (fim !== -1) {
-            const bloco = this.resto.slice(0, fim);
-            this.resto = this.resto.slice(fim + 2);
+            const bloco = buffer.slice(0, fim);
+            buffer = buffer.slice(fim + 2);
             let evento = 'message';
             const dados: string[] = [];
 
@@ -31,9 +38,10 @@ export class LeitorDeSse {
                 eventos.push({ evento, dados: dados.join('\n') });
             }
 
-            fim = this.resto.indexOf('\n\n');
+            fim = buffer.indexOf('\n\n');
         }
 
+        this.resto = buffer + retido;
         return eventos;
     }
 }
