@@ -13,6 +13,7 @@ declare module '@inertiajs/core' {
             auth: Auth;
             sidebarOpen: boolean;
             agenda: { solicitacoes_pendentes: number } | null;
+            assistente: { disponivel: boolean } | null;
             [key: string]: unknown;
         };
     }

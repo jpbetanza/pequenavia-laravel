@@ -102,3 +102,45 @@ function campoDeTeste(array $atributos = []): CampoCertificado
         'centralizado' => false,
     ], $atributos));
 }
+
+/**
+ * Corpo SSE como o OpenRouter manda: comentário de keep-alive, um `data:` por chunk e `[DONE]`.
+ *
+ * @param  list<array<string, mixed>>  $chunks
+ */
+function sseDoOpenRouter(array $chunks): string
+{
+    $corpo = ": OPENROUTER PROCESSING\n\n";
+
+    foreach ($chunks as $chunk) {
+        $corpo .= 'data: '.json_encode($chunk)."\n\n";
+    }
+
+    return $corpo."data: [DONE]\n\n";
+}
+
+/** @return array<string, mixed> */
+function chunkDeTexto(string $pedaco): array
+{
+    return ['choices' => [['index' => 0, 'delta' => ['content' => $pedaco]]]];
+}
+
+/** @return array<string, mixed> */
+function chunkDeFerramenta(int $indice, ?string $id, ?string $nome, string $argumentos): array
+{
+    $chamada = ['index' => $indice, 'function' => ['arguments' => $argumentos]];
+
+    if ($id !== null) {
+        $chamada['id'] = $id;
+        $chamada['type'] = 'function';
+        $chamada['function']['name'] = $nome;
+    }
+
+    return ['choices' => [['index' => 0, 'delta' => ['tool_calls' => [$chamada]]]]];
+}
+
+/** @return array<string, mixed> */
+function chunkDeUso(int $entrada, int $saida): array
+{
+    return ['choices' => [], 'usage' => ['prompt_tokens' => $entrada, 'completion_tokens' => $saida]];
+}

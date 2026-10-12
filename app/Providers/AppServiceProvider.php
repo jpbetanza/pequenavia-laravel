@@ -2,6 +2,13 @@
 
 namespace App\Providers;
 
+use App\Services\Assistente\CaixaDeFerramentas;
+use App\Services\Assistente\Ferramentas\ConsultarAgenda;
+use App\Services\Assistente\Ferramentas\ListarCadastros;
+use App\Services\Assistente\Ferramentas\ListarSolicitacoes;
+use App\Services\Assistente\Ferramentas\ProporReserva;
+use App\Services\Assistente\Ferramentas\ResumoDeCertificados;
+use App\Services\Assistente\Ferramentas\VerificarDisponibilidade;
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -18,7 +25,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(CaixaDeFerramentas::class, fn ($app) => new CaixaDeFerramentas([
+            $app->make(ConsultarAgenda::class),
+            $app->make(VerificarDisponibilidade::class),
+            $app->make(ListarSolicitacoes::class),
+            $app->make(ListarCadastros::class),
+            $app->make(ResumoDeCertificados::class),
+            $app->make(ProporReserva::class),
+        ]));
     }
 
     /**
@@ -29,6 +43,16 @@ class AppServiceProvider extends ServiceProvider
         $this->configureDefaults();
         $this->configureRateLimiting();
         $this->configureSolicitacoesRateLimiting();
+        $this->configureAssistenteRateLimiting();
+    }
+
+    /**
+     * Limita as mensagens ao assistente por usuário: 20 por minuto.
+     */
+    protected function configureAssistenteRateLimiting(): void
+    {
+        RateLimiter::for('assistente', fn (Request $request): Limit => Limit::perMinute(20)
+            ->by($request->user()?->id ?: $request->ip()));
     }
 
     /**
