@@ -1,0 +1,101 @@
+<?php
+
+use App\Services\Assistente\ClienteOpenRouter;
+use App\Services\Assistente\FalhaDoModelo;
+use App\Services\Assistente\RespostaDoModelo;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\Http;
+
+beforeEach(function () {
+    Http::preventStrayRequests();
+    config(['assistente.chave' => 'chave-de-teste', 'assistente.modelo' => 'anthropic/claude-haiku-5.5']);
+});
+
+/** @return array{0: list<string>, 1: RespostaDoModelo} */
+function rodar(array $mensagens = [['role' => 'user', 'content' => 'Oi']], array $ferramentas = []): array
+{
+    $gerador = app(ClienteOpenRouter::class)->conversar($mensagens, $ferramentas);
+    $pedacos = [];
+
+    foreach ($gerador as $pedaco) {
+        $pedacos[] = $pedaco;
+    }
+
+    return [$pedacos, $gerador->getReturn()];
+}
+
+test('repassa os pedaços de texto e devolve a resposta com o uso de tokens', function () {
+    Http::fake(['openrouter.ai/*' => Http::response(sseDoOpenRouter([
+        chunkDeTexto('O salão '), chunkDeTexto('está livre.'), chunkDeUso(120, 8),
+    ]), 200, ['Content-Type' => 'text/event-stream'])]);
+
+    [$pedacos, $resposta] = rodar();
+
+    expect($pedacos)->toBe(['O salão ', 'está livre.'])
+        ->and($resposta->texto)->toBe('O salão está livre.')
+        ->and($resposta->chamadas)->toBe([])
+        ->and($resposta->tokensEntrada)->toBe(120)
+        ->and($resposta->tokensSaida)->toBe(8);
+
+    Http::assertSent(fn (Request $r) => $r->hasHeader('Authorization', 'Bearer chave-de-teste')
+        && $r['model'] === 'anthropic/claude-haiku-5.5'
+        && $r['stream'] === true
+        && $r['usage'] === ['include' => true]);
+});
+
+test('junta os argumentos de uma chamada de ferramenta que chegam em pedaços', function () {
+    Http::fake(['openrouter.ai/*' => Http::response(sseDoOpenRouter([
+        chunkDeFerramenta(0, 'call_1', 'consultar_agenda', '{"inicio":'),
+        chunkDeFerramenta(0, null, null, '"2026-10-18"}'),
+    ]))]);
+
+    [, $resposta] = rodar(ferramentas: [['type' => 'function', 'function' => ['name' => 'consultar_agenda', 'description' => 'x', 'parameters' => ['type' => 'object']]]]);
+
+    expect($resposta->chamadas)->toHaveCount(1)
+        ->and($resposta->chamadas[0]->id)->toBe('call_1')
+        ->and($resposta->chamadas[0]->nome)->toBe('consultar_agenda')
+        ->and($resposta->chamadas[0]->argumentosJson)->toBe('{"inicio":"2026-10-18"}');
+});
+
+test('não envia tools vazias', function () {
+    Http::fake(['openrouter.ai/*' => Http::response(sseDoOpenRouter([chunkDeTexto('ok')]))]);
+
+    rodar();
+
+    Http::assertSent(fn (Request $r) => ! array_key_exists('tools', $r->data()));
+});
+
+test('linha de dados partida entre leituras não duplica nem perde texto', function () {
+    $corpo = sseDoOpenRouter([chunkDeTexto('Olá, '), chunkDeTexto('mundo')]);
+    Http::fake(['openrouter.ai/*' => Http::response($corpo)]);
+
+    $cliente = new ClienteOpenRouter(tamanhoDaLeitura: 7);
+    $gerador = $cliente->conversar([['role' => 'user', 'content' => 'Oi']], []);
+    $texto = implode('', iterator_to_array($gerador, false));
+
+    expect($texto)->toBe('Olá, mundo');
+});
+
+test('erros HTTP viram FalhaDoModelo com mensagem pt-BR', function (int $status, string $motivo) {
+    Http::fake(['openrouter.ai/*' => Http::response(['error' => ['message' => 'x']], $status)]);
+
+    expect(fn () => rodar())->toThrow(function (FalhaDoModelo $falha) use ($motivo) {
+        expect($falha->motivo)->toBe($motivo)
+            ->and($falha->getMessage())->toBe('Não consegui responder agora. Tente de novo.');
+    });
+})->with([[401, 'chave'], [402, 'credito'], [429, 'limite'], [500, 'servidor'], [503, 'servidor']]);
+
+test('erro dentro do stream vira FalhaDoModelo', function () {
+    Http::fake(['openrouter.ai/*' => Http::response(sseDoOpenRouter([
+        chunkDeTexto('Começo'), ['error' => ['message' => 'Provider disconnected']],
+    ]))]);
+
+    expect(fn () => rodar())->toThrow(FalhaDoModelo::class);
+});
+
+test('timeout vira FalhaDoModelo', function () {
+    Http::fake(fn () => throw new ConnectionException('timed out'));
+
+    expect(fn () => rodar())->toThrow(fn (FalhaDoModelo $falha) => expect($falha->motivo)->toBe('timeout'));
+});
