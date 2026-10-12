@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>PequenaVia — página inicial (salas, horários e assistente)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&amp;family=Instrument+Sans:wght@400;500;600&amp;family=Pinyon+Script&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F0E6}
+a{color:#6E1F24}a:hover{color:#4E1418}
+</style>
+</helmet>
+<div style="background: #F5F0E6; color: #221A17; font-family: 'Instrument Sans', system-ui, sans-serif; font-size: 16px; line-height: 1.55">
+
+  <!-- Cabeçalho -->
+  <header style="border-bottom: 1px solid #E1D7C8">
+    <div style="max-width: 1200px; margin: 0 auto; padding: 18px 32px; box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px">
+      <a href="#topo" style="display: flex; align-items: center; gap: 12px; text-decoration: none; color: #221A17">
+        <span style="width: 40px; height: 40px; border-radius: 999px; background: #FBF8F2; display: flex; align-items: center; justify-content: center"><img src="/_blob/50066c2efa3bd703f79bbba990bb7aa8" alt="" style="width: 32px; height: 32px; object-fit: contain"></span>
+        <span style="font-family: 'Cormorant Garamond', Georgia, serif; font-size: 26px; font-weight: 700; letter-spacing: 0.01em">PequenaVia</span>
+      </a>
+      <nav aria-label="Principal" style="display: flex; flex-wrap: wrap; align-items: center; gap: 4px">
+        <a href="#agenda" style="padding: 10px 14px; text-decoration: none; color: #4A3D38; font-weight: 500">Salas e horários</a>
+        <a href="#assistente" style="padding: 10px 14px; text-decoration: none; color: #4A3D38; font-weight: 500">Assistente</a>
+        <a href="#certificados" style="padding: 10px 14px; text-decoration: none; color: #4A3D38; font-weight: 500">Certificados</a>
+        <a href="Entrar.dc.html" style="margin-left: 8px; padding: 10px 18px; text-decoration: none; color: #221A17; font-weight: 600; border: 1px solid #CDBFAC; border-radius: 999px">Entrar</a>
+        <a href="Entrar.dc.html" style="padding: 11px 20px; text-decoration: none; color: #FBF8F2; background: #6E1F24; font-weight: 600; border-radius: 999px">Começar agora</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Hero: a agenda do dia com o assistente por cima -->
+  <section id="topo" style="max-width: 1200px; margin: 0 auto; padding: 80px 32px 96px; box-sizing: border-box; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 56px; align-items: center">
+    <div style="display: flex; flex-direction: column; gap: 28px">
+      <p style="margin: 0; font-size: 13px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #7A5A1E">A secretaria paroquial, num só lugar</p>
+      <h1 style="margin: 0; font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 600; font-size: 72px; line-height: 0.98; letter-spacing: -0.01em">Cada sala no seu horário. Cada pedido com resposta.</h1>
+      <p style="margin: 0; font-size: 19px; color: #4A3D38; max-width: 530px">Organize salas, capela e equipamentos sem planilha e sem choque de horário. As pastorais pedem pelo link, você aprova num clique, e um assistente responde quem está onde.</p>
+      <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: center">
+        <a href="Entrar.dc.html" style="padding: 15px 26px; text-decoration: none; color: #FBF8F2; background: #6E1F24; font-weight: 600; border-radius: 999px; font-size: 17px">Organizar minha agenda</a>
+        <a href="#assistente" style="padding: 15px 22px; text-decoration: none; color: #221A17; font-weight: 600; font-size: 17px">Conhecer o assistente →</a>
+      </div>
+      <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 14px; color: #6B5D57">
+        <li style="display: flex; align-items: center; gap: 8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#24513F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Conflitos avisados antes de reservar</li>
+        <li style="display: flex; align-items: center; gap: 8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#24513F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Projetores controlados entre salas</li>
+        <li style="display: flex; align-items: center; gap: 8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#24513F" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Certificados continuam aqui</li>
+      </ul>
+    </div>
+
+    <div style="position: relative; height: 560px">
+      <!-- Ocupação do dia -->
+      <figure aria-label="Exemplo: ocupação de sábado por sala" style="position: absolute; left: 0; top: 0; width: 88%; margin: 0; background: #FBF8F2; border: 1px solid #E1D7C8; border-radius: 18px; box-shadow: 0 30px 60px -34px rgba(60, 30, 20, 0.45); padding: 20px; box-sizing: border-box">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px">
+          <p style="margin: 0; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 26px; font-weight: 600; line-height: 1">Sábado, 17 de outubro</p>
+          <span style="font-size: 12px; font-weight: 600; color: #6B5D57">6 reservas</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 34px repeat(3, 1fr); gap: 0 8px; font-size: 12px">
+          <span></span>
+          <span style="display: flex; align-items: center; gap: 6px; font-weight: 600; padding-bottom: 8px"><i style="width: 8px; height: 8px; border-radius: 99px; background: #6E1F24"></i>Salão São José</span>
+          <span style="display: flex; align-items: center; gap: 6px; font-weight: 600; padding-bottom: 8px"><i style="width: 8px; height: 8px; border-radius: 99px; background: #1F2A44"></i>Sala Sta. Teresinha</span>
+          <span style="display: flex; align-items: center; gap: 6px; font-weight: 600; padding-bottom: 8px"><i style="width: 8px; height: 8px; border-radius: 99px; background: #24513F"></i>Capela</span>
+        </div>
+        <div style="position: relative; display: grid; grid-template-columns: 34px repeat(3, 1fr); gap: 0 8px; height: 336px; font-size: 11px; color: #8A7B73">
+          <div style="position: relative">
+            <span style="position: absolute; top: -6px">14h</span><span style="position: absolute; top: 42px">15h</span><span style="position: absolute; top: 90px">16h</span><span style="position: absolute; top: 138px">17h</span><span style="position: absolute; top: 186px">18h</span><span style="position: absolute; top: 234px">19h</span><span style="position: absolute; top: 282px">20h</span>
+          </div>
+          <!-- linhas de hora -->
+          <div aria-hidden="true" style="position: absolute; left: 42px; right: 0; top: 0; bottom: 0; background-image: repeating-linear-gradient(#EDE4D3 0 1px, transparent 1px 48px)"></div>
+          <!-- Salão -->
+          <div style="position: relative">
+            <div style="position: absolute; top: 50px; height: 92px; left: 0; right: 0; background: #F1DFDC; border-left: 3px solid #6E1F24; border-radius: 6px; padding: 6px 8px; box-sizing: border-box; color: #521519"><b style="display: block; font-size: 12px">Catequese · Crisma</b>15h–17h</div>
+            <div style="position: absolute; top: 266px; height: 70px; left: 0; right: 0; background: #F1DFDC; border-left: 3px solid #6E1F24; border-radius: 6px; padding: 6px 8px; box-sizing: border-box; color: #521519"><b style="display: block; font-size: 12px">Ensaio do coral</b>19h30–21h</div>
+          </div>
+          <!-- Teresinha -->
+          <div style="position: relative">
+            <div style="position: absolute; top: 2px; height: 92px; left: 0; right: 0; background: #DFE4EE; border-left: 3px solid #1F2A44; border-radius: 6px; padding: 6px 8px; box-sizing: border-box; color: #1F2A44"><b style="display: block; font-size: 12px">Pastoral da Criança</b>14h–16h</div>
+            <div style="position: absolute; top: 194px; height: 92px; left: 0; right: 0; background: #DFE4EE; border-left: 3px solid #1F2A44; border-radius: 6px; padding: 6px 8px; box-sizing: border-box; color: #1F2A44"><b style="display: block; font-size: 12px">Grupo de oração</b>18h–20h<span style="display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; padding: 1px 6px; border-radius: 99px; background: #FBF8F2; font-size: 10px; font-weight: 600">Projetor ×1</span></div>
+          </div>
+          <!-- Capela -->
+          <div style="position: relative">
+            <div style="position: absolute; top: 98px; height: 44px; left: 0; right: 0; background: #E2EEE8; border-left: 3px solid #24513F; border-radius: 6px; padding: 5px 8px; box-sizing: border-box; color: #1B3D30"><b style="display: block; font-size: 12px">Batizados</b>16h–17h</div>
+            <div style="position: absolute; top: 242px; height: 44px; left: 0; right: 0; background: #E2EEE8; border-left: 3px solid #24513F; border-radius: 6px; padding: 5px 8px; box-sizing: border-box; color: #1B3D30"><b style="display: block; font-size: 12px">Terço dos homens</b>19h–20h</div>
+          </div>
+          <!-- agora -->
+          <div aria-hidden="true" style="position: absolute; left: 36px; right: 0; top: 113px; height: 2px; background: #6E1F24"><i style="position: absolute; left: -4px; top: -3px; width: 8px; height: 8px; border-radius: 99px; background: #6E1F24"></i></div>
+        </div>
+      </figure>
+
+      <!-- Assistente por cima -->
+      <figure aria-label="Exemplo: conversa com o assistente" style="position: absolute; right: 0; bottom: 0; width: 340px; margin: 0; background: #FFFDF8; border: 1px solid #DCCFBB; border-radius: 18px; box-shadow: 0 34px 70px -30px rgba(40, 20, 15, 0.55); padding: 16px; box-sizing: border-box; display: flex; flex-direction: column; gap: 10px; font-size: 14px">
+        <div style="display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 13px; color: #6E1F24">
+          <span style="width: 26px; height: 26px; border-radius: 99px; background: #F1DFDC; display: flex; align-items: center; justify-content: center"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg></span>
+          Assistente
+        </div>
+        <p style="margin: 0; align-self: flex-end; max-width: 85%; background: #6E1F24; color: #FBF8F2; padding: 9px 13px; border-radius: 14px 14px 4px 14px">Tem sala livre sábado às 15h para uns 30 catequizandos?</p>
+        <p style="margin: 0; color: #221A17">O Salão São José já está com a Crisma. A <b>Sala Santa Teresinha</b> fica livre das 16h às 18h e cabe 40 pessoas. Quer que eu reserve?</p>
+        <div style="border: 1px solid #E1D7C8; border-radius: 12px; padding: 12px; background: #FBF8F2; display: flex; flex-direction: column; gap: 8px">
+          <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #7A5A1E">Nova reserva · aguardando você</span>
+          <span style="display: flex; align-items: center; gap: 8px; font-weight: 600"><i style="width: 10px; height: 10px; border-radius: 3px; background: #1F2A44"></i>Sala Santa Teresinha</span>
+          <span style="color: #4A3D38; font-size: 13px">Sáb, 17 out · 16h–18h · Catequese</span>
+          <div style="display: flex; gap: 8px; margin-top: 2px">
+            <span style="flex: 1; text-align: center; padding: 9px 0; border: 1px solid #CDBFAC; border-radius: 10px; font-weight: 600; font-size: 13px">Descartar</span>
+            <span style="flex: 1; text-align: center; padding: 9px 0; border-radius: 10px; background: #6E1F24; color: #FBF8F2; font-weight: 600; font-size: 13px">Confirmar</span>
+          </div>
+        </div>
+      </figure>
+    </div>
+  </section>
+
+  <!-- Salas e horários -->
+  <section id="agenda" style="background: #EFE8DB; border-top: 1px solid #E1D7C8; border-bottom: 1px solid #E1D7C8">
+    <div style="max-width: 1200px; margin: 0 auto; padding: 96px 32px; box-sizing: border-box; display: flex; flex-direction: column; gap: 56px">
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 24px">
+        <div style="display: flex; flex-direction: column; gap: 14px; max-width: 620px">
+          <p style="margin: 0; font-size: 13px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #7A5A1E">Salas e horários</p>
+          <h2 style="margin: 0; font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 600; font-size: 54px; line-height: 1.04">Ninguém chega e encontra a sala ocupada.</h2>
+        </div>
+        <p style="margin: 0; color: #4A3D38; max-width: 400px">Só a secretaria reserva. As pastorais pedem pelo link, e cada pedido chega já dizendo se bate com outra reserva.</p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr)); gap: 40px; align-items: start">
+        <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border-top: 1px solid #D8CCBA">
+          <li style="display: flex; gap: 18px; padding: 24px 0; border-bottom: 1px solid #D8CCBA">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6E1F24" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M8 14h3M8 17h6"/></svg>
+            <div><h3 style="margin: 0 0 6px; font-size: 19px; font-weight: 600">A semana inteira, por sala</h3><p style="margin: 0; color: #4A3D38">Cada espaço com sua cor e seus horários de funcionamento. Reservas que se repetem toda semana ou todo mês entram de uma vez.</p></div>
+          </li>
+          <li style="display: flex; gap: 18px; padding: 24px 0; border-bottom: 1px solid #D8CCBA">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6E1F24" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg>
+            <div><h3 style="margin: 0 0 6px; font-size: 19px; font-weight: 600">Conflito avisado na hora</h3><p style="margin: 0; color: #4A3D38">Sala ocupada, fora do horário, bloqueada para reforma ou sem projetor sobrando: o aviso aparece antes de você salvar, com uma sugestão de horário livre.</p></div>
+          </li>
+          <li style="display: flex; gap: 18px; padding: 24px 0; border-bottom: 1px solid #D8CCBA">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6E1F24" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><rect x="2" y="5" width="15" height="11" rx="1.5"/><path d="M17 9l5-3v10l-5-3M7 20h5M9.5 16v4"/></svg>
+            <div><h3 style="margin: 0 0 6px; font-size: 19px; font-weight: 600">Equipamentos que circulam</h3><p style="margin: 0; color: #4A3D38">Dois projetores para cinco salas? O sistema conta quantos estão em uso em cada horário e mostra o que separar e recolher hoje.</p></div>
+          </li>
+          <li style="display: flex; gap: 18px; padding: 24px 0; border-bottom: 1px solid #D8CCBA">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#6E1F24" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
+            <div><h3 style="margin: 0 0 6px; font-size: 19px; font-weight: 600">Um link para as pastorais</h3><p style="margin: 0; color: #4A3D38">Quem coordena um grupo escolhe a pastoral, o espaço e o horário, deixa nome e telefone. Sem criar conta.</p></div>
+          </li>
+        </ul>
+
+        <!-- Cartão de solicitação -->
+        <figure aria-label="Exemplo: solicitação com conflito" style="margin: 0; display: flex; flex-direction: column; gap: 14px">
+          <article style="background: #FBF8F2; border: 1px solid #E1D7C8; border-radius: 18px; padding: 22px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 24px 50px -36px rgba(60, 30, 20, 0.5)">
+            <div style="display: flex; justify-content: space-between; gap: 12px; align-items: flex-start">
+              <div style="display: flex; flex-direction: column; gap: 2px">
+                <span style="font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #7A5A1E">Pedido pelo link · há 2 horas</span>
+                <span style="font-size: 18px; font-weight: 600">Encontro de noivos</span>
+                <span style="color: #6B5D57; font-size: 14px">Marcos Lima · Pastoral Familiar</span>
+              </div>
+              <span style="padding: 4px 10px; border-radius: 99px; background: #FBEBD0; color: #7A4A0E; font-size: 12px; font-weight: 600; white-space: nowrap">Pendente</span>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px; font-size: 14px">
+              <span style="display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-radius: 8px; background: #F1DFDC; color: #521519; font-weight: 600"><i style="width: 8px; height: 8px; border-radius: 99px; background: #6E1F24"></i>Salão São José</span>
+              <span style="padding: 6px 10px; border-radius: 8px; background: #EFE8DB">Sáb, 17 out · 19h–21h</span>
+              <span style="padding: 6px 10px; border-radius: 8px; background: #EFE8DB">Projetor ×1</span>
+            </div>
+            <ul style="list-style: none; margin: 0; padding: 12px 14px; border-radius: 12px; background: #FBEBD0; color: #5E3A0A; font-size: 14px; display: flex; flex-direction: column; gap: 6px">
+              <li style="display: flex; gap: 8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 3px"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span><b>Salão ocupado</b> · Ensaio do coral, 19h30–21h</span></li>
+              <li style="display: flex; gap: 8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 3px"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01"/></svg><span><b>Projetor ×1</b> · os 2 já estão reservados nesse horário</span></li>
+            </ul>
+            <p style="margin: 0; font-size: 14px; color: #4A3D38">Livre no mesmo horário: <b>Capela</b> (sem projetor) ou <b>Salão São José</b> às 17h.</p>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px">
+              <span style="display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 14px; border: 1px solid #CDBFAC; border-radius: 10px; font-weight: 600; font-size: 14px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#24513F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21l1.6-4.8A8.5 8.5 0 1 1 8 19.6z"/></svg>Entrar em contato</span>
+              <span style="flex: 1"></span>
+              <span style="display: flex; align-items: center; min-height: 44px; padding: 0 16px; border: 1px solid #CDBFAC; border-radius: 10px; font-weight: 600; font-size: 14px">Recusar</span>
+              <span style="display: flex; align-items: center; min-height: 44px; padding: 0 18px; border-radius: 10px; background: #6E1F24; color: #FBF8F2; font-weight: 600; font-size: 14px">Resolver</span>
+            </div>
+          </article>
+          <figcaption style="font-size: 14px; color: #6B5D57; padding: 0 6px">Você ajusta o pedido no próprio cartão, troca a sala ou o horário, e aprova quando o conflito some.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- Assistente -->
+  <section id="assistente" style="background: #221A17; color: #F5F0E6">
+    <div style="max-width: 1200px; margin: 0 auto; padding: 104px 32px; box-sizing: border-box; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 440px), 1fr)); gap: 64px; align-items: center">
+      <div style="display: flex; flex-direction: column; gap: 24px">
+        <p style="margin: 0; font-size: 13px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #D9B97A">Assistente com IA</p>
+        <h2 style="margin: 0; font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 600; font-size: 56px; line-height: 1.02">Pergunte como perguntaria a uma colega de secretaria.</h2>
+        <p style="margin: 0; font-size: 18px; color: #D8CEC2; max-width: 500px">Ele lê a sua agenda, os pedidos e o histórico de certificados para responder em segundos. E quando sugere uma mudança, espera o seu “confirmar”.</p>
+        <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 16px">
+          <li style="display: flex; gap: 14px; align-items: flex-start"><span style="flex: none; width: 34px; height: 34px; border-radius: 10px; background: #3A2D28; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D9B97A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></span><div><b style="display: block">Consulta</b><span style="color: #C9BDB0">“O que tem amanhã?”, “Quem pediu o salão no sábado?”, “Quantos batismos emitimos este mês?”</span></div></li>
+          <li style="display: flex; gap: 14px; align-items: flex-start"><span style="flex: none; width: 34px; height: 34px; border-radius: 10px; background: #3A2D28; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D9B97A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span><div><b style="display: block">Encontra horário</b><span style="color: #C9BDB0">Procura a sala certa para o tamanho do grupo e sugere o próximo horário livre.</span></div></li>
+          <li style="display: flex; gap: 14px; align-items: flex-start"><span style="flex: none; width: 34px; height: 34px; border-radius: 10px; background: #3A2D28; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#D9B97A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span><div><b style="display: block">Prepara o trabalho</b><span style="color: #C9BDB0">Monta reservas e cadastra salas, grupos e equipamentos. Nada é gravado sem o seu clique.</span></div></li>
+        </ul>
+      </div>
+
+      <!-- Painel do assistente -->
+      <figure aria-label="Exemplo: painel do assistente" style="margin: 0; background: #FBF8F2; color: #221A17; border-radius: 22px; box-shadow: 0 40px 80px -30px rgba(0, 0, 0, 0.6); overflow: hidden; display: flex; flex-direction: column; font-size: 14px">
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid #E1D7C8">
+          <span style="display: flex; align-items: center; gap: 10px; font-weight: 600"><span style="width: 30px; height: 30px; border-radius: 99px; background: #F1DFDC; color: #6E1F24; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/></svg></span>Assistente</span>
+          <span style="font-size: 13px; color: #6B5D57">Conversas</span>
+        </div>
+        <div style="padding: 20px; display: flex; flex-direction: column; gap: 14px">
+          <p style="margin: 0; align-self: flex-end; max-width: 80%; background: #6E1F24; color: #FBF8F2; padding: 10px 14px; border-radius: 14px 14px 4px 14px">Tem pedido esperando resposta?</p>
+          <p style="margin: 0">Sim, 3 pedidos pendentes. Um deles tem conflito:</p>
+          <div style="border: 1px solid #E1D7C8; border-radius: 14px; overflow: hidden">
+            <div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-bottom: 1px solid #EDE4D3"><i style="flex: none; width: 10px; height: 10px; border-radius: 3px; background: #6E1F24"></i><span style="flex: 1"><b>Encontro de noivos</b><br><span style="color: #6B5D57; font-size: 13px">Salão · sáb 19h–21h</span></span><span style="padding: 3px 9px; border-radius: 99px; background: #FBEBD0; color: #7A4A0E; font-size: 12px; font-weight: 600">2 conflitos</span></div>
+            <div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-bottom: 1px solid #EDE4D3"><i style="flex: none; width: 10px; height: 10px; border-radius: 3px; background: #24513F"></i><span style="flex: 1"><b>Adoração jovem</b><br><span style="color: #6B5D57; font-size: 13px">Capela · qui 20h–21h</span></span><span style="padding: 3px 9px; border-radius: 99px; background: #E2EEE8; color: #1B3D30; font-size: 12px; font-weight: 600">Livre</span></div>
+            <div style="display: flex; align-items: center; gap: 12px; padding: 12px 14px"><i style="flex: none; width: 10px; height: 10px; border-radius: 3px; background: #4B2E5C"></i><span style="flex: 1"><b>Reunião do dízimo</b><br><span style="color: #6B5D57; font-size: 13px">Sala São Francisco · ter 19h</span></span><span style="padding: 3px 9px; border-radius: 99px; background: #E2EEE8; color: #1B3D30; font-size: 12px; font-weight: 600">Livre</span></div>
+          </div>
+          <p style="margin: 0; align-self: flex-end; max-width: 80%; background: #6E1F24; color: #FBF8F2; padding: 10px 14px; border-radius: 14px 14px 4px 14px">Cadastra a sala nova do 2º andar, 25 lugares, com TV.</p>
+          <div style="border: 1px solid #E1D7C8; border-radius: 14px; padding: 14px; background: #FFFDF8; display: flex; flex-direction: column; gap: 10px">
+            <span style="font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #7A5A1E">Novo espaço · aguardando você</span>
+            <dl style="margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; font-size: 13px"><dt style="color: #6B5D57">Nome</dt><dd style="margin: 0; font-weight: 600">Sala do 2º andar</dd><dt style="color: #6B5D57">Lugares</dt><dd style="margin: 0">25</dd><dt style="color: #6B5D57">Recursos</dt><dd style="margin: 0">TV</dd></dl>
+            <div style="display: flex; gap: 8px"><span style="flex: 1; text-align: center; padding: 10px 0; border: 1px solid #CDBFAC; border-radius: 10px; font-weight: 600">Descartar</span><span style="flex: 1; text-align: center; padding: 10px 0; border-radius: 10px; background: #6E1F24; color: #FBF8F2; font-weight: 600">Confirmar</span></div>
+          </div>
+        </div>
+        <div style="padding: 14px 20px 20px; border-top: 1px solid #E1D7C8; display: flex; flex-direction: column; gap: 10px">
+          <div style="display: flex; flex-wrap: wrap; gap: 6px"><span style="padding: 6px 12px; border: 1px solid #DCCFBB; border-radius: 99px; font-size: 13px">O que tem amanhã?</span><span style="padding: 6px 12px; border: 1px solid #DCCFBB; border-radius: 99px; font-size: 13px">Solicitações pendentes</span><span style="padding: 6px 12px; border: 1px solid #DCCFBB; border-radius: 99px; font-size: 13px">Certificados emitidos este mês</span></div>
+          <div style="display: flex; align-items: center; gap: 10px; padding: 6px 6px 6px 16px; border: 1px solid #CDBFAC; border-radius: 14px; background: #FFFDF8; color: #8A7B73">Pergunte sobre a agenda ou os certificados…<span style="margin-left: auto; width: 38px; height: 38px; border-radius: 10px; background: #6E1F24; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FBF8F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg></span></div>
+        </div>
+      </figure>
+    </div>
+  </section>
+
+  <!-- Certificados (secundário) -->
+  <section id="certificados" style="max-width: 1200px; margin: 0 auto; padding: 96px 32px; box-sizing: border-box; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 64px; align-items: center">
+    <div style="position: relative; height: 380px; order: 0">
+      <div style="position: absolute; left: 14%; top: 26px; width: 64%; height: 320px; background: #EDE4D3; border: 1px solid #DCCFBB; border-radius: 6px; transform: rotate(-5deg)"></div>
+      <figure style="position: absolute; left: 10%; top: 0; width: 70%; height: 350px; margin: 0; background: #FCF8EF; border-radius: 6px; box-shadow: 0 30px 60px -30px rgba(60, 30, 20, 0.45); padding: 14px; box-sizing: border-box">
+        <div style="height: 100%; border: 2px solid #6E1F24; padding: 5px; box-sizing: border-box">
+          <div style="height: 100%; border: 1px solid #B8955A; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 10px; padding: 20px">
+            <p style="margin: 0; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 22px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: #6E1F24">Certificado de Batismo</p>
+            <p style="margin: 0; font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; font-size: 15px; color: #4A3D38">Certificamos que</p>
+            <p style="margin: 0; font-family: 'Pinyon Script', cursive; font-size: 36px; line-height: 1.1">Maria Clara Souza</p>
+            <div style="width: 60%; height: 1px; background: #B8955A"></div>
+            <p style="margin: 0; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 14px; color: #4A3D38; max-width: 260px">recebeu o Sacramento do Batismo em 17 de outubro de 2026.</p>
+          </div>
+        </div>
+      </figure>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 22px">
+      <p style="margin: 0; font-size: 13px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; color: #7A5A1E">Certificados</p>
+      <h2 style="margin: 0; font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 600; font-size: 48px; line-height: 1.05">E os certificados continuam a um clique.</h2>
+      <p style="margin: 0; color: #4A3D38; font-size: 17px">Envie a arte uma vez, posicione nome e data, e gere um ou cem certificados a partir de uma planilha. Cada emissão fica no histórico.</p>
+      <ul style="list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; font-size: 15px">
+        <li style="padding: 14px 16px; border: 1px solid #E1D7C8; border-radius: 12px; background: #FBF8F2"><b style="display: block">Modelos por sacramento</b><span style="color: #6B5D57">Batismo, Eucaristia, Crisma…</span></li>
+        <li style="padding: 14px 16px; border: 1px solid #E1D7C8; border-radius: 12px; background: #FBF8F2"><b style="display: block">Planilha do Excel</b><span style="color: #6B5D57">Vários de uma vez</span></li>
+        <li style="padding: 14px 16px; border: 1px solid #E1D7C8; border-radius: 12px; background: #FBF8F2"><b style="display: block">Equipe</b><span style="color: #6B5D57">Modelos compartilhados</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Como começar -->
+  <section style="background: #EFE8DB; border-top: 1px solid #E1D7C8">
+    <div style="max-width: 1200px; margin: 0 auto; padding: 88px 32px; box-sizing: border-box; display: flex; flex-direction: column; gap: 44px">
+      <h2 style="margin: 0; font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 600; font-size: 50px; line-height: 1.05; max-width: 640px">Em uma tarde, a agenda da paróquia está de pé.</h2>
+      <ol style="list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 24px">
+        <li style="background: #FBF8F2; border: 1px solid #E1D7C8; border-radius: 16px; padding: 30px; display: flex; flex-direction: column; gap: 12px">
+          <span style="font-family: 'Cormorant Garamond', Georgia, serif; font-size: 44px; font-weight: 600; color: #6E1F24; line-height: 1">I</span>
+          <h3 style="margin: 0; font-size: 20px; font-weight: 600">Cadastre salas e equipamentos</h3>
+          <p style="margin: 0; color: #4A3D38">Horários de funcionamento, capacidade, projetores. Ou peça ao assistente: “cadastra a capela, das 7h às 21h”.</p>
+        </li>
+        <li style="background: #FBF8F2; border: 1px solid #E1D7C8; border-radius: 16px; padding: 30px; display: flex; flex-direction: column; gap: 12px">
+          <span style="font-family: 'Cormorant Garamond', Georgia, serif; font-size: 44px; font-weight: 600; color: #6E1F24; line-height: 1">II</span>
+          <h3 style="margin: 0; font-size: 20px; font-weight: 600">Mande o link às pastorais</h3>
+          <p style="margin: 0; color: #4A3D38">No grupo de coordenadores, no mural, no boletim. Cada pedido cai na sua lista de solicitações.</p>
+        </li>
+        <li style="background: #FBF8F2; border: 1px solid #E1D7C8; border-radius: 16px; padding: 30px; display: flex; flex-direction: column; gap: 12px">
+          <span style="font-family: 'Cormorant Garamond', Georgia, serif; font-size: 44px; font-weight: 600; color: #6E1F24; line-height: 1">III</span>
+          <h3 style="margin: 0; font-size: 20px; font-weight: 600">Aprove com tudo à vista</h3>
+          <p style="margin: 0; color: #4A3D38">Conflitos no próprio cartão, contato pelo WhatsApp ao lado do Aprovar. A semana se monta sozinha.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section style="background: #6E1F24; color: #FBF8F2">
+    <div style="max-width: 1200px; margin: 0 auto; padding: 80px 32px; box-sizing: border-box; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 32px">
+      <div style="display: flex; flex-direction: column; gap: 12px; max-width: 640px">
+        <h2 style="margin: 0; font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 600; font-size: 48px; line-height: 1.05">Comece pela sala mais disputada da paróquia.</h2>
+        <p style="margin: 0; color: #F1E3DA; font-size: 18px">Salas, capela, salão, projetores e certificados: tudo com a mesma conta.</p>
+      </div>
+      <a href="Entrar.dc.html" style="padding: 16px 28px; text-decoration: none; color: #6E1F24; background: #FBF8F2; font-weight: 600; border-radius: 999px; font-size: 17px">Criar conta gratuita</a>
+    </div>
+  </section>
+
+  <footer style="max-width: 1200px; margin: 0 auto; padding: 32px; box-sizing: border-box; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; color: #6B5D57; font-size: 14px">
+    <span style="display: flex; align-items: center; gap: 10px"><img src="/_blob/50066c2efa3bd703f79bbba990bb7aa8" alt="" style="width: 24px; height: 24px; object-fit: contain">PequenaVia · salas, horários e certificados</span>
+    <span>certificados.pequenavia.app.br</span>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":3900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>
