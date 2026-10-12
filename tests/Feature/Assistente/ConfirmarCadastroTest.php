@@ -7,6 +7,7 @@ use App\Models\Grupo;
 use App\Models\Reserva;
 use App\Models\User;
 use App\Services\Assistente\Ferramentas\ProporEquipamento;
+use App\Services\Assistente\Ferramentas\ProporEspaco;
 use App\Services\Assistente\Ferramentas\ProporGrupo;
 use Carbon\CarbonImmutable;
 
@@ -114,4 +115,68 @@ test('ação de cadastro de outro usuário responde 404', function () {
     $acao = propostaDeCadastro(ProporGrupo::class, $usuario, ['operacao' => 'criar', 'nome' => 'Coral']);
 
     $this->actingAs(User::factory()->create())->postJson(route('assistente.acoes.confirmar', $acao))->assertNotFound();
+});
+
+test('confirmar alterar_espaco com só sábado mantém os outros dias e os bloqueios', function () {
+    $usuario = User::factory()->create();
+    $espaco = espacoComAgenda($usuario);
+    $acao = propostaDeCadastro(ProporEspaco::class, $usuario, ['operacao' => 'alterar', 'alvo' => 'Salão', 'horarios' => [['dia' => 'sábado', 'abre' => '08:00', 'fecha' => '18:00']]]);
+
+    $this->actingAs($usuario)->postJson(route('assistente.acoes.confirmar', $acao))
+        ->assertOk()
+        ->assertJsonPath('acao.resultado.cadastro_id', $espaco->id)
+        ->assertJsonPath('acao.resultado.entidade', 'espaco');
+
+    $espaco->refresh();
+
+    expect($espaco->horarios->pluck('dia_semana')->all())->toBe([1, 2, 3, 4, 5, 6])
+        ->and($espaco->horarios->last()->abre)->toBe('08:00:00')
+        ->and($espaco->bloqueios)->toHaveCount(1)
+        ->and($espaco->bloqueios->first()->motivo)->toBe('Feriado');
+});
+
+test('confirmar criar_espaco grava o espaço com os horários', function () {
+    $usuario = User::factory()->create();
+    $acao = propostaDeCadastro(ProporEspaco::class, $usuario, [
+        'operacao' => 'criar', 'nome' => 'Sala 3', 'capacidade' => 25, 'cor' => 'azul',
+        'horarios' => [['dia' => 'segunda', 'abre' => '08:00', 'fecha' => '22:00'], ['dia' => 'terca', 'abre' => '08:00', 'fecha' => '22:00']],
+    ]);
+
+    $this->actingAs($usuario)->postJson(route('assistente.acoes.confirmar', $acao))->assertOk();
+
+    $espaco = Espaco::sole();
+
+    expect($espaco)->toMatchArray(['nome' => 'Sala 3', 'capacidade' => 25, 'user_id' => $usuario->id])
+        ->and($espaco->horarios->pluck('dia_semana')->all())->toBe([1, 2]);
+});
+
+test('confirmar alterar_espaco com horário que fecha antes de abrir responde 422 e não grava', function () {
+    $usuario = User::factory()->create();
+    $espaco = espacoComAgenda($usuario);
+    $acao = propostaDeCadastro(ProporEspaco::class, $usuario, ['operacao' => 'alterar', 'alvo' => 'Salão', 'capacidade' => 25]);
+
+    $dados = $acao->dados;
+    $dados['final']['horarios'][0]['fecha'] = '07:00';
+    $acao->update(['dados' => $dados]);
+
+    $this->actingAs($usuario)->postJson(route('assistente.acoes.confirmar', $acao))
+        ->assertUnprocessable()
+        ->assertJsonPath('message', 'O fechamento precisa ser depois da abertura.');
+
+    expect($espaco->fresh()->capacidade)->toBe(10)
+        ->and($acao->fresh()->status)->toBe(StatusDaAcao::Proposta);
+});
+
+test('excluir espaço que ganhou reserva depois da proposta responde 422', function () {
+    $usuario = User::factory()->create();
+    $espaco = espacoComAgenda($usuario);
+    $acao = propostaDeCadastro(ProporEspaco::class, $usuario, ['operacao' => 'excluir', 'alvo' => 'Salão']);
+
+    Reserva::factory()->for($usuario)->create(['espaco_id' => $espaco->id, 'data' => '2026-10-20']);
+
+    $this->actingAs($usuario)->postJson(route('assistente.acoes.confirmar', $acao))
+        ->assertUnprocessable()
+        ->assertJsonPath('message', 'Há reservas futuras usando este espaço. Desative em vez de excluir.');
+
+    expect(Espaco::count())->toBe(1);
 });

@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Services\Assistente\Cadastros\CadastrosDoAssistente;
 use App\Services\Assistente\Cadastros\PropostaDeCadastro;
 use App\Services\Assistente\ResumoDaAcao;
+use BackedEnum;
 use Carbon\Carbon;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Model;
@@ -39,7 +40,7 @@ abstract class PropoeCadastro implements Ferramenta
     /**
      * Campos que o modelo pode enviar. A chave é o campo; `tipo` decide a leitura do cartão e a normalização.
      *
-     * @return array<string, array{rotulo: string, tipo: 'texto'|'inteiro'|'booleano'|'data'}>
+     * @return array<string, array{rotulo: string, tipo: 'texto'|'inteiro'|'booleano'|'data'|'lista'}>
      */
     abstract protected function campos(): array;
 
@@ -62,23 +63,25 @@ abstract class PropoeCadastro implements Ferramenta
     /**
      * Estado final que a proposta grava. Por padrão, os campos atuais com os enviados por cima.
      *
-     * @param  array<string, mixed>  $atual
-     * @param  array<string, mixed>  $enviados
+     * @param  ?Model  $alvo  cadastro atual (null na criação)
+     * @param  array<string, mixed>  $atual  campos atuais (vazio na criação)
+     * @param  array<string, mixed>  $enviados  campos enviados, normalizados
+     * @param  array<string, mixed>  $argumentos  argumentos crus da chamada, para o que não é campo simples
      * @return array<string, mixed>
      */
-    protected function montarFinal(array $atual, array $enviados): array
+    protected function montarFinal(?Model $alvo, array $atual, array $enviados, array $argumentos): array
     {
         return array_replace($atual, $enviados);
     }
 
     /**
-     * Linhas do cartão que não vêm de um campo simples (ex.: horários do espaço).
+     * Linhas do cartão que não vêm de um campo simples (ex.: horários do espaço), comparando com o cadastro atual.
      *
-     * @param  array<string, mixed>  $atual
+     * @param  ?Model  $alvo  cadastro atual (null na criação)
      * @param  array<string, mixed>  $final
      * @return list<array{rotulo: string, antes: ?string, depois: ?string}>
      */
-    protected function linhasExtras(array $atual, array $final, bool $criacao): array
+    protected function linhasExtras(?Model $alvo, array $final, bool $criacao): array
     {
         return [];
     }
@@ -110,10 +113,10 @@ abstract class PropoeCadastro implements Ferramenta
         if ($operacao === 'excluir') {
             $avisos = $this->avisosDaExclusao($alvo);
         } else {
-            $final = $this->validarFinal($usuario, $this->montarFinal($atual, $enviados), $alvo);
+            $final = $this->validarFinal($usuario, $this->montarFinal($alvo, $atual, $enviados, $argumentos), $alvo);
             $linhas = [
                 ...$this->linhasDosCampos($atual, $final, $criacao),
-                ...$this->linhasExtras($atual, $final, $criacao),
+                ...$this->linhasExtras($alvo, $final, $criacao),
             ];
 
             if (! $criacao && $linhas === []) {
@@ -170,7 +173,11 @@ abstract class PropoeCadastro implements Ferramenta
 
         foreach (array_keys($this->campos()) as $campo) {
             $valor = $alvo->getAttribute($campo);
-            $atuais[$campo] = $valor instanceof DateTimeInterface ? Carbon::instance($valor)->toDateString() : $valor;
+            $atuais[$campo] = match (true) {
+                $valor instanceof DateTimeInterface => Carbon::instance($valor)->toDateString(),
+                $valor instanceof BackedEnum => $valor->value,
+                default => $valor,
+            };
         }
 
         return $atuais;
@@ -227,10 +234,13 @@ abstract class PropoeCadastro implements Ferramenta
 
     private function formatar(string $tipo, mixed $valor): string
     {
+        $valor = $valor instanceof BackedEnum ? $valor->value : $valor;
+
         return match (true) {
             $valor === null => '—',
             $tipo === 'booleano' => $valor ? 'Sim' : 'Não',
             $tipo === 'data' => Carbon::createFromFormat('Y-m-d', (string) $valor)->format('d/m/Y'),
+            $tipo === 'lista' => $valor === [] ? '—' : implode(', ', $valor),
             default => (string) $valor,
         };
     }

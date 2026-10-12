@@ -3,6 +3,7 @@
 use App\Models\AcaoProposta;
 use App\Models\CampoCertificado;
 use App\Models\Conversa;
+use App\Models\Espaco;
 use App\Models\User;
 use App\Services\Assistente\Ferramentas\ResultadoDeFerramenta;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -175,4 +176,20 @@ function propostaDeCadastro(string $ferramenta, User $usuario, array $argumentos
     app($ferramenta)->executar($usuario, conversaDe($usuario), $argumentos);
 
     return AcaoProposta::latest('created_at')->firstOrFail();
+}
+
+/** Seg–sex 08:00–22:00, dois bloqueios de teste e recursos, para os casos de alteração. */
+function espacoComAgenda(User $usuario, string $nome = 'Salão'): Espaco
+{
+    $espaco = Espaco::factory()->for($usuario)->create([
+        'nome' => $nome, 'capacidade' => 10, 'recursos_fixos' => ['Piano'], 'cor' => 'verde', 'ativo' => true,
+    ]);
+
+    $espaco->horarios()->createMany(array_map(
+        fn (int $dia) => ['dia_semana' => $dia, 'abre' => '08:00', 'fecha' => '22:00'],
+        [1, 2, 3, 4, 5],
+    ));
+    $espaco->bloqueios()->create(['inicio' => '2026-11-02', 'fim' => '2026-11-02', 'motivo' => 'Feriado']);
+
+    return $espaco;
 }
