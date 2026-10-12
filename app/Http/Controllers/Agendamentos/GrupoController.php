@@ -8,6 +8,7 @@ use App\Http\Requests\Agendamentos\UpdateGrupoRequest;
 use App\Models\Grupo;
 use App\Models\Reserva;
 use App\Models\User;
+use App\Services\Agenda\Cadastros\GravadorDeGrupo;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -56,11 +57,9 @@ class GrupoController extends Controller
     /**
      * Cria o grupo do dono logado.
      */
-    public function store(StoreGrupoRequest $request): RedirectResponse
+    public function store(StoreGrupoRequest $request, GravadorDeGrupo $gravador): RedirectResponse
     {
-        $grupo = new Grupo($request->validated());
-        $grupo->user()->associate($request->user());
-        $grupo->save();
+        $gravador->criar($request->user(), $request->validated());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Grupo criado.']);
 
@@ -70,9 +69,9 @@ class GrupoController extends Controller
     /**
      * Atualiza os dados do grupo.
      */
-    public function update(UpdateGrupoRequest $request, Grupo $grupo): RedirectResponse
+    public function update(UpdateGrupoRequest $request, Grupo $grupo, GravadorDeGrupo $gravador): RedirectResponse
     {
-        $grupo->fill($request->validated())->save();
+        $gravador->atualizar($grupo, $request->validated());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Grupo atualizado.']);
 
@@ -82,11 +81,11 @@ class GrupoController extends Controller
     /**
      * Exclui o grupo. As reservas dele continuam na agenda, sem grupo (a FK zera o campo).
      */
-    public function destroy(Grupo $grupo): RedirectResponse
+    public function destroy(Grupo $grupo, GravadorDeGrupo $gravador): RedirectResponse
     {
         Gate::authorize('delete', $grupo);
 
-        $grupo->delete();
+        $gravador->excluir($grupo);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Grupo excluído.']);
 

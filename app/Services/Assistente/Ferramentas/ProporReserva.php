@@ -7,13 +7,15 @@ use App\Models\AcaoProposta;
 use App\Models\Conversa;
 use App\Models\User;
 use App\Services\Agenda\VerificadorDeDisponibilidade;
+use App\Services\Assistente\Cadastros\ChaveDaProposta;
+use App\Services\Assistente\Cadastros\ExpiracaoDePropostas;
 use App\Services\Assistente\ResumoDaAcao;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
 
 /**
  * Prepara uma reserva para a secretaria confirmar. Nada é gravado aqui: a reserva só existe depois do clique em Confirmar.
- * Propor uma reserva nova expira a proposta pendente anterior da mesma conversa.
+ * Propor uma reserva nova expira a reserva pendente anterior da mesma conversa; cadastros pendentes ficam.
  */
 final class ProporReserva implements Ferramenta
 {
@@ -113,29 +115,30 @@ final class ProporReserva implements Ferramenta
             ]);
         }
 
-        $acao = DB::transaction(function () use ($usuario, $conversa, $espaco, $grupo, $data, $dados, $equipamentos): AcaoProposta {
-            AcaoProposta::query()
-                ->where('conversa_id', $conversa->id)
-                ->where('status', StatusDaAcao::Proposta->value)
-                ->update(['status' => StatusDaAcao::Expirada->value]);
+        $dadosDaReserva = [
+            'titulo' => $dados['titulo'],
+            'espaco_id' => $espaco->id,
+            'grupo_id' => $grupo?->id,
+            'data' => $data->toDateString(),
+            'inicio' => $dados['inicio'],
+            'fim' => $dados['fim'],
+            'pessoas' => $dados['pessoas'] ?? null,
+            'observacoes' => $dados['observacoes'] ?? null,
+            'equipamentos' => $equipamentos,
+        ];
 
-            return AcaoProposta::create([
+        ['acao' => $acao, 'substituiu' => $substituiu] = DB::transaction(function () use ($usuario, $conversa, $dadosDaReserva): array {
+            $substituiu = ExpiracaoDePropostas::expirarPendentesComMesmaChave($conversa, ChaveDaProposta::de('criar_reserva', $dadosDaReserva));
+
+            $acao = AcaoProposta::create([
                 'conversa_id' => $conversa->id,
                 'user_id' => $usuario->id,
                 'tipo' => 'criar_reserva',
-                'dados' => [
-                    'titulo' => $dados['titulo'],
-                    'espaco_id' => $espaco->id,
-                    'grupo_id' => $grupo?->id,
-                    'data' => $data->toDateString(),
-                    'inicio' => $dados['inicio'],
-                    'fim' => $dados['fim'],
-                    'pessoas' => $dados['pessoas'] ?? null,
-                    'observacoes' => $dados['observacoes'] ?? null,
-                    'equipamentos' => $equipamentos,
-                ],
+                'dados' => $dadosDaReserva,
                 'status' => StatusDaAcao::Proposta,
             ]);
+
+            return ['acao' => $acao, 'substituiu' => $substituiu];
         });
 
         return new ResultadoDeFerramenta(
@@ -143,6 +146,7 @@ final class ProporReserva implements Ferramenta
                 'criada' => true,
                 'acao_id' => $acao->id,
                 'mensagem' => 'Proposta pronta. A secretaria precisa clicar em Confirmar reserva.',
+                ...($substituiu !== [] ? ['substituiu' => $substituiu] : []),
             ],
             cartao: ['tipo' => 'acao_proposta', 'dados' => $this->resumo->paraCartao($acao)],
         );

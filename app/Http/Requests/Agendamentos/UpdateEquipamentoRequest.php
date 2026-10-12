@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Agendamentos;
 
+use App\Models\User;
+use App\Services\Agenda\Cadastros\RegrasDeEquipamento;
 use Illuminate\Auth\Access\Response;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Support\Facades\Gate;
@@ -21,6 +23,9 @@ class UpdateEquipamentoRequest extends StoreEquipamentoRequest
      */
     public function rules(): array
     {
-        return $this->regras($this->route('equipamento'));
+        /** @var User $dono */
+        $dono = $this->user();
+
+        return RegrasDeEquipamento::regras($dono, $this->route('equipamento'));
     }
 }

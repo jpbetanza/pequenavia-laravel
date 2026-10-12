@@ -73,10 +73,23 @@ export type Cartao =
       }
     | { tipo: 'acao_proposta'; dados: AcaoProposta };
 
-/** Reserva que o assistente propôs e o usuário ainda pode confirmar ou descartar. */
-export type AcaoProposta = {
+export type StatusDaAcao =
+    | 'proposta'
+    | 'confirmada'
+    | 'descartada'
+    | 'expirada';
+
+export type EntidadeDeCadastro = 'espaco' | 'grupo' | 'equipamento';
+
+export type OperacaoDeCadastro = 'criar' | 'alterar' | 'excluir';
+
+/** Reserva que o assistente propôs e o usuário ainda pode confirmar ou descartar. Cartão antigo pode vir sem `tipo`. */
+export type AcaoPropostaDeReserva = {
     id: string;
-    status: 'proposta' | 'confirmada' | 'descartada' | 'expirada';
+    status: StatusDaAcao;
+    tipo: 'criar_reserva';
+    /** Chave que decide quais propostas se substituem na conversa. Ausente em cartão antigo. */
+    chave?: string;
     resumo: {
         titulo: string;
         grupo_id: string | null;
@@ -92,6 +105,43 @@ export type AcaoProposta = {
     };
     resultado: { reserva_id: string; data: string } | null;
 };
+
+/** Criar, alterar ou excluir um espaço, grupo ou equipamento, à espera de confirmação. */
+export type AcaoPropostaDeCadastro = {
+    id: string;
+    status: StatusDaAcao;
+    tipo: TipoDeAcaoDeCadastro;
+    /** Chave que decide quais propostas se substituem na conversa. Ausente em cartão antigo. */
+    chave?: string;
+    cadastro: {
+        entidade: EntidadeDeCadastro;
+        operacao: OperacaoDeCadastro;
+        titulo: string;
+        linhas: {
+            rotulo: string;
+            antes: string | null;
+            depois: string | null;
+        }[];
+        avisos: string[];
+    };
+    resultado: {
+        cadastro_id: string | null;
+        entidade: EntidadeDeCadastro;
+    } | null;
+};
+
+export type TipoDeAcaoDeCadastro =
+    | 'criar_espaco'
+    | 'alterar_espaco'
+    | 'excluir_espaco'
+    | 'criar_grupo'
+    | 'alterar_grupo'
+    | 'excluir_grupo'
+    | 'criar_equipamento'
+    | 'alterar_equipamento'
+    | 'excluir_equipamento';
+
+export type AcaoProposta = AcaoPropostaDeReserva | AcaoPropostaDeCadastro;
 
 export type MensagemDoPainel = {
     id: string;

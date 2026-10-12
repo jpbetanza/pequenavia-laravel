@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Agendamentos;
 
+use App\Models\User;
+use App\Services\Agenda\Cadastros\RegrasDeGrupo;
 use Illuminate\Auth\Access\Response;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Support\Facades\Gate;
@@ -21,6 +23,9 @@ class UpdateGrupoRequest extends StoreGrupoRequest
      */
     public function rules(): array
     {
-        return $this->regras($this->route('grupo'));
+        /** @var User $dono */
+        $dono = $this->user();
+
+        return RegrasDeGrupo::regras($dono, $this->route('grupo'));
     }
 }

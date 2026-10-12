@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Agendamentos;
 
+use App\Models\User;
+use App\Services\Agenda\Cadastros\RegrasDeEspaco;
 use Illuminate\Auth\Access\Response;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Support\Facades\Gate;
@@ -21,6 +23,9 @@ class UpdateEspacoRequest extends StoreEspacoRequest
      */
     public function rules(): array
     {
-        return $this->regras($this->route('espaco'));
+        /** @var User $dono */
+        $dono = $this->user();
+
+        return RegrasDeEspaco::regras($dono, $this->route('espaco'));
     }
 }

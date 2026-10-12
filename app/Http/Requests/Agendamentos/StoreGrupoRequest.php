@@ -2,13 +2,13 @@
 
 namespace App\Http\Requests\Agendamentos;
 
-use App\Models\Grupo;
+use App\Models\User;
+use App\Services\Agenda\Cadastros\RegrasDeGrupo;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 /**
- * Dados de um grupo ou pastoral. O nome é único só entre os grupos do próprio dono.
+ * Dados de um grupo ou pastoral. As regras ficam em RegrasDeGrupo, compartilhadas com o assistente.
  */
 class StoreGrupoRequest extends FormRequest
 {
@@ -17,27 +17,10 @@ class StoreGrupoRequest extends FormRequest
      */
     public function rules(): array
     {
-        return $this->regras();
-    }
+        /** @var User $dono */
+        $dono = $this->user();
 
-    /**
-     * Regras do grupo. Na edição, o próprio grupo fica de fora da checagem de nome repetido.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
-    protected function regras(?Grupo $grupo = null): array
-    {
-        $nomeUnico = Rule::unique('grupos', 'nome')
-            ->where('user_id', $this->user()->id)
-            ->ignore($grupo?->id);
-
-        return [
-            'nome' => ['required', 'string', 'max:120', $nomeUnico],
-            'coordenacao' => ['nullable', 'string', 'max:120'],
-            'contato' => ['nullable', 'string', 'max:120'],
-            'observacao' => ['nullable', 'string'],
-            'ativo' => ['sometimes', 'boolean'],
-        ];
+        return RegrasDeGrupo::regras($dono);
     }
 
     /**
@@ -45,14 +28,6 @@ class StoreGrupoRequest extends FormRequest
      */
     public function messages(): array
     {
-        return [
-            'nome.required' => 'Informe o nome do grupo.',
-            'nome.max' => 'O nome pode ter no máximo 120 caracteres.',
-            'nome.unique' => 'Já existe um grupo com este nome.',
-            'coordenacao.max' => 'A coordenação pode ter no máximo 120 caracteres.',
-            'contato.max' => 'O contato pode ter no máximo 120 caracteres.',
-            'observacao.string' => 'A observação precisa ser um texto.',
-            'ativo.boolean' => 'Informe se o grupo está ativo.',
-        ];
+        return RegrasDeGrupo::mensagens();
     }
 }

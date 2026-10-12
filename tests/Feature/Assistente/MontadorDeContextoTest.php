@@ -112,3 +112,20 @@ test('turno maior que o limite não traz mensagens de um turno anterior criadas 
     expect(array_column($mensagens, 'role'))->toBe(['system', 'user', 'assistant', 'tool', 'assistant', 'tool'])
         ->and($mensagens[1]['content'])->toBe('Pergunta nova');
 });
+
+test('o prompt de sistema apresenta as ferramentas de cadastro e a regra de confirmação', function () {
+    $usuario = User::factory()->create();
+    $conversa = Conversa::factory()->for($usuario)->create();
+
+    $instrucoes = app(MontadorDeContexto::class)->montar($usuario, $conversa)[0]['content'];
+
+    expect($instrucoes)->toContain('propor_espaco')
+        ->toContain('propor_grupo')
+        ->toContain('propor_equipamento')
+        ->toContain('Elas só preparam a mudança; a secretaria confirma no cartão.')
+        ->toContain('Nunca diga que algo foi cadastrado, alterado ou excluído antes disso.')
+        ->toContain('Para alterar, envie só os campos que mudam.')
+        ->toContain('use fechado: true para fechar um dia')
+        ->toContain('use listar_cadastros e pergunte antes de propor')
+        ->toContain('Junte numa única chamada todas as mudanças do mesmo cadastro');
+});
