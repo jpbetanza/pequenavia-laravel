@@ -2,6 +2,8 @@ import { Link, router } from '@inertiajs/react';
 import { Check } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { useAssistente } from '@/hooks/use-assistente';
+import { useIsMobile } from '@/hooks/use-mobile';
 import {
     confirmar,
     descartar,
@@ -78,6 +80,8 @@ export function CartaoDeAcaoProposta({ acao, aoAtualizar }: Props) {
         'confirmar' | 'descartar' | null
     >(null);
     const [conflitos, setConflitos] = useState<string[]>([]);
+    const { fechar } = useAssistente();
+    const celular = useIsMobile();
     const emAndamento = useRef(false);
     const { resumo } = acao;
     const selo = SELOS[acao.status];
@@ -249,8 +253,17 @@ export function CartaoDeAcaoProposta({ acao, aoAtualizar }: Props) {
                                     grupo: resumo.grupo_id ?? undefined,
                                     equipamentos:
                                         equipamentosNaUrl || undefined,
+                                    pessoas: resumo.pessoas ?? undefined,
+                                    observacoes:
+                                        resumo.observacoes ?? undefined,
                                 },
                             })}
+                            onClick={() => {
+                                // No celular o painel é tela cheia: fecha para a reserva aparecer. Na mesma página o caminho não muda, então o painel não fecha sozinho.
+                                if (celular) {
+                                    fechar();
+                                }
+                            }}
                             className={cn(
                                 buttonVariants({ variant: 'outline' }),
                                 'min-h-11 flex-1 basis-36',

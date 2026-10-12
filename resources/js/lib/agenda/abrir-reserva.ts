@@ -7,11 +7,16 @@ const PARAMETROS = [
     'fim',
     'grupo',
     'equipamentos',
+    'pessoas',
+    'observacoes',
 ] as const;
 
 const HORARIO = /^([01]\d|2[0-3]):[0-5]\d$/;
 const QUANTIDADE = /^[1-9]\d{0,3}$/;
 const TITULO_MAXIMO = 160;
+const PESSOAS = /^[1-9]\d{0,3}$/;
+const PESSOAS_MAXIMO = 2000;
+const OBSERVACOES_MAXIMO = 1000;
 const QUANTIDADE_MAXIMA = 1000;
 
 export type EquipamentoPreenchido = { id: string; quantidade: number };
@@ -26,6 +31,10 @@ export type PedidoDeNovaReserva = {
     grupoId: string | null;
     /** Equipamentos na forma `id:quantidade,id:quantidade`. Inválidos e repetidos são ignorados. */
     equipamentos: EquipamentoPreenchido[];
+    /** Inteiro de 1 a 2000, ou null quando ausente ou inválido. */
+    pessoas: number | null;
+    /** Texto aparado de até 1000 caracteres, ou null quando vazio, ausente ou longo demais. */
+    observacoes: string | null;
 };
 
 /** Lê `id:quantidade,...`. Cada item precisa ter id não vazio e quantidade de 1 a 1000; o primeiro de um id repetido vale. */
@@ -62,6 +71,22 @@ function lerEquipamentos(valor: string | null): EquipamentoPreenchido[] {
     return equipamentos;
 }
 
+function lerPessoas(valor: string | null): number | null {
+    if (valor === null || !PESSOAS.test(valor)) {
+        return null;
+    }
+
+    const pessoas = Number(valor);
+
+    return pessoas <= PESSOAS_MAXIMO ? pessoas : null;
+}
+
+function lerObservacoes(valor: string | null): string | null {
+    const texto = valor?.trim() ?? '';
+
+    return texto === '' || texto.length > OBSERVACOES_MAXIMO ? null : texto;
+}
+
 /** Lê o pedido de nova reserva da query da página. Devolve null quando `nova_reserva` não é 1. */
 export function lerPedidoDeNovaReserva(
     search: string,
@@ -85,6 +110,8 @@ export function lerPedidoDeNovaReserva(
         titulo: titulo === '' || titulo.length > TITULO_MAXIMO ? null : titulo,
         grupoId: grupo === null || grupo === '' ? null : grupo,
         equipamentos: lerEquipamentos(parametros.get('equipamentos')),
+        pessoas: lerPessoas(parametros.get('pessoas')),
+        observacoes: lerObservacoes(parametros.get('observacoes')),
     };
 }
 

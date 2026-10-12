@@ -84,6 +84,8 @@ export type AlvoDoPainel =
           titulo?: string;
           grupoId?: string;
           equipamentos?: { id: string; quantidade: number }[];
+          pessoas?: number;
+          observacoes?: string;
       }
     | { modo: 'editar'; reserva: ReservaDoCalendario };
 
@@ -177,7 +179,8 @@ function formularioInicial(
     return {
         titulo: alvo.titulo ?? '',
         grupoId: grupos.find((grupo) => grupo.id === alvo.grupoId)?.id ?? '',
-        pessoas: '',
+        pessoas: alvo.pessoas === undefined ? '' : String(alvo.pessoas),
+        observacoes: alvo.observacoes ?? '',
         espacoId:
             ativos.find((espaco) => espaco.id === alvo.espacoId)?.id ??
             ativos[0]?.id ??
@@ -191,7 +194,6 @@ function formularioInicial(
         equipamentos: (alvo.equipamentos ?? []).filter((pedido) =>
             equipamentos.some((equipamento) => equipamento.id === pedido.id),
         ),
-        observacoes: '',
         escopo: 'so_esta',
     };
 }

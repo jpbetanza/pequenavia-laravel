@@ -120,6 +120,8 @@ export default function Calendario({
             titulo: pedido.titulo ?? undefined,
             grupoId: pedido.grupoId ?? undefined,
             equipamentos: pedido.equipamentos,
+            pessoas: pedido.pessoas ?? undefined,
+            observacoes: pedido.observacoes ?? undefined,
         });
         window.history.replaceState(
             window.history.state,

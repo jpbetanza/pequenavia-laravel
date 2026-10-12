@@ -11,6 +11,8 @@ const SEM_PREENCHIMENTO = {
     titulo: null,
     grupoId: null,
     equipamentos: [],
+    pessoas: null,
+    observacoes: null,
 };
 
 describe('lerPedidoDeNovaReserva', () => {
@@ -102,11 +104,51 @@ describe('lerPedidoDeNovaReserva', () => {
     });
 });
 
+describe('lerPedidoDeNovaReserva com pessoas e observações', () => {
+    it('lê pessoas como inteiro de 1 a 2000', () => {
+        expect(
+            lerPedidoDeNovaReserva('?nova_reserva=1&pessoas=35'),
+        ).toMatchObject({ pessoas: 35 });
+        expect(
+            lerPedidoDeNovaReserva('?nova_reserva=1&pessoas=2000'),
+        ).toMatchObject({ pessoas: 2000 });
+    });
+
+    it('descarta pessoas fora do intervalo ou que não são inteiros', () => {
+        for (const valor of ['0', '2001', '-3', '2.5', '12a', '', '1e2']) {
+            expect(
+                lerPedidoDeNovaReserva(`?nova_reserva=1&pessoas=${valor}`),
+            ).toMatchObject({ pessoas: null });
+        }
+    });
+
+    it('lê observações com espaços aparados e descarta vazias ou acima de 1000 caracteres', () => {
+        expect(
+            lerPedidoDeNovaReserva(
+                '?nova_reserva=1&observacoes=%20Trazer%20cadeiras%0Acom%20capa%20%20',
+            ),
+        ).toMatchObject({ observacoes: 'Trazer cadeiras\ncom capa' });
+        expect(
+            lerPedidoDeNovaReserva('?nova_reserva=1&observacoes=%20%20'),
+        ).toMatchObject({ observacoes: null });
+        expect(
+            lerPedidoDeNovaReserva(
+                `?nova_reserva=1&observacoes=${'x'.repeat(1001)}`,
+            ),
+        ).toMatchObject({ observacoes: null });
+        expect(
+            lerPedidoDeNovaReserva(
+                `?nova_reserva=1&observacoes=${'x'.repeat(1000)}`,
+            ),
+        ).toMatchObject({ observacoes: 'x'.repeat(1000) });
+    });
+});
+
 describe('removerParametrosDeNovaReserva', () => {
     it('tira os parâmetros de nova reserva e mantém os demais', () => {
         expect(
             removerParametrosDeNovaReserva(
-                'https://app.test/agendamentos/calendario?data=2026-10-18&visao=dia&nova_reserva=1&espaco=abc&inicio=14:00&titulo=X&fim=15:00&grupo=g&equipamentos=e:1',
+                'https://app.test/agendamentos/calendario?data=2026-10-18&visao=dia&nova_reserva=1&espaco=abc&inicio=14:00&titulo=X&fim=15:00&grupo=g&equipamentos=e:1&pessoas=3&observacoes=x',
             ),
         ).toBe(
             'https://app.test/agendamentos/calendario?data=2026-10-18&visao=dia',
