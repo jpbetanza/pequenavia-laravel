@@ -8,6 +8,7 @@ use App\Http\Controllers\Agendamentos\ReservaController;
 use App\Http\Controllers\Agendamentos\ReservaEquipamentoController;
 use App\Http\Controllers\Agendamentos\SolicitacaoController;
 use App\Http\Controllers\Agendamentos\SolicitacaoPublicaController;
+use App\Http\Controllers\Assistente\AcaoPropostaController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\CampoCertificadoController;
 use App\Http\Controllers\CompartilhamentoController;
@@ -15,6 +16,7 @@ use App\Http\Controllers\FonteController;
 use App\Http\Controllers\GeracaoCertificadoController;
 use App\Http\Controllers\HistoricoController;
 use App\Http\Controllers\ModeloCertificadoController;
+use App\Http\Middleware\GarantirAssistenteConfigurado;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
@@ -92,6 +94,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::delete('grupos/{grupo}', [GrupoController::class, 'destroy'])->name('grupos.destroy');
             Route::post('disponibilidade', DisponibilidadeController::class)->name('disponibilidade');
         });
+    });
+
+    Route::prefix('assistente')->name('assistente.')->middleware(GarantirAssistenteConfigurado::class)->group(function () {
+        Route::post('acoes/{acao}/confirmar', [AcaoPropostaController::class, 'confirmar'])->name('acoes.confirmar');
+        Route::post('acoes/{acao}/descartar', [AcaoPropostaController::class, 'descartar'])->name('acoes.descartar');
     });
 
     Route::get('modelos/{modelo}/imagem', [ModeloCertificadoController::class, 'imagem'])->name('modelos.imagem');

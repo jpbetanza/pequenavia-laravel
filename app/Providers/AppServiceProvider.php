@@ -6,6 +6,7 @@ use App\Services\Assistente\CaixaDeFerramentas;
 use App\Services\Assistente\Ferramentas\ConsultarAgenda;
 use App\Services\Assistente\Ferramentas\ListarCadastros;
 use App\Services\Assistente\Ferramentas\ListarSolicitacoes;
+use App\Services\Assistente\Ferramentas\ProporReserva;
 use App\Services\Assistente\Ferramentas\ResumoDeCertificados;
 use App\Services\Assistente\Ferramentas\VerificarDisponibilidade;
 use Carbon\CarbonImmutable;
@@ -30,6 +31,7 @@ class AppServiceProvider extends ServiceProvider
             $app->make(ListarSolicitacoes::class),
             $app->make(ListarCadastros::class),
             $app->make(ResumoDeCertificados::class),
+            $app->make(ProporReserva::class),
         ]));
     }
 
