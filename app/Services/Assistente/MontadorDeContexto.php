@@ -84,7 +84,7 @@ final class MontadorDeContexto
         return $conversa->mensagens()
             ->reorder()
             ->where('erro', false)
-            ->where('created_at', '>=', $ultimoPedido->created_at)
+            ->whereRaw('(created_at, id) >= (?, ?)', [$ultimoPedido->created_at, $ultimoPedido->id])
             ->orderBy('created_at')
             ->orderBy('id')
             ->get();

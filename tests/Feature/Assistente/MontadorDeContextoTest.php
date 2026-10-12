@@ -94,3 +94,21 @@ test('turno maior que o limite começa na última pergunta do usuário, com os p
         ->and($mensagens[1]['content'])->toBe('Pergunta longa')
         ->and(array_column($mensagens, 'tool_call_id'))->toBe(['c1', 'c2', 'c3']);
 });
+
+test('turno maior que o limite não traz mensagens de um turno anterior criadas no mesmo segundo', function () {
+    config(['assistente.mensagens_no_contexto' => 3]);
+    $segundo = '2026-10-13 10:00:00';
+    $conversa = Conversa::factory()->create();
+    Mensagem::factory()->for($conversa)->create(['id' => '00000000-0000-7000-8000-000000000001', 'papel' => PapelDaMensagem::Usuario, 'conteudo' => 'Pergunta antiga', 'created_at' => $segundo]);
+    Mensagem::factory()->for($conversa)->create(['id' => '00000000-0000-7000-8000-000000000002', 'papel' => PapelDaMensagem::Assistente, 'conteudo' => 'Resposta antiga', 'created_at' => $segundo]);
+    Mensagem::factory()->for($conversa)->create(['id' => '00000000-0000-7000-8000-000000000003', 'papel' => PapelDaMensagem::Usuario, 'conteudo' => 'Pergunta nova', 'created_at' => $segundo]);
+    Mensagem::factory()->for($conversa)->create(['id' => '00000000-0000-7000-8000-000000000004', 'papel' => PapelDaMensagem::Assistente, 'conteudo' => null, 'chamadas' => [['id' => 'c1', 'nome' => 'listar_cadastros', 'argumentos' => '{}']], 'created_at' => '2026-10-13 10:00:01']);
+    Mensagem::factory()->for($conversa)->create(['id' => '00000000-0000-7000-8000-000000000005', 'papel' => PapelDaMensagem::Ferramenta, 'conteudo' => '{}', 'ferramenta_id' => 'c1', 'created_at' => '2026-10-13 10:00:02']);
+    Mensagem::factory()->for($conversa)->create(['id' => '00000000-0000-7000-8000-000000000006', 'papel' => PapelDaMensagem::Assistente, 'conteudo' => null, 'chamadas' => [['id' => 'c2', 'nome' => 'listar_cadastros', 'argumentos' => '{}']], 'created_at' => '2026-10-13 10:00:03']);
+    Mensagem::factory()->for($conversa)->create(['id' => '00000000-0000-7000-8000-000000000007', 'papel' => PapelDaMensagem::Ferramenta, 'conteudo' => '{}', 'ferramenta_id' => 'c2', 'created_at' => '2026-10-13 10:00:04']);
+
+    $mensagens = app(MontadorDeContexto::class)->montar($conversa->user, $conversa);
+
+    expect(array_column($mensagens, 'role'))->toBe(['system', 'user', 'assistant', 'tool', 'assistant', 'tool'])
+        ->and($mensagens[1]['content'])->toBe('Pergunta nova');
+});
