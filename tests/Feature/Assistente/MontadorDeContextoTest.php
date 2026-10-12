@@ -32,7 +32,7 @@ test('o corte do histórico nunca começa no meio de uma chamada de ferramenta',
 
     $mensagens = app(MontadorDeContexto::class)->montar($conversa->user, $conversa);
 
-    expect(array_column($mensagens, 'role'))->toBe(['system']);
+    expect(array_column($mensagens, 'role'))->toBe(['system', 'user', 'assistant', 'tool', 'assistant']);
 });
 
 test('chamada sem resultado e resultado sem chamada não vão para o contexto', function () {
@@ -63,4 +63,34 @@ test('o nome vai para o prompt sem espaços sobrando e com no máximo 80 caracte
     $instrucoes = app(MontadorDeContexto::class)->montar($usuario, $conversa)[0]['content'];
 
     expect($instrucoes)->toContain('de Maria '.str_repeat('Conceição ', 7).'Conc...');
+});
+
+test('chamada respondida pela metade sai do contexto junto com o resultado parcial', function () {
+    $conversa = Conversa::factory()->create();
+    Mensagem::factory()->for($conversa)->create(['papel' => PapelDaMensagem::Usuario, 'conteudo' => 'Oi']);
+    Mensagem::factory()->for($conversa)->create(['papel' => PapelDaMensagem::Assistente, 'conteudo' => null, 'chamadas' => [
+        ['id' => 'c1', 'nome' => 'listar_cadastros', 'argumentos' => '{}'],
+        ['id' => 'c2', 'nome' => 'consultar_agenda', 'argumentos' => '{}'],
+    ]]);
+    Mensagem::factory()->for($conversa)->create(['papel' => PapelDaMensagem::Ferramenta, 'conteudo' => '{}', 'ferramenta_id' => 'c1']);
+
+    $mensagens = app(MontadorDeContexto::class)->montar($conversa->user, $conversa);
+
+    expect(array_column($mensagens, 'role'))->toBe(['system', 'user']);
+});
+
+test('turno maior que o limite começa na última pergunta do usuário, com os pares de ferramenta íntegros', function () {
+    config(['assistente.mensagens_no_contexto' => 3]);
+    $conversa = Conversa::factory()->create();
+    Mensagem::factory()->for($conversa)->create(['papel' => PapelDaMensagem::Usuario, 'conteudo' => 'Pergunta longa']);
+    foreach (['c1', 'c2', 'c3'] as $id) {
+        Mensagem::factory()->for($conversa)->create(['papel' => PapelDaMensagem::Assistente, 'conteudo' => null, 'chamadas' => [['id' => $id, 'nome' => 'listar_cadastros', 'argumentos' => '{}']]]);
+        Mensagem::factory()->for($conversa)->create(['papel' => PapelDaMensagem::Ferramenta, 'conteudo' => '{}', 'ferramenta_id' => $id]);
+    }
+
+    $mensagens = app(MontadorDeContexto::class)->montar($conversa->user, $conversa);
+
+    expect(array_column($mensagens, 'role'))->toBe(['system', 'user', 'assistant', 'tool', 'assistant', 'tool', 'assistant', 'tool'])
+        ->and($mensagens[1]['content'])->toBe('Pergunta longa')
+        ->and(array_column($mensagens, 'tool_call_id'))->toBe(['c1', 'c2', 'c3']);
 });

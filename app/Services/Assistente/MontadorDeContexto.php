@@ -56,10 +56,38 @@ final class MontadorDeContexto
         $inicio = $recentes->search(fn (Mensagem $mensagem) => $mensagem->papel === PapelDaMensagem::Usuario);
 
         if ($inicio === false) {
-            return collect();
+            return $this->semChamadasOrfas($this->turnoDoUltimoPedido($conversa));
         }
 
         return $this->semChamadasOrfas($recentes->slice($inicio)->values());
+    }
+
+    /**
+     * Quando um único turno (pedido e respostas com ferramentas) passa do limite, o corte ainda começa no pedido,
+     * para o modelo não perder a pergunta. Vai do último pedido do usuário até o fim da conversa.
+     *
+     * @return Collection<int, Mensagem>
+     */
+    private function turnoDoUltimoPedido(Conversa $conversa): Collection
+    {
+        $ultimoPedido = $conversa->mensagens()
+            ->reorder()
+            ->where('papel', PapelDaMensagem::Usuario)
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->first();
+
+        if ($ultimoPedido === null) {
+            return collect();
+        }
+
+        return $conversa->mensagens()
+            ->reorder()
+            ->where('erro', false)
+            ->where('created_at', '>=', $ultimoPedido->created_at)
+            ->orderBy('created_at')
+            ->orderBy('id')
+            ->get();
     }
 
     /**
