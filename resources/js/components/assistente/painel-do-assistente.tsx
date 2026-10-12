@@ -190,36 +190,19 @@ export function PainelDoAssistente() {
         return null;
     }
 
-    if (!celular) {
-        return (
-            <aside
-                id="painel-assistente"
-                aria-label="Assistente"
-                className={cn(
-                    'sticky top-0 h-svh w-[420px] shrink-0 flex-col self-start border-l bg-card print:hidden',
-                    aberto ? 'flex' : 'hidden',
-                )}
-            >
-                <ConteudoDoAssistente
-                    userId={userId}
-                    aberto={aberto}
-                    aoFechar={fechar}
-                />
-            </aside>
-        );
-    }
-
+    // Um único contêiner nos dois modos: trocar de modo só muda classes e papel ARIA, então a conversa
+    // (e o stream em andamento) não remonta.
     return (
         <div
             id="painel-assistente"
             ref={painelCelular}
-            role="dialog"
-            aria-modal="true"
+            role={celular ? 'dialog' : 'complementary'}
+            aria-modal={celular ? 'true' : undefined}
             aria-label="Assistente"
-            tabIndex={-1}
+            tabIndex={celular ? -1 : undefined}
             onKeyDown={(evento) => {
                 // Escape já tratado por outra camada (ex.: o diálogo de excluir conversa) não fecha o painel também.
-                if (evento.defaultPrevented) {
+                if (!celular || evento.defaultPrevented) {
                     return;
                 }
 
@@ -228,8 +211,10 @@ export function PainelDoAssistente() {
                 }
             }}
             className={cn(
-                'fixed inset-0 z-50 h-svh flex-col bg-background outline-none',
                 aberto ? 'flex' : 'hidden',
+                celular
+                    ? 'fixed inset-0 z-50 h-svh flex-col bg-background outline-none'
+                    : 'sticky top-0 h-svh w-[420px] shrink-0 flex-col self-start border-l bg-card print:hidden',
             )}
         >
             <ConteudoDoAssistente
