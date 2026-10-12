@@ -10,6 +10,12 @@ import {
     classeDaAba,
     MenuDoModulo,
 } from '@/components/menu-superior/menu-do-modulo';
+import {
+    NavigationMenu,
+    NavigationMenuItem,
+    NavigationMenuLink,
+    NavigationMenuList,
+} from '@/components/ui/navigation-menu';
 import { useAssistente } from '@/hooks/use-assistente';
 import { abaAtiva, secoesDoMenu } from '@/lib/menu/secoes';
 import { calendario } from '@/routes/agendamentos';
@@ -40,29 +46,51 @@ export function BarraSuperior() {
                     aria-label="Navegação do app"
                     className="hidden h-full items-center lg:flex"
                 >
-                    <Link
-                        href={inicio()}
-                        prefetch
-                        aria-current={ativa === 'inicio' ? 'page' : undefined}
-                        className={classeDaAba(ativa === 'inicio')}
+                    <NavigationMenu
+                        viewport={false}
+                        delayDuration={100}
+                        aria-label="Módulos"
+                        className="h-full max-w-none flex-none justify-start"
                     >
-                        <House aria-hidden="true" className="size-[18px]" />
-                        Início
-                    </Link>
-                    <MenuDoModulo
-                        secao={secaoAgendamentos}
-                        ativa={ativa === secaoAgendamentos.id}
-                        icone={CalendarDays}
-                        acaoFinal={{
-                            titulo: 'Nova reserva',
-                            href: calendario(),
-                        }}
-                    />
-                    <MenuDoModulo
-                        secao={secaoCertificados}
-                        ativa={ativa === secaoCertificados.id}
-                        icone={FileText}
-                    />
+                        <NavigationMenuList className="h-full flex-none justify-start gap-0">
+                            <NavigationMenuItem>
+                                <NavigationMenuLink asChild>
+                                    <Link
+                                        href={inicio()}
+                                        prefetch
+                                        aria-current={
+                                            ativa === 'inicio'
+                                                ? 'page'
+                                                : undefined
+                                        }
+                                        className={classeDaAba(
+                                            ativa === 'inicio',
+                                        )}
+                                    >
+                                        <House
+                                            aria-hidden="true"
+                                            className="size-[18px]"
+                                        />
+                                        Início
+                                    </Link>
+                                </NavigationMenuLink>
+                            </NavigationMenuItem>
+                            <MenuDoModulo
+                                secao={secaoAgendamentos}
+                                ativa={ativa === secaoAgendamentos.id}
+                                icone={CalendarDays}
+                                acaoFinal={{
+                                    titulo: 'Nova reserva',
+                                    href: calendario(),
+                                }}
+                            />
+                            <MenuDoModulo
+                                secao={secaoCertificados}
+                                ativa={ativa === secaoCertificados.id}
+                                icone={FileText}
+                            />
+                        </NavigationMenuList>
+                    </NavigationMenu>
                 </nav>
 
                 <div className="ml-auto flex items-center gap-3">
