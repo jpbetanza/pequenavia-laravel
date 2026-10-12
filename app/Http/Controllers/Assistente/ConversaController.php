@@ -8,6 +8,7 @@ use App\Models\AcaoProposta;
 use App\Models\Conversa;
 use App\Models\Mensagem;
 use App\Services\Assistente\ResumoDaAcao;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -31,6 +32,7 @@ class ConversaController extends Controller
 
         $conversas = Conversa::query()
             ->where('user_id', $request->user()->id)
+            ->when($busca !== '', fn (Builder $consulta) => $consulta->where('titulo_busca', 'like', '%'.addcslashes($busca, '%_\\').'%'))
             ->addSelect(['previa' => Mensagem::query()
                 ->select('conteudo')
                 ->whereColumn('conversa_id', 'conversas.id')
@@ -45,10 +47,6 @@ class ConversaController extends Controller
             ->orderByDesc('created_at')
             ->limit(200)
             ->get();
-
-        if ($busca !== '') {
-            $conversas = $conversas->filter(fn (Conversa $conversa) => str_contains(Str::lower(Str::ascii($conversa->titulo)), $busca))->values();
-        }
 
         return response()->json([
             'conversas' => $conversas->map(fn (Conversa $conversa) => [

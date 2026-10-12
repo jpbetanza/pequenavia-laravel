@@ -26,6 +26,29 @@ test('lista só as conversas do usuário, mais recentes primeiro, com busca sem 
         ->assertJsonPath('conversas.0.titulo', 'Salão no sábado');
 });
 
+test('busca encontra conversa antiga, além das 200 mais recentes, e a lista continua limitada a 200', function () {
+    $usuario = User::factory()->create();
+    Conversa::factory()->for($usuario)->create(['titulo' => 'Salão', 'ultima_mensagem_em' => now()->subYear()]);
+    Conversa::factory()->for($usuario)->count(204)->create(['titulo' => 'Catequese', 'ultima_mensagem_em' => now()]);
+
+    $this->actingAs($usuario)->getJson(route('assistente.conversas.index', ['busca' => 'salao']))
+        ->assertOk()
+        ->assertJsonCount(1, 'conversas')
+        ->assertJsonPath('conversas.0.titulo', 'Salão');
+
+    $this->getJson(route('assistente.conversas.index'))->assertJsonCount(200, 'conversas');
+});
+
+test('a busca acompanha a troca de título', function () {
+    $conversa = Conversa::factory()->for(User::factory()->create())->create(['titulo' => 'Nova conversa']);
+
+    $conversa->update(['titulo' => 'Reunião do conselho']);
+
+    $this->actingAs($conversa->user)->getJson(route('assistente.conversas.index', ['busca' => 'REUNIAO']))
+        ->assertJsonCount(1, 'conversas')
+        ->assertJsonPath('conversas.0.titulo', 'Reunião do conselho');
+});
+
 test('cria conversa vazia', function () {
     $this->actingAs(User::factory()->create())->postJson(route('assistente.conversas.store'))
         ->assertCreated()

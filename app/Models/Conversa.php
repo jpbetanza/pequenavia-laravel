@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 
 /**
  * Conversa do usuário com o assistente de IA, guardada para ser retomada depois.
@@ -18,6 +19,7 @@ use Illuminate\Support\Carbon;
  * @property string $id
  * @property string $user_id
  * @property string $titulo
+ * @property string $titulo_busca Título sem acento e em minúsculas, para a busca.
  * @property Carbon|null $ultima_mensagem_em
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -28,6 +30,13 @@ class Conversa extends Model
 {
     /** @use HasFactory<ConversaFactory> */
     use HasFactory, HasUuids;
+
+    protected static function booted(): void
+    {
+        static::saving(function (Conversa $conversa): void {
+            $conversa->titulo_busca = Str::lower(Str::ascii($conversa->titulo));
+        });
+    }
 
     /**
      * Get the attributes that should be cast.
