@@ -16,6 +16,7 @@ import {
     MENSAGEM_DE_FALHA,
     substituirCartaoDeAcao,
 } from '@/lib/assistente/eventos';
+import { DICA_AGUARDE_RESPOSTA } from '@/lib/assistente/painel';
 import { enviarJson, mensagemDoErro } from '@/lib/http';
 import type {
     AcaoProposta,
@@ -53,6 +54,8 @@ type Props = {
     aoVerConversas: () => void;
     aoNovaConversa: () => void;
     aoFechar: () => void;
+    /** Avisa o painel quando a resposta começa e quando termina, para a lista desabilitar a troca de conversa. */
+    aoMudarEnviando: (enviando: boolean) => void;
 };
 
 /** Marca como concluída a resposta que ficou pendente (parada pelo usuário ou stream que terminou sem `fim`). */
@@ -85,6 +88,7 @@ export function ConversaDoAssistente({
     aoVerConversas,
     aoNovaConversa,
     aoFechar,
+    aoMudarEnviando,
 }: Props) {
     // A abertura usa só o valor do primeiro render. Criar a conversa no primeiro envio não deve recarregá-la.
     const [inicial] = useState(conversaIdInicial);
@@ -163,6 +167,7 @@ export function ConversaDoAssistente({
 
         emAndamento.current = true;
         setEnviando(true);
+        aoMudarEnviando(true);
 
         const controle = new AbortController();
         const ids = {
@@ -247,6 +252,7 @@ export function ConversaDoAssistente({
             emAndamento.current = false;
             controleRef.current = null;
             setEnviando(false);
+            aoMudarEnviando(false);
         }
     }
 
@@ -309,6 +315,7 @@ export function ConversaDoAssistente({
                     aria-label="Nova conversa"
                     onClick={aoNovaConversa}
                     disabled={enviando}
+                    title={enviando ? DICA_AGUARDE_RESPOSTA : undefined}
                     className="size-11 text-muted-foreground"
                 >
                     <SquarePen aria-hidden="true" />

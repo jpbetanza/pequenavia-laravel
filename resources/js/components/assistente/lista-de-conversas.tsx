@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { buscarJson } from '@/lib/assistente/enviar';
+import { DICA_AGUARDE_RESPOSTA } from '@/lib/assistente/painel';
 import { agruparConversas, filtrarConversas } from '@/lib/assistente/lista';
 import { enviarJson, mensagemDoErro } from '@/lib/http';
 import { tempoRelativo } from '@/lib/tempo';
@@ -29,6 +30,8 @@ type Props = {
     /** A lista fica montada o tempo todo; recarrega sempre que volta a ficar visível. */
     visivel: boolean;
     conversaAtualId: string | null;
+    /** Resposta em andamento: não dá para trocar de conversa nem criar outra sem cortar o stream. */
+    enviando: boolean;
     aoAbrir: (id: string) => void;
     aoNovaConversa: () => void;
     aoVoltar: () => void;
@@ -39,6 +42,7 @@ type Props = {
 export function ListaDeConversas({
     visivel,
     conversaAtualId,
+    enviando,
     aoAbrir,
     aoNovaConversa,
     aoVoltar,
@@ -139,6 +143,8 @@ export function ListaDeConversas({
                 <Button
                     type="button"
                     onClick={aoNovaConversa}
+                    disabled={enviando}
+                    title={enviando ? DICA_AGUARDE_RESPOSTA : undefined}
                     className="min-h-11 w-full rounded-xl"
                 >
                     <SquarePen aria-hidden="true" />
@@ -216,6 +222,12 @@ export function ListaDeConversas({
                                             type="button"
                                             aria-current={
                                                 atual ? 'true' : undefined
+                                            }
+                                            disabled={enviando}
+                                            title={
+                                                enviando
+                                                    ? DICA_AGUARDE_RESPOSTA
+                                                    : undefined
                                             }
                                             onClick={() => aoAbrir(conversa.id)}
                                             className={cn(

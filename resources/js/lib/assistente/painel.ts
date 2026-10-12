@@ -1,3 +1,6 @@
+/** Dica de botão desabilitado enquanto a resposta está sendo escrita: trocar de conversa agora cortaria o stream. */
+export const DICA_AGUARDE_RESPOSTA = 'Aguarde a resposta terminar';
+
 /** Abaixo de 768 px o painel do assistente é um diálogo em tela cheia (mesmo limite do `md` do Tailwind). */
 export const CONSULTA_CELULAR = '(max-width: 767px)';
 

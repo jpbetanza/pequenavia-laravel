@@ -71,6 +71,7 @@ function isolarFundo(painel: HTMLElement): () => void {
 function ConteudoDoAssistente({ userId, aberto, aoFechar }: ConteudoProps) {
     const chave = chaveDaConversaSalva(userId);
     const [vista, setVista] = useState<'conversa' | 'lista'>('conversa');
+    const [enviando, setEnviando] = useState(false);
     const [conversaId, setConversaId] = useState<string | null>(() =>
         lerConversaSalva(chave),
     );
@@ -103,6 +104,7 @@ function ConteudoDoAssistente({ userId, aberto, aoFechar }: ConteudoProps) {
                     aoVerConversas={() => setVista('lista')}
                     aoNovaConversa={() => abrirConversa(null)}
                     aoFechar={aoFechar}
+                    aoMudarEnviando={setEnviando}
                 />
             </div>
             <div
@@ -114,6 +116,7 @@ function ConteudoDoAssistente({ userId, aberto, aoFechar }: ConteudoProps) {
                 <ListaDeConversas
                     visivel={vista === 'lista' && aberto}
                     conversaAtualId={conversaId}
+                    enviando={enviando}
                     aoAbrir={abrirConversa}
                     aoNovaConversa={() => abrirConversa(null)}
                     aoVoltar={() => setVista('conversa')}
