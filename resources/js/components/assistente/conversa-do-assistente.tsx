@@ -9,6 +9,7 @@ import { store as enviarAoAssistente } from '@/actions/App/Http/Controllers/Assi
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { buscarJson, enviarMensagem } from '@/lib/assistente/enviar';
+import { deveDescartarConversa } from '@/lib/assistente/conversa-salva';
 import {
     aplicarEvento,
     iniciarTroca,
@@ -46,6 +47,8 @@ type Props = {
     /** Conversa a abrir ao montar. Muda só quando o painel troca de conversa (que remonta este componente). */
     conversaIdInicial: string | null;
     aoConversaCriada: (id: string) => void;
+    /** Conversa salva não existe mais: o painel esquece a referência. */
+    aoConversaPerdida: () => void;
     aoVerConversas: () => void;
     aoNovaConversa: () => void;
     aoFechar: () => void;
@@ -77,6 +80,7 @@ function paraPainel(
 export function ConversaDoAssistente({
     conversaIdInicial,
     aoConversaCriada,
+    aoConversaPerdida,
     aoVerConversas,
     aoNovaConversa,
     aoFechar,
@@ -109,9 +113,21 @@ export function ConversaDoAssistente({
                 setMensagens(dados.mensagens.map(paraPainel));
             })
             .catch((erro: unknown) => {
-                if (!controle.signal.aborted) {
-                    toast.error(mensagemDoErro(erro));
+                if (controle.signal.aborted) {
+                    return;
                 }
+
+                if (deveDescartarConversa(erro)) {
+                    // Conversa apagada ou de outro usuário: começa uma conversa nova, sem aviso.
+                    setConversaId(null);
+                    setTitulo(null);
+                    setMensagens([]);
+                    aoConversaPerdida();
+
+                    return;
+                }
+
+                toast.error(mensagemDoErro(erro));
             })
             .finally(() => {
                 if (!controle.signal.aborted) {

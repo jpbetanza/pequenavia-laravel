@@ -26,6 +26,8 @@ import { cn } from '@/lib/utils';
 import type { ResumoDeConversa } from '@/types/assistente';
 
 type Props = {
+    /** A lista fica montada o tempo todo; recarrega sempre que volta a ficar visível. */
+    visivel: boolean;
     conversaAtualId: string | null;
     aoAbrir: (id: string) => void;
     aoNovaConversa: () => void;
@@ -35,6 +37,7 @@ type Props = {
 };
 
 export function ListaDeConversas({
+    visivel,
     conversaAtualId,
     aoAbrir,
     aoNovaConversa,
@@ -52,13 +55,20 @@ export function ListaDeConversas({
     const [excluindo, setExcluindo] = useState(false);
 
     useEffect(() => {
+        if (!visivel) {
+            return;
+        }
+
         const controle = new AbortController();
 
         buscarJson<{ conversas: ResumoDeConversa[] }>(
             listarConversas.url(),
             controle.signal,
         )
-            .then((dados) => setConversas(dados.conversas))
+            .then((dados) => {
+                setFalhou(false);
+                setConversas(dados.conversas);
+            })
             .catch((erro: unknown) => {
                 if (!controle.signal.aborted) {
                     setFalhou(true);
@@ -67,7 +77,7 @@ export function ListaDeConversas({
             });
 
         return () => controle.abort();
-    }, []);
+    }, [visivel]);
 
     async function excluir(conversa: ResumoDeConversa) {
         setExcluindo(true);
