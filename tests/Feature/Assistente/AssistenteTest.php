@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Services\Assistente\Assistente;
 use App\Services\Assistente\ClienteOpenRouter;
 use App\Services\Assistente\EventoDoAssistente;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
@@ -113,6 +114,7 @@ test('interrupção no meio do texto grava o trecho já recebido', function () {
 });
 
 test('erro inesperado grava a mensagem de erro e emite o evento erro, sem deixar o stream mudo', function () {
+    Exceptions::fake();
     $this->mock(ClienteOpenRouter::class)
         ->shouldReceive('conversar')
         ->andThrow(new RuntimeException('falha inesperada'));
@@ -123,4 +125,6 @@ test('erro inesperado grava a mensagem de erro e emite o evento erro, sem deixar
     expect(array_map(fn ($e) => $e->tipo, $eventos))->toBe(['erro'])
         ->and(end($eventos)->dados['mensagem'])->toBe('Não consegui responder agora. Tente de novo.')
         ->and($conversa->mensagens()->where('papel', PapelDaMensagem::Assistente)->where('erro', true)->count())->toBe(1);
+
+    Exceptions::assertReported(RuntimeException::class);
 });
