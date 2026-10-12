@@ -1,74 +1,98 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import {
-    ArrowRight,
-    FileSpreadsheet,
-    History,
-    Image,
-    Lock,
-    Type,
-    Users,
+    CalendarDays,
+    Check,
+    Link as IconeDeLink,
+    Pencil,
+    Projector,
+    Search,
+    TriangleAlert,
 } from 'lucide-react';
+import { ExemploDeCertificado } from '@/components/welcome/exemplo-de-certificado';
+import { ExemploDePedido } from '@/components/welcome/exemplo-de-pedido';
+import { ExemploDoDia } from '@/components/welcome/exemplo-do-dia';
+import {
+    ExemploDoAssistente,
+    PainelDoAssistente,
+} from '@/components/welcome/exemplo-do-assistente';
 import { Button } from '@/components/ui/button';
-import { home, login, register } from '@/routes';
-import { index as meusCertificados } from '@/routes/meus-certificados';
+import { home, inicio, login, register } from '@/routes';
+
+const recursosDaAgenda = [
+    {
+        icone: CalendarDays,
+        titulo: 'A semana inteira, por sala',
+        descricao:
+            'Cada espaço com sua cor e seus horários de funcionamento. Reservas que se repetem toda semana ou todo mês entram de uma vez.',
+    },
+    {
+        icone: TriangleAlert,
+        titulo: 'Conflito avisado na hora',
+        descricao:
+            'Sala ocupada, fora do horário, bloqueada para reforma ou sem projetor sobrando: o aviso aparece antes de você salvar, com uma sugestão de horário livre.',
+    },
+    {
+        icone: Projector,
+        titulo: 'Equipamentos que circulam',
+        descricao:
+            'Dois projetores para cinco salas? O sistema conta quantos estão em uso em cada horário e mostra o que separar e recolher hoje.',
+    },
+    {
+        icone: IconeDeLink,
+        titulo: 'Um link para as pastorais',
+        descricao:
+            'Quem coordena um grupo escolhe a pastoral, o espaço e o horário, deixa nome e telefone. Sem criar conta.',
+    },
+];
+
+const recursosDoAssistente = [
+    {
+        icone: Search,
+        titulo: 'Consulta',
+        descricao:
+            '“O que tem amanhã?”, “Quem pediu o salão no sábado?”, “Quantos batismos emitimos este mês?”',
+    },
+    {
+        icone: CalendarDays,
+        titulo: 'Encontra horário',
+        descricao:
+            'Procura a sala certa para o tamanho do grupo e sugere o próximo horário livre.',
+    },
+    {
+        icone: Pencil,
+        titulo: 'Prepara o trabalho',
+        descricao:
+            'Monta reservas e cadastra salas, grupos e equipamentos. Nada é gravado sem o seu clique.',
+    },
+];
+
+const recursosDosCertificados = [
+    {
+        titulo: 'Modelos por sacramento',
+        descricao: 'Batismo, Eucaristia, Crisma…',
+    },
+    { titulo: 'Planilha do Excel', descricao: 'Vários de uma vez' },
+    { titulo: 'Equipe', descricao: 'Modelos compartilhados' },
+];
 
 const passos = [
     {
         numeral: 'I',
-        titulo: 'Envie a arte do certificado',
+        titulo: 'Cadastre salas e equipamentos',
         descricao:
-            'PNG, JPG ou WEBP de até 50 MB, com os espaços em branco onde entram os dados.',
+            'Horários de funcionamento, capacidade, projetores. Ou peça ao assistente: “cadastra a capela, das 7h às 21h”.',
     },
     {
         numeral: 'II',
-        titulo: 'Posicione os campos',
+        titulo: 'Mande o link às pastorais',
         descricao:
-            'Arraste nome, data e paróquia sobre a imagem e escolha fonte, tamanho e cor. Tudo é salvo sozinho.',
+            'No grupo de coordenadores, no mural, no boletim. Cada pedido cai na sua lista de solicitações.',
     },
     {
         numeral: 'III',
-        titulo: 'Gere um ou vários',
+        titulo: 'Aprove com tudo à vista',
         descricao:
-            'Digite os dados ou importe uma planilha do Excel e baixe cada certificado em alta resolução.',
-    },
-];
-
-const recursos = [
-    {
-        icone: Type,
-        titulo: 'Fontes clássicas incluídas',
-        descricao:
-            'Caligráficas, serifadas e sem serifa, escolhidas para documentos solenes.',
-    },
-    {
-        icone: FileSpreadsheet,
-        titulo: 'Importação de planilha',
-        descricao:
-            'Baixe a planilha do modelo, preencha no Excel e traga tudo de volta de uma vez.',
-    },
-    {
-        icone: Users,
-        titulo: 'Equipe compartilhada',
-        descricao:
-            'Compartilhe modelos por e-mail e decida quem pode editar e quem só gera.',
-    },
-    {
-        icone: History,
-        titulo: 'Histórico de emissões',
-        descricao:
-            'Cada certificado gerado fica registrado, com os dados na ordem do modelo.',
-    },
-    {
-        icone: Image,
-        titulo: 'Imagens em alta resolução',
-        descricao:
-            'Artes de até 50 MB, geradas no tamanho original, prontas para a gráfica.',
-    },
-    {
-        icone: Lock,
-        titulo: 'Acesso simples e seguro',
-        descricao:
-            'Entre com o Google ou com e-mail e senha; chaves de acesso e 2FA disponíveis.',
+            'Conflitos no próprio cartão, contato pelo WhatsApp ao lado do Aprovar. A semana se monta sozinha.',
     },
 ];
 
@@ -77,19 +101,19 @@ const ancoraClasse =
 
 export default function Welcome() {
     const { auth } = usePage().props;
-    const comecar = auth.user ? meusCertificados() : register();
+    const comecar = auth.user ? inicio() : register();
 
     return (
         <>
-            <Head title="Certificados sagrados, geridos com beleza">
+            <Head title="Salas, horários e certificados da paróquia">
                 <link
                     rel="stylesheet"
-                    href="https://fonts.googleapis.com/css2?family=Pinyon+Script&display=swap"
+                    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Instrument+Sans:wght@400;500;600&family=Pinyon+Script&display=swap"
                 />
             </Head>
             <div className="min-h-screen bg-background text-foreground">
                 <header className="border-b border-border">
-                    <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-4 px-6 py-4 md:px-8">
+                    <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-4 px-4 py-4 md:px-8">
                         <Link
                             href={home()}
                             className="flex items-center gap-3 text-foreground"
@@ -108,29 +132,30 @@ export default function Welcome() {
 
                         <nav
                             aria-label="Principal"
-                            className="flex flex-wrap items-center gap-2"
+                            className="flex flex-wrap items-center gap-1"
                         >
-                            <a href="#como-funciona" className={ancoraClasse}>
-                                Como funciona
+                            <a href="#agenda" className={ancoraClasse}>
+                                Salas e horários
                             </a>
-                            <a href="#recursos" className={ancoraClasse}>
-                                Recursos
+                            <a href="#assistente" className={ancoraClasse}>
+                                Assistente
+                            </a>
+                            <a href="#certificados" className={ancoraClasse}>
+                                Certificados
                             </a>
                             {auth.user ? (
                                 <Button
                                     asChild
-                                    className="h-11 rounded-full px-5 font-semibold"
+                                    className="ml-1 h-11 rounded-full px-5 font-semibold"
                                 >
-                                    <Link href={meusCertificados()}>
-                                        Meus certificados
-                                    </Link>
+                                    <Link href={inicio()}>Abrir o app</Link>
                                 </Button>
                             ) : (
                                 <>
                                     <Button
                                         asChild
                                         variant="outline"
-                                        className="h-11 rounded-full border-input bg-transparent px-5 font-semibold"
+                                        className="ml-2 h-11 rounded-full border-input bg-transparent px-5 font-semibold"
                                     >
                                         <Link href={login()}>Entrar</Link>
                                     </Button>
@@ -151,21 +176,21 @@ export default function Welcome() {
                 <main>
                     <section
                         id="topo"
-                        className="mx-auto grid max-w-[1200px] grid-cols-1 items-center gap-16 px-6 pt-16 pb-24 md:px-8 lg:grid-cols-2 lg:pt-22"
+                        className="mx-auto grid max-w-[1200px] grid-cols-1 items-center gap-14 px-4 pt-14 pb-20 md:px-8 lg:grid-cols-2 lg:pt-20 lg:pb-24"
                     >
                         <div className="flex flex-col gap-7">
                             <p className="text-[13px] font-semibold tracking-[0.16em] text-dourado uppercase">
-                                Certificados sacramentais para paróquias
+                                A secretaria paroquial, num só lugar
                             </p>
                             <h1 className="font-serif text-5xl leading-[0.98] font-semibold text-balance md:text-7xl">
-                                Cada sacramento, registrado com o cuidado que
-                                merece.
+                                Cada sala no seu horário. Cada pedido com
+                                resposta.
                             </h1>
-                            <p className="max-w-[520px] text-lg text-pretty text-foreground/80 md:text-xl">
-                                Envie a arte do seu certificado, diga onde vai
-                                cada nome e data, e gere um ou cem certificados
-                                prontos para imprimir — sem abrir um editor de
-                                imagens.
+                            <p className="max-w-[530px] text-lg text-pretty text-foreground/80 md:text-[19px]">
+                                Organize salas, capela e equipamentos sem
+                                planilha e sem choque de horário. As pastorais
+                                pedem pelo link, você aprova num clique, e um
+                                assistente responde quem está onde.
                             </p>
                             <div className="flex flex-wrap items-center gap-3">
                                 <Button
@@ -173,109 +198,205 @@ export default function Welcome() {
                                     className="h-12 rounded-full px-7 text-base font-semibold"
                                 >
                                     <Link href={comecar}>
-                                        Criar meu primeiro modelo
+                                        Organizar minha agenda
                                     </Link>
                                 </Button>
                                 <a
-                                    href="#como-funciona"
+                                    href="#assistente"
                                     className="inline-flex min-h-11 items-center px-4 font-semibold text-foreground"
                                 >
-                                    Ver como funciona{' '}
-                                    <ArrowRight className="ml-1 size-4" />
+                                    Conhecer o assistente →
                                 </a>
                             </div>
-                            {!auth.user && (
-                                <p className="text-sm text-muted-foreground">
-                                    Entre com sua conta Google ou com e-mail e
-                                    senha.
-                                </p>
-                            )}
+                            <ul className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted-foreground">
+                                {[
+                                    'Conflitos avisados antes de reservar',
+                                    'Projetores controlados entre salas',
+                                    'Certificados continuam aqui',
+                                ].map((item) => (
+                                    <li
+                                        key={item}
+                                        className="flex items-center gap-2"
+                                    >
+                                        <Check
+                                            className="size-4 shrink-0 text-sucesso"
+                                            strokeWidth={2.2}
+                                            aria-hidden="true"
+                                        />
+                                        {item}
+                                    </li>
+                                ))}
+                            </ul>
                         </div>
 
-                        <div className="relative mx-auto h-[500px] w-full max-w-[460px] sm:h-[520px] lg:mx-0 lg:max-w-none">
-                            <div
-                                aria-hidden="true"
-                                className="absolute top-9 left-[12%] h-[430px] w-[72%] -rotate-6 rounded-md border border-[#DCCFBB] bg-[#EDE4D3]"
-                            />
-                            <div
-                                aria-hidden="true"
-                                className="absolute top-[18px] left-[16%] h-[430px] w-[72%] rotate-3 rounded-md border border-[#DCCFBB] bg-[#F1E9DA]"
-                            />
-                            <figure className="absolute top-0 left-[10%] m-0 h-[470px] w-[78%] rounded-md bg-[#FCF8EF] p-[18px] shadow-[0_30px_60px_-30px_rgba(60,30,20,0.45),0_2px_6px_rgba(60,30,20,0.08)]">
-                                <div className="h-full border-2 border-[#6E1F24] p-1.5">
-                                    <div className="flex h-full flex-col items-center justify-center gap-2.5 border border-[#B8955A] px-4 py-5 text-center sm:px-4">
-                                        <img
-                                            src="/images/logo.png"
-                                            alt=""
-                                            className="size-12 object-contain opacity-90"
-                                        />
-                                        <p className="font-serif text-lg leading-snug font-bold tracking-[0.04em] text-[#6E1F24] uppercase sm:text-xl sm:whitespace-nowrap">
-                                            Certificado de Batismo
-                                        </p>
-                                        <p className="font-serif text-base text-[#4A3D38] italic">
-                                            Certificamos que
-                                        </p>
-                                        <p
-                                            className="text-3xl leading-tight text-[#221A17] sm:text-4xl"
-                                            style={{
-                                                fontFamily:
-                                                    "'Pinyon Script', cursive",
-                                            }}
-                                        >
-                                            Maria Clara Souza
-                                        </p>
-                                        <div className="h-px w-3/5 bg-[#B8955A]" />
-                                        <p className="max-w-[340px] font-serif text-sm leading-snug text-[#4A3D38] sm:text-base">
-                                            recebeu o Sacramento do Batismo em
-                                            14 de setembro de 2026, na Paróquia
-                                            [NOME DA PARÓQUIA].
-                                        </p>
-                                    </div>
-                                </div>
-                                <figcaption className="absolute right-[-14px] bottom-9 flex items-center gap-2 rounded-full bg-[#221A17] px-3.5 py-2 text-[13px] font-semibold text-[#FBF8F2]">
-                                    <svg
-                                        width="16"
-                                        height="16"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        aria-hidden="true"
-                                    >
-                                        <path d="M20 6 9 17l-5-5" />
-                                    </svg>
-                                    Gerado a partir da planilha
-                                </figcaption>
-                            </figure>
+                        <div className="relative flex flex-col gap-5 lg:block lg:h-[560px]">
+                            <ExemploDoDia />
+                            <ExemploDoAssistente />
                         </div>
                     </section>
 
                     <section
-                        id="como-funciona"
+                        id="agenda"
                         className="border-y border-border bg-secondary"
                     >
-                        <div className="mx-auto flex max-w-[1200px] flex-col gap-12 px-6 py-20 md:px-8">
+                        <div className="mx-auto flex max-w-[1200px] flex-col gap-14 px-4 py-20 md:px-8 md:py-24">
                             <div className="flex flex-wrap items-end justify-between gap-6">
-                                <h2 className="max-w-xl font-serif text-4xl leading-[1.05] font-semibold text-balance md:text-5xl">
-                                    Três passos, do modelo ao certificado
-                                    impresso.
-                                </h2>
-                                <p className="max-w-sm text-foreground/80">
-                                    Você faz a arte uma vez. Depois disso,
-                                    preencher certificados vira uma tarefa de
-                                    secretaria, não de design.
+                                <div className="flex max-w-[620px] flex-col gap-3.5">
+                                    <p className="text-[13px] font-semibold tracking-[0.16em] text-dourado uppercase">
+                                        Salas e horários
+                                    </p>
+                                    <h2 className="font-serif text-4xl leading-[1.04] font-semibold text-balance md:text-5xl">
+                                        Ninguém chega e encontra a sala ocupada.
+                                    </h2>
+                                </div>
+                                <p className="max-w-[400px] text-foreground/80">
+                                    Só a secretaria reserva. As pastorais pedem
+                                    pelo link, e cada pedido chega já dizendo se
+                                    bate com outra reserva.
                                 </p>
                             </div>
-                            <ol className="grid grid-cols-1 gap-6 md:grid-cols-3">
+
+                            <div className="grid gap-14 lg:grid-cols-2 lg:items-start">
+                                <ul className="flex flex-col border-t border-border">
+                                    {recursosDaAgenda.map(
+                                        ({
+                                            icone: Icone,
+                                            titulo,
+                                            descricao,
+                                        }) => (
+                                            <li
+                                                key={titulo}
+                                                className="flex gap-4.5 border-b border-border py-6"
+                                            >
+                                                <Icone
+                                                    className="size-7 shrink-0 text-primary"
+                                                    strokeWidth={1.6}
+                                                    aria-hidden="true"
+                                                />
+                                                <div>
+                                                    <h3 className="mb-1.5 text-lg font-semibold">
+                                                        {titulo}
+                                                    </h3>
+                                                    <p className="text-foreground/80">
+                                                        {descricao}
+                                                    </p>
+                                                </div>
+                                            </li>
+                                        ),
+                                    )}
+                                </ul>
+
+                                <ExemploDePedido />
+                            </div>
+                        </div>
+                    </section>
+
+                    <section
+                        id="assistente"
+                        className="bg-foreground text-background"
+                    >
+                        <div className="mx-auto grid max-w-[1200px] items-center gap-16 px-4 py-24 md:px-8 lg:grid-cols-2">
+                            <div className="flex flex-col gap-6">
+                                <p className="text-[13px] font-semibold tracking-[0.16em] text-dourado-claro uppercase">
+                                    Assistente com IA
+                                </p>
+                                <h2 className="font-serif text-4xl leading-[1.02] font-semibold text-balance md:text-[56px]">
+                                    Pergunte como perguntaria a uma colega de
+                                    secretaria.
+                                </h2>
+                                <p className="max-w-[500px] text-lg text-background/75">
+                                    Ele lê a sua agenda, os pedidos e o
+                                    histórico de certificados para responder em
+                                    segundos. E quando sugere uma mudança,
+                                    espera o seu “confirmar”.
+                                </p>
+                                <ul className="flex flex-col gap-4">
+                                    {recursosDoAssistente.map(
+                                        ({
+                                            icone: Icone,
+                                            titulo,
+                                            descricao,
+                                        }) => (
+                                            <li
+                                                key={titulo}
+                                                className="flex items-start gap-3.5"
+                                            >
+                                                <span className="flex size-[34px] shrink-0 items-center justify-center rounded-[10px] bg-background/10 text-dourado-claro">
+                                                    <Icone
+                                                        className="size-[18px]"
+                                                        strokeWidth={1.8}
+                                                        aria-hidden="true"
+                                                    />
+                                                </span>
+                                                <div>
+                                                    <b className="block font-semibold">
+                                                        {titulo}
+                                                    </b>
+                                                    <span className="text-background/75">
+                                                        {descricao}
+                                                    </span>
+                                                </div>
+                                            </li>
+                                        ),
+                                    )}
+                                </ul>
+                            </div>
+
+                            <PainelDoAssistente />
+                        </div>
+                    </section>
+
+                    <section
+                        id="certificados"
+                        className="mx-auto grid max-w-[1200px] items-center gap-16 px-4 py-24 md:px-8 lg:grid-cols-2"
+                    >
+                        <ExemploDeCertificado />
+
+                        <div className="flex flex-col gap-6">
+                            <p className="text-[13px] font-semibold tracking-[0.16em] text-dourado uppercase">
+                                Certificados
+                            </p>
+                            <h2 className="font-serif text-4xl leading-[1.05] font-semibold text-balance md:text-5xl">
+                                E os certificados continuam a um clique.
+                            </h2>
+                            <p className="text-[17px] text-foreground/80">
+                                Envie a arte uma vez, posicione nome e data, e
+                                gere um ou cem certificados a partir de uma
+                                planilha. Cada emissão fica no histórico.
+                            </p>
+                            <ul className="grid gap-3 sm:grid-cols-3">
+                                {recursosDosCertificados.map(
+                                    ({ titulo, descricao }) => (
+                                        <li
+                                            key={titulo}
+                                            className="rounded-xl border border-border bg-card px-4 py-3.5 text-[15px]"
+                                        >
+                                            <b className="block font-semibold">
+                                                {titulo}
+                                            </b>
+                                            <span className="text-muted-foreground">
+                                                {descricao}
+                                            </span>
+                                        </li>
+                                    ),
+                                )}
+                            </ul>
+                        </div>
+                    </section>
+
+                    <section className="border-t border-border bg-secondary">
+                        <div className="mx-auto flex max-w-[1200px] flex-col gap-11 px-4 py-20 md:px-8 md:py-24">
+                            <h2 className="max-w-[640px] font-serif text-4xl leading-[1.05] font-semibold text-balance md:text-5xl">
+                                Em uma tarde, a agenda da paróquia está de pé.
+                            </h2>
+                            <ol className="grid gap-6 md:grid-cols-3">
                                 {passos.map(
                                     ({ numeral, titulo, descricao }) => (
                                         <li
                                             key={numeral}
-                                            className="flex flex-col gap-3.5 rounded-2xl border border-border bg-card p-8"
+                                            className="flex flex-col gap-3 rounded-2xl border border-border bg-card p-7"
                                         >
-                                            <span className="font-serif text-5xl leading-none font-semibold text-primary">
+                                            <span className="font-serif text-[44px] leading-none font-semibold text-primary">
                                                 {numeral}
                                             </span>
                                             <h3 className="text-xl font-semibold">
@@ -291,48 +412,15 @@ export default function Welcome() {
                         </div>
                     </section>
 
-                    <section
-                        id="recursos"
-                        className="mx-auto flex max-w-[1200px] flex-col gap-12 px-6 py-24 md:px-8"
-                    >
-                        <h2 className="max-w-2xl font-serif text-4xl leading-[1.05] font-semibold text-balance md:text-5xl">
-                            Pensado para a rotina da secretaria paroquial.
-                        </h2>
-                        <ul className="grid grid-cols-1 border-t border-border md:grid-cols-2 lg:grid-cols-3">
-                            {recursos.map(
-                                ({ icone: Icone, titulo, descricao }) => (
-                                    <li
-                                        key={titulo}
-                                        className="flex gap-4.5 border-b border-border py-7 pr-7"
-                                    >
-                                        <Icone
-                                            className="size-7 shrink-0 text-primary"
-                                            strokeWidth={1.6}
-                                            aria-hidden="true"
-                                        />
-                                        <div>
-                                            <h3 className="mb-1.5 text-lg font-semibold">
-                                                {titulo}
-                                            </h3>
-                                            <p className="text-foreground/80">
-                                                {descricao}
-                                            </p>
-                                        </div>
-                                    </li>
-                                ),
-                            )}
-                        </ul>
-                    </section>
-
                     <section className="bg-primary text-primary-foreground">
-                        <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-8 px-6 py-20 md:px-8">
-                            <div className="flex max-w-[620px] flex-col gap-3">
+                        <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-8 px-4 py-20 md:px-8">
+                            <div className="flex max-w-[640px] flex-col gap-3">
                                 <h2 className="font-serif text-4xl leading-[1.05] font-semibold text-balance md:text-5xl">
-                                    Comece pelo certificado que você mais emite.
+                                    Comece pela sala mais disputada da paróquia.
                                 </h2>
                                 <p className="text-lg text-primary-foreground/85">
-                                    Batismo, Primeira Eucaristia, Crisma ou
-                                    Matrimônio: um modelo por sacramento.
+                                    Salas, capela, salão, projetores e
+                                    certificados: tudo com a mesma conta.
                                 </p>
                             </div>
                             <Button
@@ -340,26 +428,22 @@ export default function Welcome() {
                                 variant="secondary"
                                 className="h-12 rounded-full bg-card px-7 text-base font-semibold text-primary hover:bg-card/90"
                             >
-                                <Link href={comecar}>
-                                    {auth.user
-                                        ? 'Abrir meus certificados'
-                                        : 'Criar conta gratuita'}
-                                </Link>
+                                <Link href={comecar}>Criar conta gratuita</Link>
                             </Button>
                         </div>
                     </section>
                 </main>
 
-                <footer className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-4 px-6 py-8 text-sm text-muted-foreground md:px-8">
+                <footer className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-4 px-4 py-8 text-sm text-muted-foreground md:px-8">
                     <span className="flex items-center gap-2.5">
                         <img
                             src="/images/logo.png"
                             alt=""
                             className="size-6 object-contain"
                         />
-                        PequenaVia
+                        PequenaVia · salas, horários e certificados
                     </span>
-                    <span>© {new Date().getFullYear()} PequenaVia</span>
+                    <span>certificados.pequenavia.app.br</span>
                 </footer>
             </div>
         </>
