@@ -9,6 +9,8 @@ use App\Http\Controllers\Agendamentos\ReservaEquipamentoController;
 use App\Http\Controllers\Agendamentos\SolicitacaoController;
 use App\Http\Controllers\Agendamentos\SolicitacaoPublicaController;
 use App\Http\Controllers\Assistente\AcaoPropostaController;
+use App\Http\Controllers\Assistente\ConversaController;
+use App\Http\Controllers\Assistente\MensagemController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\CampoCertificadoController;
 use App\Http\Controllers\CompartilhamentoController;
@@ -99,6 +101,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('assistente')->name('assistente.')->middleware(GarantirAssistenteConfigurado::class)->group(function () {
         Route::post('acoes/{acao}/confirmar', [AcaoPropostaController::class, 'confirmar'])->name('acoes.confirmar');
         Route::post('acoes/{acao}/descartar', [AcaoPropostaController::class, 'descartar'])->name('acoes.descartar');
+        Route::get('conversas', [ConversaController::class, 'index'])->name('conversas.index');
+        Route::post('conversas', [ConversaController::class, 'store'])->name('conversas.store');
+        Route::get('conversas/{conversa}', [ConversaController::class, 'show'])->name('conversas.show');
+        Route::delete('conversas/{conversa}', [ConversaController::class, 'destroy'])->name('conversas.destroy');
+        Route::post('conversas/{conversa}/mensagens', [MensagemController::class, 'store'])
+            ->middleware('throttle:assistente')
+            ->name('mensagens.store');
     });
 
     Route::get('modelos/{modelo}/imagem', [ModeloCertificadoController::class, 'imagem'])->name('modelos.imagem');

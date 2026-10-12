@@ -43,6 +43,16 @@ class AppServiceProvider extends ServiceProvider
         $this->configureDefaults();
         $this->configureRateLimiting();
         $this->configureSolicitacoesRateLimiting();
+        $this->configureAssistenteRateLimiting();
+    }
+
+    /**
+     * Limita as mensagens ao assistente por usuário: 20 por minuto.
+     */
+    protected function configureAssistenteRateLimiting(): void
+    {
+        RateLimiter::for('assistente', fn (Request $request): Limit => Limit::perMinute(20)
+            ->by($request->user()?->id ?: $request->ip()));
     }
 
     /**

@@ -48,7 +48,7 @@ class Conversa extends Model
     /** @return HasMany<Mensagem, $this> */
     public function mensagens(): HasMany
     {
-        return $this->hasMany(Mensagem::class, 'conversa_id')->orderBy('created_at')->orderBy('id');
+        return $this->hasMany(Mensagem::class, 'conversa_id');
     }
 
     /** @return HasMany<AcaoProposta, $this> */
