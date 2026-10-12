@@ -107,6 +107,17 @@ it('conta os certificados do mês no fuso e traz o último', function () {
             ->where('certificados.ultimo.modelo', 'Batismo'));
 });
 
+it('não traz no painel de equipamentos as reservas de hoje de outro dono', function () {
+    $outro = User::factory()->create();
+    $reserva = Reserva::factory()->for($outro)->for(Espaco::factory()->for($outro))->create(['data' => '2026-10-17']);
+    $reserva->equipamentos()->attach(Equipamento::factory()->for($outro)->create()->id, ['quantidade' => 1]);
+
+    $this->actingAs(User::factory()->create())
+        ->get(route('inicio'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('equipamentos_hoje.movimentos', 0));
+});
+
 it('sem certificado o último é nulo, e o painel de equipamentos vem no formato da tela de equipamentos', function () {
     $this->actingAs(User::factory()->create())
         ->get(route('inicio'))
