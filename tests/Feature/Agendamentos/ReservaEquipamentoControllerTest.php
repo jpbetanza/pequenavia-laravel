@@ -45,6 +45,7 @@ it('marca como entregue e grava o horário da entrega', function () {
     $dados = reservaComEquipamento();
 
     $this->actingAs($dados['user'])
+        ->from(route('agendamentos.equipamentos.index'))
         ->patch(route('agendamentos.reservas.equipamentos.update', [$dados['reserva'], $dados['equipamento']]), ['acao' => 'entregue'])
         ->assertRedirect(route('agendamentos.equipamentos.index'))
         ->assertSessionHasNoErrors();
@@ -55,10 +56,20 @@ it('marca como entregue e grava o horário da entrega', function () {
         ->and($pivo->recolhido_em)->toBeNull();
 });
 
+it('volta para a página de origem quando marcada a partir do Início', function () {
+    $dados = reservaComEquipamento();
+
+    $this->actingAs($dados['user'])
+        ->from(route('inicio'))
+        ->patch(route('agendamentos.reservas.equipamentos.update', [$dados['reserva'], $dados['equipamento']]), ['acao' => 'entregue'])
+        ->assertRedirect(route('inicio'));
+});
+
 it('marca como recolhido e grava o horário da devolução', function () {
     $dados = reservaComEquipamento();
 
     $this->actingAs($dados['user'])
+        ->from(route('agendamentos.equipamentos.index'))
         ->patch(route('agendamentos.reservas.equipamentos.update', [$dados['reserva'], $dados['equipamento']]), ['acao' => 'recolhido'])
         ->assertRedirect(route('agendamentos.equipamentos.index'));
 

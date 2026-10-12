@@ -56,6 +56,9 @@ type Props = {
     aoFechar: () => void;
     /** Avisa o painel quando a resposta começa e quando termina, para a lista desabilitar a troca de conversa. */
     aoMudarEnviando: (enviando: boolean) => void;
+    /** Pergunta a enviar assim que esta conversa (nova) monta. */
+    perguntaInicial?: string | null;
+    aoPerguntaEnviada?: () => void;
 };
 
 /** Marca como concluída a resposta que ficou pendente (parada pelo usuário ou stream que terminou sem `fim`). */
@@ -89,6 +92,8 @@ export function ConversaDoAssistente({
     aoNovaConversa,
     aoFechar,
     aoMudarEnviando,
+    perguntaInicial,
+    aoPerguntaEnviada,
 }: Props) {
     // A abertura usa só o valor do primeiro render. Criar a conversa no primeiro envio não deve recarregá-la.
     const [inicial] = useState(conversaIdInicial);
@@ -157,6 +162,22 @@ export function ConversaDoAssistente({
         },
         [],
     );
+
+    // Pergunta vinda de fora: envia uma vez, ao montar. Adia para depois do ciclo de montagem: no StrictMode
+    // o primeiro agendamento é cancelado pelo cleanup e só o segundo envia, sem ser abortado.
+    useEffect(() => {
+        if (!perguntaInicial) {
+            return;
+        }
+
+        const agendado = window.setTimeout(() => {
+            aoPerguntaEnviada?.();
+            void enviar(perguntaInicial);
+        }, 0);
+
+        return () => window.clearTimeout(agendado);
+        // Só ao montar a conversa nova: a pergunta inicial não muda depois disso.
+    }, []);
 
     async function enviar(pergunta: string) {
         const limpa = pergunta.trim();

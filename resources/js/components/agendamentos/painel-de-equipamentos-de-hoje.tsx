@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { update } from '@/actions/App/Http/Controllers/Agendamentos/ReservaEquipamentoController';
 import { tratamentoDeErro } from '@/components/modelos/erro-de-acao';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 import {
     rotuloDaAcao,
     rotuloDoMarcar,
@@ -12,12 +13,17 @@ import type { MovimentoDeHoje, PainelDeHoje } from '@/types/agendamentos';
 
 type Props = {
     painel: PainelDeHoje;
+    /** Sem o título e a moldura internos, para o pai (ex.: o cartão do Início) já ter os seus. */
+    semTitulo?: boolean;
 };
 
 /**
  * Lista de levar e recolher do dia. Cada equipamento tem o próprio botão, que faz o PATCH da reserva.
  */
-export default function PainelDeEquipamentosDeHoje({ painel }: Props) {
+export default function PainelDeEquipamentosDeHoje({
+    painel,
+    semTitulo = false,
+}: Props) {
     /** Chave "reserva-equipamento-acao" enquanto a marcação está indo ao servidor. */
     const [enviando, setEnviando] = useState<string | null>(null);
 
@@ -45,25 +51,38 @@ export default function PainelDeEquipamentosDeHoje({ painel }: Props) {
 
     return (
         <section
-            aria-labelledby="hoje-equipamentos"
+            aria-labelledby={semTitulo ? undefined : 'hoje-equipamentos'}
             className="flex flex-col gap-3"
         >
-            <h2
-                id="hoje-equipamentos"
-                className="flex flex-wrap items-baseline gap-x-3 font-serif text-2xl font-semibold"
-            >
-                Hoje: separar e recolher
-                <span className="text-sm font-normal text-muted-foreground capitalize">
-                    {painel.rotulo}
-                </span>
-            </h2>
+            {!semTitulo && (
+                <h2
+                    id="hoje-equipamentos"
+                    className="flex flex-wrap items-baseline gap-x-3 font-serif text-2xl font-semibold"
+                >
+                    Hoje: separar e recolher
+                    <span className="text-sm font-normal text-muted-foreground capitalize">
+                        {painel.rotulo}
+                    </span>
+                </h2>
+            )}
 
             {painel.movimentos.length === 0 ? (
-                <p className="rounded-2xl border border-dashed bg-card p-6 text-center text-muted-foreground">
+                <p
+                    className={cn(
+                        'p-6 text-center text-muted-foreground',
+                        !semTitulo &&
+                            'rounded-2xl border border-dashed bg-card',
+                    )}
+                >
                     Nenhum equipamento para separar ou recolher hoje.
                 </p>
             ) : (
-                <ul className="divide-y overflow-hidden rounded-2xl border bg-card">
+                <ul
+                    className={cn(
+                        'divide-y overflow-hidden',
+                        !semTitulo && 'rounded-2xl border bg-card',
+                    )}
+                >
                     {painel.movimentos.map((movimento) => {
                         return (
                             <li

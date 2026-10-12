@@ -27,6 +27,6 @@ class ReservaEquipamentoController extends Controller
             ->whereNull($coluna)
             ->update([$coluna => now()]);
 
-        return to_route('agendamentos.equipamentos.index');
+        return redirect()->back(fallback: route('agendamentos.equipamentos.index'));
     }
 }
