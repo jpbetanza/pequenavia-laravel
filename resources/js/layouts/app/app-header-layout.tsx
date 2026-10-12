@@ -20,7 +20,9 @@ export default function AppHeaderLayout({
                                 <Breadcrumbs breadcrumbs={breadcrumbs} />
                             </div>
                         )}
-                        {children}
+                        <div className="mx-auto w-full max-w-[1376px] md:px-4">
+                            {children}
+                        </div>
                     </main>
                     <PainelDoAssistente />
                 </div>

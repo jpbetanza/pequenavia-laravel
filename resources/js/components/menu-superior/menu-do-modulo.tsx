@@ -13,7 +13,7 @@ import type { SecaoDoMenu } from '@/lib/menu/secoes';
 
 export const classeDaAba = (ativa: boolean) =>
     cn(
-        'inline-flex h-16 items-center gap-2 border-b-2 px-3.5 text-[15px] font-semibold',
+        'inline-flex h-16 items-center gap-2 rounded-sm border-b-2 px-3.5 text-[15px] font-semibold outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50',
         ativa
             ? 'border-primary text-primary'
             : 'border-transparent text-foreground/80 hover:text-foreground',
@@ -39,19 +39,16 @@ export function MenuDoModulo({ secao, ativa, icone: Icone, acaoFinal }: Props) {
             <DropdownMenuTrigger asChild>
                 <button
                     type="button"
-                    className={cn(
-                        classeDaAba(ativa),
-                        'group cursor-pointer outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50',
-                    )}
+                    className={cn(classeDaAba(ativa), 'group')}
                 >
                     <Icone aria-hidden="true" className="size-[18px]" />
                     {secao.titulo}
                     {pendentes > 0 && (
-                        <span
-                            aria-label={`${pendentes} pedidos pendentes`}
-                            className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-semibold text-primary-foreground"
-                        >
-                            {pendentes}
+                        <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-xs font-semibold text-primary-foreground">
+                            <span className="sr-only">
+                                {pendentes} pedidos pendentes
+                            </span>
+                            <span aria-hidden="true">{pendentes}</span>
                         </span>
                     )}
                     <ChevronDown
@@ -74,7 +71,7 @@ export function MenuDoModulo({ secao, ativa, icone: Icone, acaoFinal }: Props) {
                             key={item.titulo}
                             asChild
                             className={cn(
-                                'flex-col items-start gap-0.5 rounded-[10px] px-3 py-2.5 focus:bg-secondary',
+                                'flex-col items-start gap-0.5 rounded-[10px] px-3 py-2.5',
                                 atual && 'bg-secondary',
                             )}
                         >
@@ -86,11 +83,13 @@ export function MenuDoModulo({ secao, ativa, icone: Icone, acaoFinal }: Props) {
                                 <span className="flex items-center gap-2 font-semibold">
                                     {item.titulo}
                                     {contador > 0 && (
-                                        <span
-                                            aria-label={`${contador} pendentes`}
-                                            className="rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground"
-                                        >
-                                            {contador}
+                                        <span className="rounded-full bg-primary px-2 py-0.5 text-xs font-semibold text-primary-foreground">
+                                            <span className="sr-only">
+                                                {contador} pedidos pendentes
+                                            </span>
+                                            <span aria-hidden="true">
+                                                {contador}
+                                            </span>
                                         </span>
                                     )}
                                 </span>

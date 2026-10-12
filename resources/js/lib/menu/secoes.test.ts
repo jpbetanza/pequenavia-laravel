@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { abaAtiva, type SecaoDoMenu } from './secoes';
+import { abaAtiva, secoesDoMenu, type SecaoDoMenu } from './secoes';
+import { toUrl } from '@/lib/utils';
 
 const secoes: SecaoDoMenu[] = [
     {
@@ -36,5 +37,32 @@ describe('abaAtiva', () => {
     it('não confunde prefixo parecido', () => {
         expect(abaAtiva('/agendamentosx', secoes)).toBeNull();
         expect(abaAtiva('/settings/profile', secoes)).toBeNull();
+    });
+});
+
+describe('secoesDoMenu', () => {
+    it('cada item de uma seção cai dentro de um prefixo dela', () => {
+        for (const secao of secoesDoMenu(0)) {
+            for (const item of secao.itens) {
+                const caminho = toUrl(item.href);
+
+                expect(
+                    secao.prefixos.some(
+                        (prefixo) =>
+                            caminho === prefixo ||
+                            caminho.startsWith(`${prefixo}/`),
+                    ),
+                ).toBe(true);
+            }
+        }
+    });
+
+    it('leva o contador de solicitações pendentes ao item certo', () => {
+        const [agendamentos] = secoesDoMenu(3);
+        const solicitacoes = agendamentos.itens.find(
+            (item) => item.titulo === 'Solicitações',
+        );
+
+        expect(solicitacoes?.contador).toBe(3);
     });
 });

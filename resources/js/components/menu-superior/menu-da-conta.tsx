@@ -21,8 +21,8 @@ export function MenuDaConta() {
                 <button
                     type="button"
                     aria-label={`Conta de ${auth.user.name}`}
-                    data-test="sidebar-menu-button"
-                    className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                    data-test="menu-da-conta"
+                    className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
                 >
                     {getInitials(auth.user.name)}
                 </button>
