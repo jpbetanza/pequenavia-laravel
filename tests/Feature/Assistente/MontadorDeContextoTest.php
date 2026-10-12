@@ -3,6 +3,7 @@
 use App\Enums\PapelDaMensagem;
 use App\Models\Conversa;
 use App\Models\Mensagem;
+use App\Models\User;
 use App\Services\Assistente\MontadorDeContexto;
 
 test('começa nas instruções e converte papéis e chamadas para o formato OpenAI', function () {
@@ -43,4 +44,23 @@ test('chamada sem resultado e resultado sem chamada não vão para o contexto', 
     $mensagens = app(MontadorDeContexto::class)->montar($conversa->user, $conversa);
 
     expect(array_column($mensagens, 'role'))->toBe(['system', 'user']);
+});
+
+test('o nome do usuário vai para o prompt como texto puro, sem escape HTML', function () {
+    $usuario = User::factory()->create(['name' => "Ana D'Ávila <x>"]);
+    $conversa = Conversa::factory()->for($usuario)->create();
+
+    $mensagens = app(MontadorDeContexto::class)->montar($usuario, $conversa);
+
+    expect($mensagens[0]['content'])->toContain("de Ana D'Ávila <x>.")
+        ->and($mensagens[0]['content'])->not->toContain('&#039;')->not->toContain('&lt;');
+});
+
+test('o nome vai para o prompt sem espaços sobrando e com no máximo 80 caracteres', function () {
+    $usuario = User::factory()->create(['name' => "  Maria\n  ".str_repeat('Conceição ', 12)]);
+    $conversa = Conversa::factory()->for($usuario)->create();
+
+    $instrucoes = app(MontadorDeContexto::class)->montar($usuario, $conversa)[0]['content'];
+
+    expect($instrucoes)->toContain('de Maria '.str_repeat('Conceição ', 7).'Conc...');
 });

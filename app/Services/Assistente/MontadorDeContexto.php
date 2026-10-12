@@ -7,6 +7,7 @@ use App\Models\Conversa;
 use App\Models\Mensagem;
 use App\Models\User;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 /**
  * Monta as mensagens enviadas ao modelo: as instruções do sistema e o histórico recente da conversa no formato OpenAI.
@@ -23,7 +24,7 @@ final class MontadorDeContexto
         $agora = now($fuso)->locale('pt_BR');
 
         $instrucoes = view('assistente.instrucoes', [
-            'nome' => $usuario->name,
+            'nome' => Str::limit(Str::squish($usuario->name), 80),
             'hoje' => $agora->format('Y-m-d'),
             'diaDaSemana' => $agora->translatedFormat('l'),
             'hora' => $agora->format('H:i'),
