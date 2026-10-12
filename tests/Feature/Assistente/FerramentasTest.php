@@ -173,15 +173,21 @@ test('listar_solicitacoes recusa status fora da lista', function () {
     expect(fn () => executar(ListarSolicitacoes::class, User::factory()->create(), ['status' => 'cancelada']))->toThrow(ArgumentoInvalido::class);
 });
 
-test('verificar_disponibilidade acha o equipamento pelo nome e deixa o pedido livre quando há unidade', function () {
+test('verificar_disponibilidade acha cada equipamento pelo nome: o ocupado conflita e o livre não', function () {
     $usuario = User::factory()->create();
     $salao = Espaco::factory()->comHorarioComercial()->for($usuario)->create(['nome' => 'Salão paroquial']);
+    $outroEspaco = Espaco::factory()->comHorarioComercial()->for($usuario)->create(['nome' => 'Sala 2']);
     Equipamento::factory()->for($usuario)->create(['nome' => 'Projetor', 'quantidade' => 1]);
+    $caixa = Equipamento::factory()->for($usuario)->create(['nome' => 'Caixa de som', 'quantidade' => 1]);
+    Reserva::factory()->for($usuario)->create(['espaco_id' => $outroEspaco->id, 'data' => '2026-10-16', 'inicio' => '09:00', 'fim' => '12:00'])
+        ->equipamentos()->attach($caixa->id, ['quantidade' => 1]);
 
-    $resultado = executar(VerificarDisponibilidade::class, $usuario, ['espaco' => $salao->id, 'data' => '2026-10-16', 'inicio' => '10:00', 'fim' => '11:00', 'equipamentos' => [['equipamento' => 'projetor', 'quantidade' => 1]]]);
+    $ocupado = executar(VerificarDisponibilidade::class, $usuario, ['espaco' => $salao->id, 'data' => '2026-10-16', 'inicio' => '10:00', 'fim' => '11:00', 'equipamentos' => [['equipamento' => 'caixa DE som', 'quantidade' => 1]]]);
+    $livre = executar(VerificarDisponibilidade::class, $usuario, ['espaco' => $salao->id, 'data' => '2026-10-16', 'inicio' => '10:00', 'fim' => '11:00', 'equipamentos' => [['equipamento' => 'projetor', 'quantidade' => 1]]]);
 
-    expect($resultado->paraOModelo['livre'])->toBeTrue()
-        ->and($resultado->cartao['dados']['pedido']['conflitos'])->toBe([]);
+    expect($ocupado->cartao['dados']['pedido']['conflitos'][0]['tipo'])->toBe('equipamento_indisponivel')
+        ->and($livre->paraOModelo['livre'])->toBeTrue()
+        ->and($livre->cartao['dados']['pedido']['conflitos'])->toBe([]);
 });
 
 test('verificar_disponibilidade com equipamento esgotado aponta equipamento_indisponivel', function () {
