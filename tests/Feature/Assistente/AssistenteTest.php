@@ -6,8 +6,10 @@ use App\Models\Espaco;
 use App\Models\Mensagem;
 use App\Models\User;
 use App\Services\Assistente\Assistente;
+use App\Services\Assistente\ChamadaDeFerramenta;
 use App\Services\Assistente\ClienteOpenRouter;
 use App\Services\Assistente\EventoDoAssistente;
+use App\Services\Assistente\RespostaDoModelo;
 use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Http;
 
@@ -78,10 +80,41 @@ test('falha numa rodada posterior grava o texto já transmitido antes da mensage
 
     $eventos = eventos($usuario, $conversa, 'O salão está livre?');
 
-    $respostas = $conversa->mensagens()->where('papel', PapelDaMensagem::Assistente)->whereNull('chamadas')->orderBy('created_at')->get();
+    $respostas = $conversa->mensagens()->where('papel', PapelDaMensagem::Assistente)->whereNull('chamadas')->orderBy('created_at')->orderBy('id')->get();
     expect(end($eventos)->tipo)->toBe('erro')
-        ->and($respostas->pluck('conteudo')->all())->toBe(['Vou consultar. ', 'Não consegui responder agora. Tente de novo.'])
-        ->and($respostas->pluck('erro')->all())->toBe([false, true]);
+        ->and($respostas->where('erro', false)->pluck('conteudo')->all())->toBe(['Vou consultar. '])
+        ->and($respostas->where('erro', true)->pluck('conteudo')->all())->toBe(['Não consegui responder agora. Tente de novo.']);
+});
+
+test('erro inesperado numa rodada posterior também grava o texto já transmitido', function () {
+    Exceptions::fake();
+    $usuario = User::factory()->create();
+    $conversa = Conversa::factory()->for($usuario)->create();
+    $rodada = 0;
+    $this->mock(ClienteOpenRouter::class)
+        ->shouldReceive('conversar')
+        ->andReturnUsing(function () use (&$rodada) {
+            $rodada++;
+
+            if ($rodada > 1) {
+                throw new RuntimeException('falha inesperada');
+            }
+
+            return (function () {
+                yield 'Vou consultar. ';
+
+                return new RespostaDoModelo('Vou consultar. ', [new ChamadaDeFerramenta('c1', 'listar_cadastros', '{}')], 10, 2);
+            })();
+        });
+
+    $eventos = eventos($usuario, $conversa, 'Oi');
+
+    $respostas = $conversa->mensagens()->where('papel', PapelDaMensagem::Assistente)->whereNull('chamadas')->orderBy('created_at')->orderBy('id')->get();
+    expect(end($eventos)->tipo)->toBe('erro')
+        ->and($respostas->where('erro', false)->pluck('conteudo')->all())->toBe(['Vou consultar. '])
+        ->and($respostas->where('erro', true)->pluck('conteudo')->all())->toBe(['Não consegui responder agora. Tente de novo.']);
+
+    Exceptions::assertReported(RuntimeException::class);
 });
 
 test('limite de rodadas de ferramenta encerra com mensagem fixa', function () {

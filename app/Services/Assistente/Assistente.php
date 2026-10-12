@@ -84,31 +84,14 @@ final class Assistente
             $concluido = true;
             Log::warning('assistente.falha', ['conversa' => $conversa->id, 'motivo' => $falha->motivo]);
 
-            if ($textoVisivel !== '') {
-                $this->gravarResposta($conversa, $textoVisivel, $cartoes, $tokensEntrada, $tokensSaida);
-            }
-
-            $conversa->mensagens()->create([
-                'papel' => PapelDaMensagem::Assistente,
-                'conteudo' => $falha->getMessage(),
-                'erro' => true,
-            ]);
-
-            yield new EventoDoAssistente('erro', ['mensagem' => $falha->getMessage()]);
+            yield from $this->gravarFalha($conversa, $textoVisivel, $cartoes, $tokensEntrada, $tokensSaida, $falha->getMessage());
         } catch (Throwable $erro) {
             report($erro);
 
             if (! $concluido) {
                 $concluido = true;
-                $mensagem = 'Não consegui responder agora. Tente de novo.';
 
-                $conversa->mensagens()->create([
-                    'papel' => PapelDaMensagem::Assistente,
-                    'conteudo' => $mensagem,
-                    'erro' => true,
-                ]);
-
-                yield new EventoDoAssistente('erro', ['mensagem' => $mensagem]);
+                yield from $this->gravarFalha($conversa, $textoVisivel, $cartoes, $tokensEntrada, $tokensSaida, 'Não consegui responder agora. Tente de novo.');
             }
         } finally {
             if (! $concluido && $textoVisivel !== '') {
@@ -160,6 +143,27 @@ final class Assistente
             'mensagem_id' => $mensagem->id,
             'conversa' => ['id' => $conversa->id, 'titulo' => $conversa->titulo],
         ]);
+    }
+
+    /**
+     * Falha no meio do ciclo: grava o texto já transmitido como resposta comum (se houver) e depois a mensagem de erro.
+     *
+     * @param  list<array<string, mixed>>  $cartoes
+     * @return Generator<int, EventoDoAssistente, mixed, void>
+     */
+    private function gravarFalha(Conversa $conversa, string $textoVisivel, array $cartoes, int $tokensEntrada, int $tokensSaida, string $mensagem): Generator
+    {
+        if ($textoVisivel !== '') {
+            $this->gravarResposta($conversa, $textoVisivel, $cartoes, $tokensEntrada, $tokensSaida);
+        }
+
+        $conversa->mensagens()->create([
+            'papel' => PapelDaMensagem::Assistente,
+            'conteudo' => $mensagem,
+            'erro' => true,
+        ]);
+
+        yield new EventoDoAssistente('erro', ['mensagem' => $mensagem]);
     }
 
     /**
