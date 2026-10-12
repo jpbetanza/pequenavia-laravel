@@ -1,5 +1,7 @@
+import { normalizarAcao } from '@/lib/assistente/cadastro';
 import type { AcaoProposta, Cartao as TipoDeCartao } from '@/types/assistente';
 import { CartaoDeAcaoProposta } from './cartao-de-acao-proposta';
+import { CartaoDeCadastroProposto } from './cartao-de-cadastro-proposto';
 import { CartaoDeCertificados } from './cartao-de-certificados';
 import { CartaoDeDisponibilidade } from './cartao-de-disponibilidade';
 import { CartaoDeReservas } from './cartao-de-reservas';
@@ -10,7 +12,7 @@ type Props = {
     aoAtualizarAcao: (acao: AcaoProposta) => void;
 };
 
-/** Escolhe o cartão pelo `tipo`. Tipo desconhecido não renderiza nada. */
+/** Escolhe o cartão pelo `tipo`; proposta de cadastro tem layout próprio. Tipo desconhecido não renderiza nada. */
 export function Cartao({ cartao, aoAtualizarAcao }: Props) {
     switch (cartao.tipo) {
         case 'disponibilidade':
@@ -25,13 +27,21 @@ export function Cartao({ cartao, aoAtualizarAcao }: Props) {
         case 'certificados':
             return <CartaoDeCertificados dados={cartao.dados} />;
 
-        case 'acao_proposta':
-            return (
+        case 'acao_proposta': {
+            const acao = normalizarAcao(cartao.dados);
+
+            return acao.tipo === 'criar_reserva' ? (
                 <CartaoDeAcaoProposta
-                    acao={cartao.dados}
+                    acao={acao}
+                    aoAtualizar={aoAtualizarAcao}
+                />
+            ) : (
+                <CartaoDeCadastroProposto
+                    acao={acao}
                     aoAtualizar={aoAtualizarAcao}
                 />
             );
+        }
 
         default:
             return null;

@@ -30,6 +30,7 @@ const acao = (
 ): AcaoProposta => ({
     id,
     status,
+    tipo: 'criar_reserva',
     resumo: {
         titulo,
         grupo_id: null,
@@ -262,6 +263,61 @@ describe('aplicarEvento com cartão de ação nova', () => {
         expect(resultado[0].cartoes).toEqual([
             cartaoReservas,
             cartaoAcao(acao('ac1', 'Única')),
+        ]);
+    });
+});
+
+const acaoDeCadastro = (
+    id: string,
+    status: AcaoProposta['status'] = 'proposta',
+): AcaoProposta => ({
+    id,
+    status,
+    tipo: 'excluir_grupo',
+    cadastro: {
+        entidade: 'grupo',
+        operacao: 'excluir',
+        titulo: 'Excluir grupo Coral',
+        linhas: [],
+        avisos: [],
+    },
+    resultado: null,
+});
+
+describe('cartão de cadastro e de reserva juntos', () => {
+    it('uma proposta nova de reserva expira a proposta de cadastro ainda pendente', () => {
+        const mensagens: MensagemDoPainel[] = [
+            assistente('a1', { cartoes: [cartaoAcao(acaoDeCadastro('c1'))] }),
+        ];
+
+        const resultado = aplicarEvento(mensagens, {
+            tipo: 'cartao',
+            cartao: cartaoAcao(acao('r1', 'Festa')),
+        });
+
+        expect(resultado[0].cartoes).toEqual([
+            cartaoAcao(acaoDeCadastro('c1', 'expirada')),
+            cartaoAcao(acao('r1', 'Festa')),
+        ]);
+    });
+
+    it('substituirCartaoDeAcao troca um cartão de cadastro pelo atual sem tocar no de reserva', () => {
+        const reserva = acao('r1', 'Festa');
+        const mensagens: MensagemDoPainel[] = [
+            assistente('a1', {
+                cartoes: [
+                    cartaoAcao(acaoDeCadastro('c1')),
+                    cartaoAcao(reserva),
+                ],
+            }),
+        ];
+
+        const confirmada = acaoDeCadastro('c1', 'confirmada');
+        const resultado = substituirCartaoDeAcao(mensagens, confirmada);
+
+        expect(resultado[0].cartoes).toEqual([
+            cartaoAcao(confirmada),
+            cartaoAcao(reserva),
         ]);
     });
 });
