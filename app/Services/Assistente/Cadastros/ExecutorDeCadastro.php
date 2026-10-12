@@ -34,7 +34,7 @@ final class ExecutorDeCadastro
         }
 
         $alvo = $this->alvoAtual($usuario, $entidade, $proposta['alvo_id'] ?? null);
-        $this->conferirVersao($alvo, $proposta['alvo_atualizado_em'] ?? null);
+        $this->conferirVersao($alvo, $proposta);
 
         if ($proposta['operacao'] === 'alterar') {
             $dados = $this->validarFinal($usuario, $entidade, $proposta['final'], $alvo);
@@ -69,11 +69,25 @@ final class ExecutorDeCadastro
         return $alvo ?? $this->recusar('O cadastro não existe mais.');
     }
 
-    private function conferirVersao(Model $alvo, ?string $atualizadoEm): void
+    /**
+     * Compara com a impressão digital da proposta. Proposta antiga, sem impressão, cai na data de atualização.
+     *
+     * @param  array<string, mixed>  $proposta
+     */
+    private function conferirVersao(Model $alvo, array $proposta): void
     {
-        if ($atualizadoEm === null || $alvo->updated_at === null || ! Carbon::parse($atualizadoEm)->equalTo($alvo->updated_at)) {
+        $mudou = isset($proposta['alvo_impressao'])
+            ? ! hash_equals($proposta['alvo_impressao'], $this->cadastros->impressao($alvo))
+            : ! $this->mesmaDataDeAtualizacao($alvo, $proposta['alvo_atualizado_em'] ?? null);
+
+        if ($mudou) {
             $this->recusar('O cadastro mudou desde a proposta. Peça de novo.');
         }
+    }
+
+    private function mesmaDataDeAtualizacao(Model $alvo, ?string $atualizadoEm): bool
+    {
+        return $atualizadoEm !== null && $alvo->updated_at !== null && Carbon::parse($atualizadoEm)->equalTo($alvo->updated_at);
     }
 
     /**

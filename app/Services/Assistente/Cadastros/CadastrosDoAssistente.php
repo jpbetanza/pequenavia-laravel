@@ -14,6 +14,7 @@ use App\Services\Agenda\Cadastros\RegrasDeEspaco;
 use App\Services\Agenda\Cadastros\RegrasDeGrupo;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
@@ -44,6 +45,35 @@ final class CadastrosDoAssistente
     public function gravador(string $entidade): object
     {
         return $this->container->make($this->definicao($entidade)['gravador']);
+    }
+
+    /**
+     * Impressão digital do estado completo do cadastro: colunas, e no espaço também horários e bloqueios.
+     * Muda com qualquer edição, inclusive as que não tocam `updated_at`, e não depende da resolução do relógio.
+     */
+    public function impressao(Model $alvo): string
+    {
+        $estado = Arr::except($alvo->attributesToArray(), ['created_at', 'updated_at']);
+
+        if ($alvo instanceof Espaco) {
+            $estado['horarios'] = $alvo->horarios()->lockForUpdate()->get()
+                ->map(fn ($horario) => [
+                    'dia_semana' => (int) $horario->dia_semana,
+                    'abre' => substr((string) $horario->abre, 0, 5),
+                    'fecha' => substr((string) $horario->fecha, 0, 5),
+                ])
+                ->sortBy('dia_semana')->values()->all();
+
+            $estado['bloqueios'] = $alvo->bloqueios()->lockForUpdate()->get()
+                ->map(fn ($bloqueio) => [
+                    'inicio' => $bloqueio->inicio->toDateString(),
+                    'fim' => $bloqueio->fim->toDateString(),
+                    'motivo' => (string) $bloqueio->motivo,
+                ])
+                ->sortBy(['inicio', 'fim', 'motivo'])->values()->all();
+        }
+
+        return hash('sha256', json_encode($this->ordenar($estado), JSON_THROW_ON_ERROR));
     }
 
     /**
@@ -102,6 +132,19 @@ final class CadastrosDoAssistente
         $classeRegras = $this->definicao($entidade)['regras'];
 
         return method_exists($classeRegras, 'errosCruzados') ? $classeRegras::errosCruzados($dados) : [];
+    }
+
+    /**
+     * Ordena as chaves em todos os níveis, para que a ordem de leitura não mude a impressão digital.
+     *
+     * @param  array<mixed>  $valor
+     * @return array<mixed>
+     */
+    private function ordenar(array $valor): array
+    {
+        ksort($valor);
+
+        return array_map(fn (mixed $item) => is_array($item) ? $this->ordenar($item) : $item, $valor);
     }
 
     /**

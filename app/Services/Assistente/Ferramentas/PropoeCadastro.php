@@ -127,7 +127,18 @@ abstract class PropoeCadastro implements Ferramenta
         $nome = $criacao ? (string) ($final['nome'] ?? '') : (string) $alvo->getAttribute('nome');
         $titulo = $this->verboDoTitulo($operacao)." {$this->nomeNaFrase()}: {$nome}";
 
-        $acao = PropostaDeCadastro::criar($usuario, $conversa, $this->entidade(), $operacao, $alvo, $final, $linhas, $avisos, $titulo);
+        $acao = PropostaDeCadastro::criar(
+            $usuario,
+            $conversa,
+            $this->entidade(),
+            $operacao,
+            $alvo,
+            $final,
+            $linhas,
+            $avisos,
+            $titulo,
+            $alvo === null ? null : $this->cadastros->impressao($alvo),
+        );
 
         return new ResultadoDeFerramenta(
             paraOModelo: [

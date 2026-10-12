@@ -6,6 +6,7 @@ use App\Models\Espaco;
 use App\Models\Grupo;
 use App\Models\Reserva;
 use App\Models\User;
+use App\Services\Agenda\Cadastros\GravadorDeEspaco;
 use App\Services\Assistente\Ferramentas\ProporEquipamento;
 use App\Services\Assistente\Ferramentas\ProporEspaco;
 use App\Services\Assistente\Ferramentas\ProporGrupo;
@@ -179,4 +180,89 @@ test('excluir espaço que ganhou reserva depois da proposta responde 422', funct
         ->assertJsonPath('message', 'Há reservas futuras usando este espaço. Desative em vez de excluir.');
 
     expect(Espaco::count())->toBe(1);
+});
+
+/** Regrava o espaço pelo gravador da tela, com o estado atual mais as mudanças. */
+function gravarEspacoComoTela(Espaco $espaco, array $mudancas): void
+{
+    $espaco->load(['horarios', 'bloqueios']);
+
+    $dados = [
+        'nome' => $espaco->nome, 'capacidade' => $espaco->capacidade, 'localizacao' => $espaco->localizacao,
+        'cor' => $espaco->cor, 'recursos_fixos' => $espaco->recursos_fixos, 'aceita_solicitacoes' => $espaco->aceita_solicitacoes,
+        'antecedencia_min_horas' => $espaco->antecedencia_min_horas, 'duracao_max_min' => $espaco->duracao_max_min,
+        'intervalo_min' => $espaco->intervalo_min, 'ativo' => $espaco->ativo,
+        'horarios' => $espaco->horarios->map(fn ($horario) => [
+            'dia_semana' => $horario->dia_semana, 'abre' => substr($horario->abre, 0, 5), 'fecha' => substr($horario->fecha, 0, 5),
+        ])->all(),
+        'bloqueios' => $espaco->bloqueios->map(fn ($bloqueio) => [
+            'inicio' => $bloqueio->inicio->toDateString(), 'fim' => $bloqueio->fim->toDateString(), 'motivo' => $bloqueio->motivo,
+        ])->all(),
+    ];
+
+    app(GravadorDeEspaco::class)->atualizar($espaco, array_replace($dados, $mudancas));
+}
+
+test('confirmar alteração de espaço responde 422 quando só os bloqueios mudaram pela tela, e preserva a mudança da tela', function () {
+    $usuario = User::factory()->create();
+    $espaco = espacoComAgenda($usuario);
+    $acao = propostaDeCadastro(ProporEspaco::class, $usuario, ['operacao' => 'alterar', 'alvo' => 'Salão', 'capacidade' => 25]);
+
+    gravarEspacoComoTela($espaco, ['bloqueios' => [['inicio' => '2026-12-01', 'fim' => '2026-12-02', 'motivo' => 'Reforma pela tela']]]);
+
+    $this->actingAs($usuario)->postJson(route('assistente.acoes.confirmar', $acao))
+        ->assertUnprocessable()
+        ->assertJsonPath('message', 'O cadastro mudou desde a proposta. Peça de novo.');
+
+    expect($espaco->fresh()->bloqueios->pluck('motivo')->all())->toBe(['Reforma pela tela'])
+        ->and($espaco->fresh()->capacidade)->toBe(10)
+        ->and($acao->fresh()->status)->toBe(StatusDaAcao::Proposta);
+});
+
+test('confirmar alteração de espaço responde 422 quando só os horários mudaram pela tela, e preserva a mudança da tela', function () {
+    $usuario = User::factory()->create();
+    $espaco = espacoComAgenda($usuario);
+    $acao = propostaDeCadastro(ProporEspaco::class, $usuario, ['operacao' => 'alterar', 'alvo' => 'Salão', 'capacidade' => 25]);
+
+    gravarEspacoComoTela($espaco, ['horarios' => [['dia_semana' => 6, 'abre' => '09:00', 'fecha' => '13:00']]]);
+
+    $this->actingAs($usuario)->postJson(route('assistente.acoes.confirmar', $acao))
+        ->assertUnprocessable()
+        ->assertJsonPath('message', 'O cadastro mudou desde a proposta. Peça de novo.');
+
+    expect($espaco->fresh()->horarios->pluck('dia_semana')->all())->toBe([6])
+        ->and($espaco->fresh()->capacidade)->toBe(10)
+        ->and($acao->fresh()->status)->toBe(StatusDaAcao::Proposta);
+});
+
+test('confirmar alteração de grupo responde 422 quando o grupo muda de novo no mesmo segundo', function () {
+    $usuario = User::factory()->create();
+    $grupo = Grupo::factory()->for($usuario)->create(['nome' => 'Catequese', 'coordenacao' => 'Ana', 'contato' => '11 9999']);
+    $acao = propostaDeCadastro(ProporGrupo::class, $usuario, ['operacao' => 'alterar', 'alvo' => 'Catequese', 'coordenacao' => 'Bia']);
+
+    $grupo->update(['contato' => 'outro']);
+
+    $this->actingAs($usuario)->postJson(route('assistente.acoes.confirmar', $acao))
+        ->assertUnprocessable()
+        ->assertJsonPath('message', 'O cadastro mudou desde a proposta. Peça de novo.');
+
+    expect($grupo->fresh()->contato)->toBe('outro')
+        ->and($acao->fresh()->status)->toBe(StatusDaAcao::Proposta);
+});
+
+test('proposta antiga sem impressão digital confere a data de atualização', function () {
+    $usuario = User::factory()->create();
+    $grupo = Grupo::factory()->for($usuario)->create(['nome' => 'Catequese', 'coordenacao' => 'Ana']);
+    $acao = propostaDeCadastro(ProporGrupo::class, $usuario, ['operacao' => 'alterar', 'alvo' => 'Catequese', 'coordenacao' => 'Bia']);
+
+    $dados = $acao->dados;
+    unset($dados['alvo_impressao']);
+    $acao->update(['dados' => $dados]);
+
+    $this->travel(1)->seconds();
+    $grupo->update(['contato' => 'outro']);
+
+    $this->actingAs($usuario)->postJson(route('assistente.acoes.confirmar', $acao))
+        ->assertUnprocessable()
+        ->assertJsonPath('message', 'O cadastro mudou desde a proposta. Peça de novo.');
 });

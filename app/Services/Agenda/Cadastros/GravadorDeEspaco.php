@@ -45,6 +45,9 @@ final class GravadorDeEspaco
 
             $this->gravarHorariosEBloqueios($espaco, $dados);
 
+            // Horário e bloqueio também mudam o cadastro: a proposta do assistente confere a data de atualização.
+            $espaco->touch();
+
             return $espaco;
         });
     }

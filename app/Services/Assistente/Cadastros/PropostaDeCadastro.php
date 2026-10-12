@@ -30,8 +30,9 @@ final class PropostaDeCadastro
         array $linhas,
         array $avisos,
         string $titulo,
+        ?string $alvoImpressao = null,
     ): AcaoProposta {
-        return DB::transaction(function () use ($usuario, $conversa, $entidade, $operacao, $alvo, $final, $linhas, $avisos, $titulo): AcaoProposta {
+        return DB::transaction(function () use ($usuario, $conversa, $entidade, $operacao, $alvo, $final, $linhas, $avisos, $titulo, $alvoImpressao): AcaoProposta {
             AcaoProposta::query()
                 ->where('conversa_id', $conversa->id)
                 ->where('status', StatusDaAcao::Proposta->value)
@@ -47,6 +48,8 @@ final class PropostaDeCadastro
                     'alvo_id' => $alvo?->getKey(),
                     // Microssegundos: a alteração feita logo depois da proposta precisa ser percebida.
                     'alvo_atualizado_em' => $alvo?->updated_at?->format('Y-m-d\TH:i:s.uP'),
+                    // Impressão digital do estado completo do alvo. É ela que decide se a proposta ainda vale.
+                    'alvo_impressao' => $alvoImpressao,
                     'final' => $final,
                     'linhas' => $linhas,
                     'avisos' => $avisos,
