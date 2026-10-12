@@ -77,7 +77,7 @@ class AcaoPropostaController extends Controller
         $travada = AcaoProposta::query()->whereKey($acao->id)->lockForUpdate()->firstOrFail();
 
         if ($travada->status !== StatusDaAcao::Proposta) {
-            $this->recusar('Esta ação não está mais pendente.');
+            $this->recusar('Esta ação não está mais pendente.', ['acao' => $this->resumo->paraCartao($travada)]);
         }
 
         return $travada;
@@ -107,8 +107,11 @@ class AcaoPropostaController extends Controller
         return array_map(fn (array $pedido) => ['id' => $pedido['id'], 'quantidade' => (int) $pedido['quantidade']], $pedidos);
     }
 
-    private function recusar(string $mensagem): never
+    /**
+     * @param  array<string, mixed>  $extras  Campos extras do JSON, como o cartão atual da ação.
+     */
+    private function recusar(string $mensagem, array $extras = []): never
     {
-        abort(response()->json(['message' => $mensagem], 422));
+        abort(response()->json(['message' => $mensagem, ...$extras], 422));
     }
 }

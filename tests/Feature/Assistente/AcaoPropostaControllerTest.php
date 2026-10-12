@@ -49,6 +49,17 @@ test('confirmar de novo responde 422 e não duplica', function () {
     expect(Reserva::count())->toBe(1);
 });
 
+test('ação que já não está pendente responde 422 com o cartão atual', function (string $rota) {
+    [$usuario, $acao] = proposta();
+    $acao->update(['status' => StatusDaAcao::Expirada]);
+
+    $this->actingAs($usuario)->postJson(route($rota, $acao))
+        ->assertUnprocessable()
+        ->assertJsonPath('message', 'Esta ação não está mais pendente.')
+        ->assertJsonPath('acao.id', $acao->id)
+        ->assertJsonPath('acao.status', 'expirada');
+})->with(['assistente.acoes.confirmar', 'assistente.acoes.descartar']);
+
 test('conflito surgido depois da proposta responde 422 e nada é gravado', function () {
     [$usuario, $acao, $salao] = proposta();
     Reserva::factory()->for($usuario)->create(['espaco_id' => $salao->id, 'data' => '2026-10-16', 'inicio' => '15:00', 'fim' => '16:00']);
