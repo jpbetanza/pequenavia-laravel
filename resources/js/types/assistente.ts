@@ -79,6 +79,7 @@ export type AcaoProposta = {
     status: 'proposta' | 'confirmada' | 'descartada' | 'expirada';
     resumo: {
         titulo: string;
+        grupo_id: string | null;
         grupo_nome: string | null;
         espaco_id: string | null;
         espaco_nome: string;
@@ -86,7 +87,7 @@ export type AcaoProposta = {
         inicio: string;
         fim: string;
         pessoas: number | null;
-        equipamentos: { nome: string; quantidade: number }[];
+        equipamentos: { id: string; nome: string; quantidade: number }[];
         observacoes: string | null;
     };
     resultado: { reserva_id: string; data: string } | null;

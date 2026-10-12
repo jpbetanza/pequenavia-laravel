@@ -32,6 +32,7 @@ const acao = (
     status,
     resumo: {
         titulo,
+        grupo_id: null,
         grupo_nome: null,
         espaco_id: 'e1',
         espaco_nome: 'Salão',

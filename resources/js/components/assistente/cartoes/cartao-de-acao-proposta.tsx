@@ -130,6 +130,10 @@ export function CartaoDeAcaoProposta({ acao, aoAtualizar }: Props) {
         }
     }
 
+    // Formato `id:quantidade,id:quantidade`, lido por lerPedidoDeNovaReserva.
+    const equipamentosNaUrl = resumo.equipamentos
+        .map((item) => `${item.id}:${item.quantidade}`)
+        .join(',');
     const quando = `${rotuloDoDia(resumo.data)}, ${faixaDeHoras(resumo.inicio, resumo.fim)}`;
 
     return (
@@ -240,6 +244,11 @@ export function CartaoDeAcaoProposta({ acao, aoAtualizar }: Props) {
                                     nova_reserva: '1',
                                     espaco: resumo.espaco_id,
                                     inicio: resumo.inicio,
+                                    titulo: resumo.titulo,
+                                    fim: resumo.fim,
+                                    grupo: resumo.grupo_id ?? undefined,
+                                    equipamentos:
+                                        equipamentosNaUrl || undefined,
                                 },
                             })}
                             className={cn(

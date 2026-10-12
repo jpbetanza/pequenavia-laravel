@@ -74,7 +74,17 @@ import type {
 
 /** O que abriu o painel: uma reserva nova (com dia, hora e espaço opcionais) ou uma existente. */
 export type AlvoDoPainel =
-    | { modo: 'nova'; data: string; hora?: string; espacoId?: string }
+    | {
+          modo: 'nova';
+          data: string;
+          hora?: string;
+          espacoId?: string;
+          /** Pré-preenchimento vindo do assistente. Valores que não existem mais são ignorados. */
+          fim?: string;
+          titulo?: string;
+          grupoId?: string;
+          equipamentos?: { id: string; quantidade: number }[];
+      }
     | { modo: 'editar'; reserva: ReservaDoCalendario };
 
 type Props = {
@@ -135,6 +145,8 @@ const OPCOES_DE_ESCOPO: { valor: Escopo; rotulo: string }[] = [
 function formularioInicial(
     alvo: AlvoDoPainel,
     espacos: EspacoDoCalendario[],
+    grupos: GrupoDoCalendario[],
+    equipamentos: EquipamentoDoCalendario[],
 ): Formulario {
     if (alvo.modo === 'editar') {
         const { reserva } = alvo;
@@ -163,8 +175,8 @@ function formularioInicial(
     const ativos = espacosDisponiveisParaReserva(espacos, null);
 
     return {
-        titulo: '',
-        grupoId: '',
+        titulo: alvo.titulo ?? '',
+        grupoId: grupos.find((grupo) => grupo.id === alvo.grupoId)?.id ?? '',
         pessoas: '',
         espacoId:
             ativos.find((espaco) => espaco.id === alvo.espacoId)?.id ??
@@ -172,11 +184,13 @@ function formularioInicial(
             '',
         data: alvo.data,
         inicio,
-        fim: fimPadrao(inicio),
+        fim: alvo.fim ?? fimPadrao(inicio),
         repetir: 'nao',
         ate: ateSugerido(alvo.data),
         pulas: [],
-        equipamentos: [],
+        equipamentos: (alvo.equipamentos ?? []).filter((pedido) =>
+            equipamentos.some((equipamento) => equipamento.id === pedido.id),
+        ),
         observacoes: '',
         escopo: 'so_esta',
     };
@@ -198,7 +212,7 @@ export default function PainelDeReserva({
     const reservaId = alvo.modo === 'editar' ? alvo.reserva.id : null;
     const ehSerie = alvo.modo === 'editar' && alvo.reserva.serie_id !== null;
     const [form, setForm] = useState<Formulario>(() =>
-        formularioInicial(alvo, espacos),
+        formularioInicial(alvo, espacos, grupos, equipamentos),
     );
     const [verificacao, setVerificacao] = useState<Verificacao | null>(null);
     const [conflitosDoServidor, setConflitosDoServidor] =

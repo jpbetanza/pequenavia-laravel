@@ -1,13 +1,66 @@
 /** Parâmetros que o painel do assistente põe na URL do calendário para abrir uma nova reserva. */
-const PARAMETROS = ['nova_reserva', 'espaco', 'inicio'] as const;
+const PARAMETROS = [
+    'nova_reserva',
+    'espaco',
+    'inicio',
+    'titulo',
+    'fim',
+    'grupo',
+    'equipamentos',
+] as const;
 
 const HORARIO = /^([01]\d|2[0-3]):[0-5]\d$/;
+const QUANTIDADE = /^[1-9]\d{0,3}$/;
+const TITULO_MAXIMO = 160;
+const QUANTIDADE_MAXIMA = 1000;
+
+export type EquipamentoPreenchido = { id: string; quantidade: number };
 
 export type PedidoDeNovaReserva = {
     espacoId: string | null;
     /** Horário HH:MM, ou null quando ausente ou inválido. */
     inicio: string | null;
+    /** Horário HH:MM de término, ou null quando ausente ou inválido. */
+    fim: string | null;
+    titulo: string | null;
+    grupoId: string | null;
+    /** Equipamentos na forma `id:quantidade,id:quantidade`. Inválidos e repetidos são ignorados. */
+    equipamentos: EquipamentoPreenchido[];
 };
+
+/** Lê `id:quantidade,...`. Cada item precisa ter id não vazio e quantidade de 1 a 1000; o primeiro de um id repetido vale. */
+function lerEquipamentos(valor: string | null): EquipamentoPreenchido[] {
+    if (valor === null || valor === '') {
+        return [];
+    }
+
+    const vistos = new Set<string>();
+    const equipamentos: EquipamentoPreenchido[] = [];
+
+    for (const item of valor.split(',')) {
+        const partes = item.split(':');
+
+        if (partes.length !== 2) {
+            continue;
+        }
+
+        const [id, quantidade] = partes;
+
+        if (
+            id === '' ||
+            !QUANTIDADE.test(quantidade) ||
+            Number(quantidade) > QUANTIDADE_MAXIMA ||
+            vistos.has(id)
+        ) {
+            continue;
+        }
+
+        vistos.add(id);
+        equipamentos.push({ id, quantidade: Number(quantidade) });
+    }
+
+    return equipamentos;
+}
 
 /** Lê o pedido de nova reserva da query da página. Devolve null quando `nova_reserva` não é 1. */
 export function lerPedidoDeNovaReserva(
@@ -20,11 +73,18 @@ export function lerPedidoDeNovaReserva(
     }
 
     const inicio = parametros.get('inicio');
+    const fim = parametros.get('fim');
     const espaco = parametros.get('espaco');
+    const grupo = parametros.get('grupo');
+    const titulo = parametros.get('titulo')?.trim() ?? '';
 
     return {
         espacoId: espaco === null || espaco === '' ? null : espaco,
         inicio: inicio !== null && HORARIO.test(inicio) ? inicio : null,
+        fim: fim !== null && HORARIO.test(fim) ? fim : null,
+        titulo: titulo === '' || titulo.length > TITULO_MAXIMO ? null : titulo,
+        grupoId: grupo === null || grupo === '' ? null : grupo,
+        equipamentos: lerEquipamentos(parametros.get('equipamentos')),
     };
 }
 

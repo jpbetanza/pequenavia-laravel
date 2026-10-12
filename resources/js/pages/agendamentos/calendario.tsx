@@ -111,11 +111,16 @@ export default function Calendario({
             return;
         }
 
-        abrirNovaReserva(
+        setPainel({
+            modo: 'nova',
             data,
-            pedido.inicio ?? undefined,
-            pedido.espacoId ?? undefined,
-        );
+            hora: pedido.inicio ?? undefined,
+            espacoId: pedido.espacoId ?? undefined,
+            fim: pedido.fim ?? undefined,
+            titulo: pedido.titulo ?? undefined,
+            grupoId: pedido.grupoId ?? undefined,
+            equipamentos: pedido.equipamentos,
+        });
         window.history.replaceState(
             window.history.state,
             '',
