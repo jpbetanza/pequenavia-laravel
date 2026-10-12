@@ -48,6 +48,9 @@ class HandleInertiaRequests extends Middleware
                     ->where('status', StatusSolicitacao::Pendente)
                     ->count(),
             ],
+            'assistente' => fn () => $request->user() === null ? null : [
+                'disponivel' => filled(config('assistente.chave')),
+            ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }
