@@ -8,6 +8,7 @@ use App\Http\Requests\Agendamentos\UpdateEquipamentoRequest;
 use App\Models\Equipamento;
 use App\Models\Reserva;
 use App\Models\User;
+use App\Services\Agenda\Cadastros\GravadorDeEquipamento;
 use App\Services\Agenda\UsoDeEquipamento;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
@@ -15,7 +16,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -71,9 +71,9 @@ class EquipamentoController extends Controller
     /**
      * Cria o equipamento do dono logado.
      */
-    public function store(StoreEquipamentoRequest $request): RedirectResponse
+    public function store(StoreEquipamentoRequest $request, GravadorDeEquipamento $gravador): RedirectResponse
     {
-        $request->user()->equipamentos()->create($request->validated());
+        $gravador->criar($request->user(), $request->validated());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Equipamento criado.']);
 
@@ -83,9 +83,9 @@ class EquipamentoController extends Controller
     /**
      * Atualiza os dados do equipamento.
      */
-    public function update(UpdateEquipamentoRequest $request, Equipamento $equipamento): RedirectResponse
+    public function update(UpdateEquipamentoRequest $request, Equipamento $equipamento, GravadorDeEquipamento $gravador): RedirectResponse
     {
-        $equipamento->fill($request->validated())->save();
+        $gravador->atualizar($equipamento, $request->validated());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Equipamento atualizado.']);
 
@@ -93,28 +93,13 @@ class EquipamentoController extends Controller
     }
 
     /**
-     * Exclui o equipamento, mas só sem reservas. A FK de reserva_equipamento é DEFERRABLE, então a checagem vem antes, no código.
+     * Exclui o equipamento. A checagem de reservas fica no gravador.
      */
-    public function destroy(Equipamento $equipamento): RedirectResponse
+    public function destroy(Equipamento $equipamento, GravadorDeEquipamento $gravador): RedirectResponse
     {
         Gate::authorize('delete', $equipamento);
 
-        $reservas = $equipamento->reservas();
-        $hoje = now(config('agendamentos.fuso'))->toDateString();
-
-        if ((clone $reservas)->where('reservas.data', '>=', $hoje)->exists()) {
-            throw ValidationException::withMessages([
-                'equipamento' => 'Há reservas futuras usando este equipamento. Desative em vez de excluir.',
-            ]);
-        }
-
-        if ($reservas->exists()) {
-            throw ValidationException::withMessages([
-                'equipamento' => 'Há reservas usando este equipamento. Desative em vez de excluir.',
-            ]);
-        }
-
-        $equipamento->delete();
+        $gravador->excluir($equipamento);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Equipamento excluído.']);
 

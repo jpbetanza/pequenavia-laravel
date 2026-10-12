@@ -8,16 +8,13 @@ use App\Http\Requests\Agendamentos\UpdateEspacoRequest;
 use App\Models\Espaco;
 use App\Models\EspacoBloqueio;
 use App\Models\EspacoHorario;
-use App\Models\Reserva;
 use App\Models\User;
+use App\Services\Agenda\Cadastros\GravadorDeEspaco;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -83,13 +80,9 @@ class EspacoController extends Controller
     /**
      * Cria o espaço do dono logado, com horários e bloqueios, em uma transação.
      */
-    public function store(StoreEspacoRequest $request): RedirectResponse
+    public function store(StoreEspacoRequest $request, GravadorDeEspaco $gravador): RedirectResponse
     {
-        DB::transaction(function () use ($request) {
-            $espaco = $request->user()->espacos()->create($this->atributos($request->validated()));
-
-            $this->gravarHorariosEBloqueios($espaco, $request->validated());
-        });
+        $gravador->criar($request->user(), $request->validated());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Espaço criado.']);
 
@@ -132,16 +125,9 @@ class EspacoController extends Controller
     /**
      * Atualiza o espaço. Horários e bloqueios enviados substituem os anteriores.
      */
-    public function update(UpdateEspacoRequest $request, Espaco $espaco): RedirectResponse
+    public function update(UpdateEspacoRequest $request, Espaco $espaco, GravadorDeEspaco $gravador): RedirectResponse
     {
-        DB::transaction(function () use ($request, $espaco) {
-            $espaco->fill($this->atributos($request->validated()))->save();
-
-            $espaco->horarios()->delete();
-            $espaco->bloqueios()->delete();
-
-            $this->gravarHorariosEBloqueios($espaco, $request->validated());
-        });
+        $gravador->atualizar($espaco, $request->validated());
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Espaço atualizado.']);
 
@@ -149,28 +135,13 @@ class EspacoController extends Controller
     }
 
     /**
-     * Exclui o espaço, mas só sem reservas. A FK de reservas é restrita, então a checagem vem antes.
+     * Exclui o espaço. A checagem de reservas fica no gravador.
      */
-    public function destroy(Espaco $espaco): RedirectResponse
+    public function destroy(Espaco $espaco, GravadorDeEspaco $gravador): RedirectResponse
     {
         Gate::authorize('delete', $espaco);
 
-        $reservas = Reserva::query()->where('espaco_id', $espaco->id);
-        $hoje = now(config('agendamentos.fuso'))->toDateString();
-
-        if ((clone $reservas)->where('data', '>=', $hoje)->exists()) {
-            throw ValidationException::withMessages([
-                'espaco' => 'Há reservas futuras usando este espaço. Desative em vez de excluir.',
-            ]);
-        }
-
-        if ($reservas->exists()) {
-            throw ValidationException::withMessages([
-                'espaco' => 'Há reservas usando este espaço. Desative em vez de excluir.',
-            ]);
-        }
-
-        $espaco->delete();
+        $gravador->excluir($espaco);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Espaço excluído.']);
 
@@ -224,25 +195,5 @@ class EspacoController extends Controller
             ->unique()
             ->values()
             ->all();
-    }
-
-    /**
-     * Atributos da tabela `espacos`, sem as listas de horários e bloqueios.
-     *
-     * @param  array<string, mixed>  $validado
-     * @return array<string, mixed>
-     */
-    private function atributos(array $validado): array
-    {
-        return Arr::except($validado, ['horarios', 'bloqueios']);
-    }
-
-    /**
-     * @param  array<string, mixed>  $validado
-     */
-    private function gravarHorariosEBloqueios(Espaco $espaco, array $validado): void
-    {
-        $espaco->horarios()->createMany($validado['horarios'] ?? []);
-        $espaco->bloqueios()->createMany($validado['bloqueios'] ?? []);
     }
 }
