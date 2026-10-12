@@ -17,10 +17,9 @@ use App\Models\Grupo;
 use App\Models\Reserva;
 use App\Models\Solicitacao;
 use App\Models\User;
-use App\Services\Agenda\Conflito;
 use App\Services\Agenda\ConflitosDeReservaException;
+use App\Services\Agenda\CriadorDeReservas;
 use App\Services\Agenda\Recorrencia;
-use App\Services\Agenda\VerificadorDeDisponibilidade;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
@@ -29,7 +28,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -41,7 +39,7 @@ use Inertia\Response;
  */
 class ReservaController extends Controller
 {
-    public function __construct(private readonly VerificadorDeDisponibilidade $verificador) {}
+    public function __construct(private readonly CriadorDeReservas $criador) {}
 
     /**
      * Calendário da semana (padrão) ou do dia, com as reservas, espaços, equipamentos, grupos e solicitações pendentes do intervalo.
@@ -99,46 +97,12 @@ class ReservaController extends Controller
     public function store(StoreReservaRequest $request): RedirectResponse
     {
         $dados = $request->validated();
-        $user = $request->user();
         $espaco = $this->espacoDoDono($dados['espaco_id']);
         $grupo = $this->grupoDoDono($dados['grupo_id'] ?? null);
         $equipamentos = $this->equipamentosDoDono($dados['equipamentos']);
         $datas = $this->datasDaSerie($dados);
-        $serieId = count($datas) > 1 ? (string) Str::uuid() : null;
 
-        DB::transaction(function () use ($user, $espaco, $grupo, $dados, $datas, $equipamentos, $serieId): void {
-            $this->travarAgendaDo($user);
-
-            $conflitos = [];
-
-            foreach ($datas as $data) {
-                $conflitosDaData = $this->conflitosDaData($espaco, $data, $dados, $equipamentos, null);
-
-                if ($conflitosDaData !== null) {
-                    $conflitos[] = $conflitosDaData;
-                }
-            }
-
-            if ($conflitos !== []) {
-                throw new ConflitosDeReservaException($conflitos);
-            }
-
-            foreach ($datas as $data) {
-                $reserva = $user->reservas()->create([
-                    'espaco_id' => $espaco->id,
-                    'grupo_id' => $grupo?->id,
-                    'titulo' => $dados['titulo'],
-                    'data' => $data->toDateString(),
-                    'inicio' => $dados['inicio'],
-                    'fim' => $dados['fim'],
-                    'pessoas' => $dados['pessoas'] ?? null,
-                    'observacoes' => $dados['observacoes'] ?? null,
-                    'serie_id' => $serieId,
-                ]);
-
-                $reserva->equipamentos()->attach($this->pivotDosEquipamentos($equipamentos));
-            }
-        });
+        $this->criador->criar($request->user(), $espaco, $grupo, $dados, $datas, $equipamentos);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => count($datas) === 1 ? 'Reserva criada.' : count($datas).' reservas criadas.']);
 
@@ -161,7 +125,7 @@ class ReservaController extends Controller
         $espacosOriginais = $membros->mapWithKeys(fn (Reserva $membro) => [$membro->id => $membro->espaco_id])->all();
 
         DB::transaction(function () use ($user, $reserva, $espaco, $grupo, $dados, $equipamentos, $membros, $espacosOriginais): void {
-            $this->travarAgendaDo($user);
+            $this->criador->travarAgendaDo($user);
 
             foreach ($membros as $membro) {
                 $ehEsta = $membro->is($reserva);
@@ -177,13 +141,13 @@ class ReservaController extends Controller
                     ...($ehEsta ? ['data' => $dados['data']] : []),
                 ])->save();
 
-                $membro->equipamentos()->sync($this->pivotDosEquipamentos($equipamentos));
+                $membro->equipamentos()->sync($this->criador->pivotDosEquipamentos($equipamentos));
             }
 
             $conflitos = [];
 
             foreach ($membros as $membro) {
-                $conflitosDaData = $this->conflitosDaData(
+                $conflitosDaData = $this->criador->conflitosDaData(
                     $espaco,
                     CarbonImmutable::instance($membro->data)->startOfDay(),
                     [
@@ -375,33 +339,6 @@ class ReservaController extends Controller
     }
 
     /**
-     * Confere uma data candidata. Devolve null quando não há conflito.
-     *
-     * O espaço inativo só conta como conflito quando a reserva passa a usá-lo: na edição sem troca de espaço, `ignorarEspacoInativo` o descarta.
-     *
-     * @param  array<string, mixed>  $dados  Com `inicio` e `fim`.
-     * @param  list<array{id: string, quantidade: int}>  $equipamentos
-     * @return array{data: string, conflitos: list<array{tipo: string, mensagem: string}>}|null
-     */
-    private function conflitosDaData(Espaco $espaco, CarbonImmutable $data, array $dados, array $equipamentos, ?string $ignorarReservaId, bool $ignorarEspacoInativo = false): ?array
-    {
-        $conflitos = $this->verificador->verificar($espaco, $data, $dados['inicio'], $dados['fim'], $equipamentos, $ignorarReservaId);
-
-        if ($ignorarEspacoInativo) {
-            $conflitos = array_values(array_filter($conflitos, fn (Conflito $conflito) => $conflito->tipo !== Conflito::ESPACO_INATIVO));
-        }
-
-        if ($conflitos === []) {
-            return null;
-        }
-
-        return [
-            'data' => $data->toDateString(),
-            'conflitos' => array_map(fn (Conflito $conflito) => $conflito->toArray(), $conflitos),
-        ];
-    }
-
-    /**
      * Reservas que a edição ou a exclusão atinge: só a própria, ou a série a partir da data dela.
      *
      * @return Collection<int, Reserva>
@@ -418,14 +355,6 @@ class ReservaController extends Controller
             ->where('data', '>=', $reserva->data->toDateString())
             ->orderBy('data')
             ->get();
-    }
-
-    /**
-     * Trava a linha do dono até o fim da transação, para que duas gravações da mesma agenda não passem juntas pela verificação.
-     */
-    private function travarAgendaDo(User $user): void
-    {
-        User::query()->whereKey($user->id)->lockForUpdate()->firstOrFail();
     }
 
     private function espacoDoDono(string $id): Espaco
@@ -468,17 +397,6 @@ class ReservaController extends Controller
             fn (array $pedido) => ['id' => $pedido['id'], 'quantidade' => (int) $pedido['quantidade']],
             $pedidos,
         );
-    }
-
-    /**
-     * @param  list<array{id: string, quantidade: int}>  $equipamentos
-     * @return array<string, array{quantidade: int}>
-     */
-    private function pivotDosEquipamentos(array $equipamentos): array
-    {
-        return collect($equipamentos)
-            ->mapWithKeys(fn (array $equipamento) => [$equipamento['id'] => ['quantidade' => $equipamento['quantidade']]])
-            ->all();
     }
 
     /**
