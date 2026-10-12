@@ -18,6 +18,9 @@ class MensagemController extends Controller
     public function store(EnviarMensagemRequest $request, Conversa $conversa)
     {
         return response()->eventStream(function () use ($request, $conversa) {
+            // Sem isso o PHP aborta o script quando o cliente fecha a aba, e o `finally` do gerador não grava o texto parcial.
+            ignore_user_abort(true);
+
             foreach ($this->assistente->responder($request->user(), $conversa, $request->validated('texto')) as $evento) {
                 yield new StreamedEvent(event: $evento->tipo, data: $evento->dados);
             }

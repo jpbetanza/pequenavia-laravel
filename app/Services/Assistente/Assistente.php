@@ -9,6 +9,7 @@ use App\Models\User;
 use Generator;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Throwable;
 
 /**
  * Ciclo de uma pergunta: o modelo responde (em texto ou pedindo ferramentas), as ferramentas rodam e o modelo responde de novo,
@@ -90,6 +91,21 @@ final class Assistente
             ]);
 
             yield new EventoDoAssistente('erro', ['mensagem' => $falha->getMessage()]);
+        } catch (Throwable $erro) {
+            report($erro);
+
+            if (! $concluido) {
+                $concluido = true;
+                $mensagem = 'Não consegui responder agora. Tente de novo.';
+
+                $conversa->mensagens()->create([
+                    'papel' => PapelDaMensagem::Assistente,
+                    'conteudo' => $mensagem,
+                    'erro' => true,
+                ]);
+
+                yield new EventoDoAssistente('erro', ['mensagem' => $mensagem]);
+            }
         } finally {
             if (! $concluido && $textoVisivel !== '') {
                 $this->gravarResposta($conversa, $textoVisivel, $cartoes, $tokensEntrada, $tokensSaida);

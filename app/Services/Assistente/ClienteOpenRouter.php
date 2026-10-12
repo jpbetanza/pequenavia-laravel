@@ -5,6 +5,7 @@ namespace App\Services\Assistente;
 use Generator;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Psr\Http\Message\StreamInterface;
 use Throwable;
 
@@ -44,6 +45,8 @@ class ClienteOpenRouter
         }
 
         if ($resposta->failed()) {
+            Log::warning('assistente.http', ['status' => $resposta->status()]);
+
             throw new FalhaDoModelo(match ($resposta->status()) {
                 401, 403 => 'chave',
                 402 => 'credito',
@@ -95,7 +98,9 @@ class ClienteOpenRouter
             }
         } catch (FalhaDoModelo $falha) {
             throw $falha;
-        } catch (Throwable) {
+        } catch (Throwable $erro) {
+            report($erro);
+
             throw new FalhaDoModelo('stream');
         }
 

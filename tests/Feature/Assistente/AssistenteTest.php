@@ -6,8 +6,10 @@ use App\Models\Espaco;
 use App\Models\Mensagem;
 use App\Models\User;
 use App\Services\Assistente\Assistente;
+use App\Services\Assistente\ClienteOpenRouter;
 use App\Services\Assistente\EventoDoAssistente;
 use Illuminate\Support\Facades\Http;
+use RuntimeException;
 
 beforeEach(function () {
     Http::preventStrayRequests();
@@ -108,4 +110,17 @@ test('interrupção no meio do texto grava o trecho já recebido', function () {
 
     $parcial = $conversa->mensagens()->where('papel', PapelDaMensagem::Assistente)->sole();
     expect($parcial->conteudo)->toBe('Olá')->and($parcial->erro)->toBeFalse();
+});
+
+test('erro inesperado grava a mensagem de erro e emite o evento erro, sem deixar o stream mudo', function () {
+    $this->mock(ClienteOpenRouter::class)
+        ->shouldReceive('conversar')
+        ->andThrow(new RuntimeException('falha inesperada'));
+    $conversa = Conversa::factory()->create();
+
+    $eventos = eventos($conversa->user, $conversa, 'Oi');
+
+    expect(array_map(fn ($e) => $e->tipo, $eventos))->toBe(['erro'])
+        ->and(end($eventos)->dados['mensagem'])->toBe('Não consegui responder agora. Tente de novo.')
+        ->and($conversa->mensagens()->where('papel', PapelDaMensagem::Assistente)->where('erro', true)->count())->toBe(1);
 });

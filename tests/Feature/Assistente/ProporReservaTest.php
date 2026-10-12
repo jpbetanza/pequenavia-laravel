@@ -75,3 +75,15 @@ test('argumentos ruins viram ArgumentoInvalido', function (array $argumentos) {
     [['titulo' => 'X', 'espaco' => 'Salão paroquial', 'data' => '2026-10-16', 'inicio' => '15:00', 'fim' => '14:00']],
     [['titulo' => 'X', 'espaco' => 'Salão paroquial', 'data' => '2026-10-01', 'inicio' => '14:00', 'fim' => '15:00']],
 ]);
+
+test('equipamentos repetidos, por nome e por id, viram um item com a soma das quantidades', function () {
+    [$usuario, $conversa, , $projetor] = cenario();
+    $projetor->update(['quantidade' => 5]);
+
+    app(ProporReserva::class)->executar($usuario, $conversa, [
+        'titulo' => 'X', 'espaco' => 'Salão paroquial', 'data' => '2026-10-16', 'inicio' => '14:00', 'fim' => '15:00',
+        'equipamentos' => [['equipamento' => 'Projetor', 'quantidade' => 1], ['equipamento' => $projetor->id, 'quantidade' => 2]],
+    ]);
+
+    expect(AcaoProposta::sole()->dados['equipamentos'])->toBe([['id' => $projetor->id, 'quantidade' => 3]]);
+});

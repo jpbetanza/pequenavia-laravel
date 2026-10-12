@@ -146,3 +146,13 @@ test('verificar_disponibilidade exige início e fim juntos', function () {
     expect(fn () => executar(VerificarDisponibilidade::class, $usuario, ['espaco' => $salao->id, 'data' => '2026-10-16', 'inicio' => '10:00', 'fim' => '']))
         ->toThrow(ArgumentoInvalido::class, 'Informe início e fim, ou nenhum dos dois.');
 });
+
+test('listar_cadastros dá o nome do dia da semana junto do número', function () {
+    $usuario = User::factory()->create();
+    $espaco = Espaco::factory()->for($usuario)->create(['nome' => 'Salão']);
+    $espaco->horarios()->create(['dia_semana' => 1, 'abre' => '08:00', 'fecha' => '12:00']);
+
+    $resultado = executar(ListarCadastros::class, $usuario, []);
+
+    expect($resultado->paraOModelo['espacos'][0]['horarios'][0])->toBe(['dia_semana' => 1, 'dia' => 'segunda', 'abre' => '08:00', 'fecha' => '12:00']);
+});

@@ -43,3 +43,16 @@ test('mais de 20 mensagens por minuto responde 429', function () {
 
     $this->postJson(route('assistente.mensagens.store', $conversa), ['texto' => 'Oi'])->assertTooManyRequests();
 });
+
+test('o stream segue até o fim mesmo se o cliente fechar a conexão, para gravar a resposta parcial', function () {
+    Http::fake(['openrouter.ai/*' => Http::response(sseDoOpenRouter([chunkDeTexto('Oi!')]))]);
+    $conversa = Conversa::factory()->create();
+    ignore_user_abort(false);
+
+    $this->actingAs($conversa->user)
+        ->post(route('assistente.mensagens.store', $conversa), ['texto' => 'Olá'])
+        ->assertOk()
+        ->streamedContent();
+
+    expect(ignore_user_abort())->toBe(1);
+});

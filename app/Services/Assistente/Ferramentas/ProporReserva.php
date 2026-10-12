@@ -42,7 +42,7 @@ final class ProporReserva implements Ferramenta
             'properties' => [
                 'titulo' => ['type' => 'string', 'description' => 'Nome da reserva, até 160 caracteres.'],
                 'espaco' => ['type' => 'string', 'description' => 'Nome ou id do espaço.'],
-                'grupo' => ['type' => 'string', 'description' => 'Nome ou id do grupo. Opcional.'],
+                'grupo' => ['type' => 'string', 'description' => 'Pastoral ou grupo que vai usar o espaço; use este campo, não observações. Nome ou id. Opcional.'],
                 'data' => ['type' => 'string', 'description' => 'Dia, no formato AAAA-MM-DD. Não pode ser no passado.'],
                 'inicio' => ['type' => 'string', 'description' => 'Horário de início, HH:MM.'],
                 'fim' => ['type' => 'string', 'description' => 'Horário de término, HH:MM. Depois do início.'],
@@ -91,11 +91,14 @@ final class ProporReserva implements Ferramenta
 
         $espaco = $this->resolvedor->espaco($usuario, $dados['espaco']);
         $grupo = $this->resolvedor->grupo($usuario, $dados['grupo'] ?? null);
+        // Mesmo equipamento pedido de duas formas (nome e id) vira um item só, com a soma das quantidades.
         $equipamentos = collect($dados['equipamentos'] ?? [])
             ->map(fn (array $pedido) => [
                 'id' => $this->resolvedor->equipamento($usuario, $pedido['equipamento'])->id,
                 'quantidade' => (int) $pedido['quantidade'],
             ])
+            ->groupBy('id')
+            ->map(fn ($pedidos, string $id) => ['id' => $id, 'quantidade' => $pedidos->sum('quantidade')])
             ->values()
             ->all();
         $data = CarbonImmutable::createFromFormat('Y-m-d', $dados['data'], $fuso)->startOfDay();

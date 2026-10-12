@@ -94,7 +94,7 @@ final class VerificarDisponibilidade implements Ferramenta
 
         $espaco->loadMissing('horarios');
         $horario = $espaco->horarios->firstWhere('dia_semana', $dia->dayOfWeek);
-        $reservas = $this->reservasDoDia($espaco->id, $dia);
+        $reservas = $this->reservasDoDia($usuario, $espaco->id, $dia);
 
         $cartaoDados = [
             'espaco' => ['id' => $espaco->id, 'nome' => $espaco->nome, 'cor' => $espaco->cor->value],
@@ -144,9 +144,10 @@ final class VerificarDisponibilidade implements Ferramenta
     /**
      * @return list<array{inicio: string, fim: string, titulo: string}>
      */
-    private function reservasDoDia(string $espacoId, CarbonImmutable $dia): array
+    private function reservasDoDia(User $usuario, string $espacoId, CarbonImmutable $dia): array
     {
         return Reserva::query()
+            ->where('user_id', $usuario->id)
             ->where('espaco_id', $espacoId)
             ->where('data', $dia->toDateString())
             ->orderBy('inicio')

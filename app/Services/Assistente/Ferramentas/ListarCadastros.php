@@ -13,6 +13,8 @@ use App\Models\User;
  */
 final class ListarCadastros implements Ferramenta
 {
+    private const DIAS = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
+
     public function nome(): string
     {
         return 'listar_cadastros';
@@ -48,6 +50,7 @@ final class ListarCadastros implements Ferramenta
                 'horarios' => $espaco->horarios
                     ->map(fn ($horario) => [
                         'dia_semana' => $horario->dia_semana,
+                        'dia' => self::DIAS[$horario->dia_semana],
                         'abre' => substr($horario->abre, 0, 5),
                         'fecha' => substr($horario->fecha, 0, 5),
                     ])
