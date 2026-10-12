@@ -16,13 +16,13 @@ class DashboardTest extends TestCase
         $response->assertRedirect(route('login'));
     }
 
-    public function test_authenticated_users_are_sent_to_their_certificates()
+    public function test_authenticated_users_are_sent_to_the_home()
     {
         $user = User::factory()->create();
         $this->actingAs($user);
 
         $response = $this->get(route('dashboard'));
 
-        $response->assertRedirect(route('meus-certificados.index'));
+        $response->assertRedirect(route('inicio'));
     }
 }

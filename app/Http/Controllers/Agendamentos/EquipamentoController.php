@@ -9,6 +9,7 @@ use App\Models\Equipamento;
 use App\Models\Reserva;
 use App\Models\User;
 use App\Services\Agenda\Cadastros\GravadorDeEquipamento;
+use App\Services\Agenda\PainelDeEquipamentosDeHoje;
 use App\Services\Agenda\UsoDeEquipamento;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
@@ -24,8 +25,7 @@ use Inertia\Response;
  */
 class EquipamentoController extends Controller
 {
-    /** Minutos de antecedência com que o equipamento sai para a reserva. */
-    private const ANTECEDENCIA_DA_SEPARACAO_MIN = 15;
+    public function __construct(private readonly PainelDeEquipamentosDeHoje $painelDeHoje) {}
 
     /**
      * Lista os equipamentos do dono por nome, com o estado de agora, o uso da semana e o painel de hoje.
@@ -64,7 +64,7 @@ class EquipamentoController extends Controller
                     'semana' => $this->semana($equipamento, $usos, $inicioDaSemana),
                 ];
             })->values(),
-            'hoje' => $this->painelDeHoje($request->user(), $agora),
+            'hoje' => $this->painelDeHoje->montar($request->user(), $agora),
         ]);
     }
 
@@ -193,64 +193,5 @@ class EquipamentoController extends Controller
             })
             ->values()
             ->all();
-    }
-
-    /**
-     * Levar (início − 15 min) e recolher (fim) de cada reserva de hoje que tem equipamento, em ordem de horário.
-     *
-     * @return array{rotulo: string, movimentos: list<array<string, mixed>>}
-     */
-    private function painelDeHoje(User $user, CarbonInterface $agora): array
-    {
-        $fuso = config('agendamentos.fuso');
-
-        $reservas = Reserva::query()
-            ->where('user_id', $user->id)
-            ->where('data', $agora->toDateString())
-            ->whereHas('equipamentos')
-            ->with(['equipamentos' => fn ($consulta) => $consulta->orderBy('equipamentos.nome'), 'espaco:id,nome'])
-            ->get();
-
-        $movimentos = $reservas
-            ->flatMap(function (Reserva $reserva) use ($fuso) {
-                $inicio = CarbonImmutable::parse($reserva->data->toDateString().' '.$reserva->inicio, $fuso);
-                $fim = CarbonImmutable::parse($reserva->data->toDateString().' '.$reserva->fim, $fuso);
-
-                return [
-                    $this->movimento($reserva, 'levar', $inicio->subMinutes(self::ANTECEDENCIA_DA_SEPARACAO_MIN)->format('H:i')),
-                    $this->movimento($reserva, 'recolher', $fim->format('H:i')),
-                ];
-            })
-            ->sortBy([['horario', 'asc'], ['titulo', 'asc']])
-            ->values()
-            ->all();
-
-        return [
-            'rotulo' => $agora->locale('pt_BR')->isoFormat('dddd, D [de] MMMM'),
-            'movimentos' => $movimentos,
-        ];
-    }
-
-    /**
-     * @return array{chave: string, acao: string, horario: string, titulo: string, espaco: string, reserva_id: string, itens: list<array{equipamento_id: string, nome: string, quantidade: int, marcado: bool}>}
-     */
-    private function movimento(Reserva $reserva, string $acao, string $horario): array
-    {
-        $coluna = $acao === 'levar' ? 'entregue_em' : 'recolhido_em';
-
-        return [
-            'chave' => "{$reserva->id}-{$acao}",
-            'acao' => $acao,
-            'horario' => $horario,
-            'titulo' => $reserva->titulo,
-            'espaco' => $reserva->espaco->nome,
-            'reserva_id' => $reserva->id,
-            'itens' => $reserva->equipamentos->map(fn (Equipamento $equipamento) => [
-                'equipamento_id' => $equipamento->id,
-                'nome' => $equipamento->nome,
-                'quantidade' => (int) $equipamento->pivot->quantidade,
-                'marcado' => $equipamento->pivot->{$coluna} !== null,
-            ])->values()->all(),
-        ];
     }
 }

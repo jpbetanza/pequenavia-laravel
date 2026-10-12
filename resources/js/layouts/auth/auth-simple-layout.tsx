@@ -6,9 +6,10 @@ import { home } from '@/routes';
 import type { AuthLayoutProps } from '@/types';
 
 const beneficios = [
-    'Modelos compartilhados com a sua equipe',
-    'Geração em lote a partir do Excel',
-    'Histórico de cada certificado emitido',
+    'Salas e equipamentos sem choque de horário',
+    'Pedidos das pastorais com conflito à vista',
+    'Um assistente que conhece a sua agenda',
+    'Certificados gerados a partir do Excel',
 ];
 
 export default function AuthSimpleLayout({
@@ -45,8 +46,8 @@ export default function AuthSimpleLayout({
                     </p>
                     {painel && (
                         <p className="hidden text-lg text-primary-foreground/85 md:block">
-                            Seus modelos, campos e o histórico de emissões estão
-                            onde você deixou.
+                            A agenda das salas, os pedidos das pastorais e os
+                            certificados estão onde você deixou.
                         </p>
                     )}
                 </div>

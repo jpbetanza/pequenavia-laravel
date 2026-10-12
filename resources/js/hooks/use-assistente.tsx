@@ -11,6 +11,12 @@ type ValorDoAssistente = {
     aberto: boolean;
     alternar: () => void;
     fechar: () => void;
+    /** Pergunta enviada de fora do painel (ex.: Início), ainda não entregue à conversa. */
+    perguntaPendente: string | null;
+    /** Abre o painel e manda a pergunta numa conversa nova. */
+    perguntar: (texto: string) => void;
+    /** A conversa avisa que pegou a pergunta. */
+    consumirPergunta: () => void;
 };
 
 const ContextoDoAssistente = createContext<ValorDoAssistente | null>(null);
@@ -45,6 +51,9 @@ function gravarAberto(aberto: boolean): void {
 
 export function ProvedorDoAssistente({ children }: { children: ReactNode }) {
     const [aberto, setAberto] = useState(lerAberto);
+    const [perguntaPendente, setPerguntaPendente] = useState<string | null>(
+        null,
+    );
 
     function definir(novo: boolean) {
         setAberto(novo);
@@ -60,6 +69,18 @@ export function ProvedorDoAssistente({ children }: { children: ReactNode }) {
                 aberto,
                 alternar: () => definir(!aberto),
                 fechar: () => definir(false),
+                perguntaPendente,
+                perguntar: (texto: string) => {
+                    const limpa = texto.trim();
+
+                    if (limpa === '') {
+                        return;
+                    }
+
+                    setPerguntaPendente(limpa);
+                    definir(true);
+                },
+                consumirPergunta: () => setPerguntaPendente(null),
             }}
         >
             {children}
