@@ -57,7 +57,7 @@ export function PedidosDoInicio({ total, primeiras }: Props) {
                 <Link
                     href={solicitacoes()}
                     prefetch
-                    className="font-semibold whitespace-nowrap underline-offset-4 hover:underline"
+                    className="inline-flex min-h-11 items-center font-semibold whitespace-nowrap underline-offset-4 hover:underline"
                 >
                     {total === 0
                         ? 'Ver solicitações →'

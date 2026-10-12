@@ -66,7 +66,7 @@ export function HojeNasSalas({ reservas }: Props) {
                 <Link
                     href={calendario({ query: { visao: 'dia' } })}
                     prefetch
-                    className="font-semibold underline-offset-4 hover:underline"
+                    className="inline-flex min-h-11 items-center font-semibold underline-offset-4 hover:underline"
                 >
                     Ver ocupação →
                 </Link>

@@ -56,7 +56,7 @@ export default function Inicio({
                                 <Button
                                     asChild
                                     variant="link"
-                                    className="h-auto p-0 font-semibold whitespace-nowrap"
+                                    className="h-auto min-h-11 p-0 font-semibold whitespace-nowrap"
                                 >
                                     <Link href={equipamentos()} prefetch>
                                         Equipamentos →
@@ -65,6 +65,7 @@ export default function Inicio({
                             </div>
                             <PainelDeEquipamentosDeHoje
                                 painel={equipamentos_hoje}
+                                semTitulo
                             />
                         </section>
 
