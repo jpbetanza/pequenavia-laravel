@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>PequenaVia — menu superior suspenso</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&amp;family=Instrument+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F0E6}
+a{color:#6E1F24}a:hover{color:#4E1418}
+button,a,[role=tab],[role=menuitem]{cursor:pointer}
+</style>
+</helmet>
+<div style="min-height: 1000px; background: #F5F0E6; color: #221A17; font-family: 'Instrument Sans', system-ui, sans-serif; font-size: 14px; line-height: 1.45">
+<div style="position: relative">
+  <header style="position: sticky; top: 0; z-index: 2; background: #F5F0E6; border-bottom: 1px solid #E1D7C8">
+    <div style="max-width: 1376px; margin: 0 auto; padding: 0 32px; box-sizing: border-box; display: flex; align-items: center; gap: 28px">
+      <a href="../Inicio.dc.html" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: #221A17; flex: none">
+        <span style="width: 36px; height: 36px; border-radius: 999px; background: #FBF8F2; border: 1px solid #E1D7C8; display: flex; align-items: center; justify-content: center"><img src="/_blob/50066c2efa3bd703f79bbba990bb7aa8" alt="" style="width: 28px; height: 28px; object-fit: contain"></span>
+        <span style="font-family: 'Cormorant Garamond', Georgia, serif; font-size: 23px; font-weight: 700">PequenaVia</span>
+      </a>
+      <nav aria-label="Navegação do app" style="display: flex; align-items: center; gap: 4px">
+        <a href="TopoInicio.dc.html" aria-current="page" style="text-decoration: none; display: flex; align-items: center; gap: 8px; height: 64px; padding: 0 14px; box-sizing: border-box; border-bottom: 2px solid #6E1F24; color: #6E1F24; font-size: 15px; font-weight: 600"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Início</a><div style="position: relative"><button type="button" aria-expanded="true" style="border: none; background: transparent; font: inherit; cursor: pointer; display: flex; align-items: center; gap: 8px; height: 64px; padding: 0 14px; box-sizing: border-box; border-bottom: 2px solid transparent; color: #4A3D38; font-size: 15px; font-weight: 600"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Agendamentos <span aria-label="3 pedidos pendentes" style="min-width: 20px; height: 20px; padding: 0 6px; box-sizing: border-box; border-radius: 999px; background: #6E1F24; color: #FBF8F2; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center">3</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><div role="menu" aria-label="Agendamentos" style="position: absolute; top: calc(100% + 6px); left: 0; width: 330px; padding: 8px; box-sizing: border-box; background: #FBF8F2; border: 1px solid #E1D7C8; border-radius: 16px; box-shadow: 0 24px 50px -24px rgba(60,30,20,.45); display: flex; flex-direction: column; gap: 2px; z-index: 3"><a href="#" style="display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 10px; text-decoration: none; color: #221A17; background: #EFE8DB"><span style="display: flex; align-items: center; gap: 8px; font-weight: 600">Calendário</span><span style="color: #6B5D57; font-size: 13px">A semana das salas, por espaço</span></a><a href="#" style="display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 10px; text-decoration: none; color: #221A17"><span style="display: flex; align-items: center; gap: 8px; font-weight: 600">Solicitações <span aria-label="3 pedidos pendentes" style="min-width: 20px; height: 20px; padding: 0 6px; box-sizing: border-box; border-radius: 999px; background: #6E1F24; color: #FBF8F2; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center">3</span></span><span style="color: #6B5D57; font-size: 13px">Pedidos das pastorais para decidir</span></a><a href="#" style="display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 10px; text-decoration: none; color: #221A17"><span style="display: flex; align-items: center; gap: 8px; font-weight: 600">Espaços</span><span style="color: #6B5D57; font-size: 13px">Salas, capela, horários e bloqueios</span></a><a href="#" style="display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 10px; text-decoration: none; color: #221A17"><span style="display: flex; align-items: center; gap: 8px; font-weight: 600">Equipamentos</span><span style="color: #6B5D57; font-size: 13px">Projetores e o que separar hoje</span></a><a href="#" style="display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border-radius: 10px; text-decoration: none; color: #221A17"><span style="display: flex; align-items: center; gap: 8px; font-weight: 600">Grupos e pastorais</span><span style="color: #6B5D57; font-size: 13px">Quem reserva e as reuniões fixas</span></a>
+      <div style="margin: 6px 4px 2px; padding-top: 10px; border-top: 1px solid #E1D7C8"><a href="#" style="display: flex; align-items: center; min-height: 40px; padding: 0 8px; font-weight: 600; text-decoration: none">+ Nova reserva</a></div>
+    </div></div><button type="button" aria-expanded="false" style="border: none; background: transparent; font: inherit; cursor: pointer; display: flex; align-items: center; gap: 8px; height: 64px; padding: 0 14px; box-sizing: border-box; border-bottom: 2px solid transparent; color: #4A3D38; font-size: 15px; font-weight: 600"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M7 21h10M8 9h8M8 13h5"/></svg>Certificados<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
+      </nav>
+      <div style="margin-left: auto; display: flex; align-items: center; gap: 12px; flex: none">
+        <button type="button" aria-controls="painel-assistente" aria-pressed="false" style="display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border: 1px solid #CDBFAC; border-radius: 999px; background: #FBF8F2; font: inherit; font-weight: 600; color: #221A17; cursor: pointer"><span style="color: #6E1F24; display: flex"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/></svg></span>Assistente</button>
+        <button type="button" aria-label="Conta de Ana Secretaria" style="width: 40px; height: 40px; border: none; border-radius: 999px; background: #6E1F24; color: #FBF8F2; font: inherit; font-weight: 600; font-size: 13px; cursor: pointer">AS</button>
+      </div>
+    </div>
+    
+  </header>
+  
+  <div style="opacity: .55; pointer-events: none">  <main style="max-width: 1376px; margin: 0 auto; padding: 28px 32px 40px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px">
+
+    <!-- Saudação + assistente em destaque -->
+    <section aria-labelledby="saudacao" style="background: #221A17; color: #F5F0E6; border-radius: 22px; padding: 28px 30px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 28px; align-items: center">
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <p style="margin: 0; font-size: 13px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #D9B97A">Sábado, 17 de outubro</p>
+        <h1 id="saudacao" style="margin: 0; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 46px; font-weight: 600; line-height: 1">Boa tarde, Ana.</h1>
+        <p style="margin: 0; color: #D8CEC2; font-size: 16px">6 reservas hoje, 3 pedidos esperando resposta e 2 projetores para separar.</p>
+      </div>
+      <form style="display: flex; flex-direction: column; gap: 10px" onsubmit="return false">
+        <label for="pergunta" style="display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#D9B97A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/></svg>Pergunte ao assistente</label>
+        <div style="display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 16px; border-radius: 14px; background: #FBF8F2">
+          <input id="pergunta" type="text" placeholder="Ex.: tem sala livre quinta à noite para 20 pessoas?" style="flex: 1; min-width: 0; min-height: 40px; border: none; background: transparent; font: inherit; font-size: 15px; color: #221A17; outline: none">
+          <button type="submit" aria-label="Enviar pergunta" style="flex: none; width: 44px; height: 44px; border: none; border-radius: 10px; background: #6E1F24; display: flex; align-items: center; justify-content: center; cursor: pointer"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FBF8F2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 6px">
+          <button type="button" style="min-height: 34px; padding: 0 12px; border: 1px solid #5A4A43; border-radius: 99px; background: transparent; font: inherit; font-size: 13px; color: #F5F0E6; cursor: pointer">O que tem amanhã?</button>
+          <button type="button" style="min-height: 34px; padding: 0 12px; border: 1px solid #5A4A43; border-radius: 99px; background: transparent; font: inherit; font-size: 13px; color: #F5F0E6; cursor: pointer">Resolver os conflitos dos pedidos</button>
+          <button type="button" style="min-height: 34px; padding: 0 12px; border: 1px solid #5A4A43; border-radius: 99px; background: transparent; font: inherit; font-size: 13px; color: #F5F0E6; cursor: pointer">Certificados emitidos este mês</button>
+        </div>
+      </form>
+    </section>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 24px; align-items: start">
+
+      <!-- Hoje nas salas -->
+      <section aria-labelledby="hoje" style="background: #FBF8F2; border: 1px solid #E1D7C8; border-radius: 18px; padding: 22px; display: flex; flex-direction: column; gap: 16px">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px">
+          <h2 id="hoje" style="margin: 0; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 30px; font-weight: 600; line-height: 1">Hoje nas salas</h2>
+          <a href="../agenda/OcupacaoDia.dc.html" style="font-weight: 600; text-decoration: none">Ver ocupação →</a>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; background: #F1DFDC; color: #521519">
+          <span style="font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase">Agora</span>
+          <span style="flex: 1"><b>Catequese · Crisma</b> no Salão São José, até 17h</span>
+        </div>
+        <ol style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column">
+          <li style="display: grid; grid-template-columns: 74px 1fr auto; gap: 12px; align-items: center; padding: 12px 0; border-top: 1px solid #EDE4D3; color: #8A7B73"><span>14h–16h</span><span style="display: flex; align-items: center; gap: 10px"><i style="flex: none; width: 4px; height: 32px; border-radius: 4px; background: #1F2A44; opacity: .5"></i><span><b style="color: #6B5D57">Pastoral da Criança</b><br>Sala Santa Teresinha</span></span><span style="font-size: 12px">Encerrada</span></li>
+          <li style="display: grid; grid-template-columns: 74px 1fr auto; gap: 12px; align-items: center; padding: 12px 0; border-top: 1px solid #EDE4D3"><span style="font-weight: 600">15h–17h</span><span style="display: flex; align-items: center; gap: 10px"><i style="flex: none; width: 4px; height: 32px; border-radius: 4px; background: #6E1F24"></i><span><b>Catequese · Crisma</b><br><span style="color: #6B5D57">Salão São José</span></span></span><span style="padding: 3px 9px; border-radius: 99px; background: #F1DFDC; color: #521519; font-size: 12px; font-weight: 600">Em andamento</span></li>
+          <li style="display: grid; grid-template-columns: 74px 1fr auto; gap: 12px; align-items: center; padding: 12px 0; border-top: 1px solid #EDE4D3"><span style="font-weight: 600">16h–17h</span><span style="display: flex; align-items: center; gap: 10px"><i style="flex: none; width: 4px; height: 32px; border-radius: 4px; background: #24513F"></i><span><b>Batizados</b><br><span style="color: #6B5D57">Capela</span></span></span><span></span></li>
+          <li style="display: grid; grid-template-columns: 74px 1fr auto; gap: 12px; align-items: center; padding: 12px 0; border-top: 1px solid #EDE4D3"><span style="font-weight: 600">18h–20h</span><span style="display: flex; align-items: center; gap: 10px"><i style="flex: none; width: 4px; height: 32px; border-radius: 4px; background: #1F2A44"></i><span><b>Grupo de oração</b><br><span style="color: #6B5D57">Sala Santa Teresinha</span></span></span><span style="padding: 3px 9px; border-radius: 99px; background: #EFE8DB; font-size: 12px; font-weight: 600">Projetor ×1</span></li>
+          <li style="display: grid; grid-template-columns: 74px 1fr auto; gap: 12px; align-items: center; padding: 12px 0; border-top: 1px solid #EDE4D3"><span style="font-weight: 600">19h–20h</span><span style="display: flex; align-items: center; gap: 10px"><i style="flex: none; width: 4px; height: 32px; border-radius: 4px; background: #24513F"></i><span><b>Terço dos homens</b><br><span style="color: #6B5D57">Capela</span></span></span><span></span></li>
+          <li style="display: grid; grid-template-columns: 74px 1fr auto; gap: 12px; align-items: center; padding: 12px 0; border-top: 1px solid #EDE4D3"><span style="font-weight: 600">19h30–21h</span><span style="display: flex; align-items: center; gap: 10px"><i style="flex: none; width: 4px; height: 32px; border-radius: 4px; background: #6E1F24"></i><span><b>Ensaio do coral</b><br><span style="color: #6B5D57">Salão São José</span></span></span><span style="padding: 3px 9px; border-radius: 99px; background: #EFE8DB; font-size: 12px; font-weight: 600">Projetor ×1</span></li>
+        </ol>
+        <div style="display: flex; flex-wrap: wrap; gap: 10px">
+          <a href="../agenda/NovaReserva.dc.html" style="display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 18px; border-radius: 10px; background: #6E1F24; color: #FBF8F2; font-weight: 600; text-decoration: none"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Nova reserva</a>
+          <a href="../agenda/Calendario.dc.html" style="display: flex; align-items: center; min-height: 44px; padding: 0 16px; border: 1px solid #CDBFAC; border-radius: 10px; color: #221A17; font-weight: 600; text-decoration: none">Abrir a semana</a>
+        </div>
+      </section>
+
+      <div style="display: flex; flex-direction: column; gap: 24px">
+        <!-- Pedidos -->
+        <section aria-labelledby="pedidos" style="background: #FBF8F2; border: 1px solid #E1D7C8; border-radius: 18px; padding: 22px; display: flex; flex-direction: column; gap: 12px">
+          <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px">
+            <h2 id="pedidos" style="margin: 0; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 30px; font-weight: 600; line-height: 1">Pedidos esperando você</h2>
+            <a href="../agenda/Solicitacoes.dc.html" style="font-weight: 600; text-decoration: none">Ver todos (3) →</a>
+          </div>
+          <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column">
+            <li style="display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid #EDE4D3"><i style="flex: none; width: 10px; height: 10px; border-radius: 3px; background: #6E1F24"></i><span style="flex: 1; min-width: 0"><b>Encontro de noivos</b> · Pastoral Familiar<br><span style="color: #6B5D57">Salão São José · sáb 24, 19h–21h</span></span><span style="padding: 3px 9px; border-radius: 99px; background: #FBEBD0; color: #7A4A0E; font-size: 12px; font-weight: 600; white-space: nowrap">2 conflitos</span></li>
+            <li style="display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid #EDE4D3"><i style="flex: none; width: 10px; height: 10px; border-radius: 3px; background: #24513F"></i><span style="flex: 1; min-width: 0"><b>Adoração jovem</b> · Pastoral da Juventude<br><span style="color: #6B5D57">Capela · qui 22, 20h–21h</span></span><span style="padding: 3px 9px; border-radius: 99px; background: #E2EEE8; color: #1B3D30; font-size: 12px; font-weight: 600; white-space: nowrap">Sem conflito</span></li>
+            <li style="display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 1px solid #EDE4D3"><i style="flex: none; width: 10px; height: 10px; border-radius: 3px; background: #4B2E5C"></i><span style="flex: 1; min-width: 0"><b>Reunião do dízimo</b> · Pastoral do Dízimo<br><span style="color: #6B5D57">Sala São Francisco · ter 20, 19h–20h30</span></span><span style="padding: 3px 9px; border-radius: 99px; background: #E2EEE8; color: #1B3D30; font-size: 12px; font-weight: 600; white-space: nowrap">Sem conflito</span></li>
+          </ul>
+        </section>
+
+        <!-- Equipamentos -->
+        <section aria-labelledby="separar" style="background: #FBF8F2; border: 1px solid #E1D7C8; border-radius: 18px; padding: 22px; display: flex; flex-direction: column; gap: 12px">
+          <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px">
+            <h2 id="separar" style="margin: 0; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 30px; font-weight: 600; line-height: 1">Separar e recolher</h2>
+            <a href="../agenda/Equipamentos.dc.html" style="font-weight: 600; text-decoration: none">Equipamentos →</a>
+          </div>
+          <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px">
+            <li style="display: grid; grid-template-columns: 56px 1fr; gap: 12px; align-items: center; padding: 10px 12px; border-radius: 10px; background: #EFE8DB"><b>17h50</b><span><b>Projetor 1</b> → Sala Santa Teresinha <span style="color: #6B5D57">(Grupo de oração)</span></span></li>
+            <li style="display: grid; grid-template-columns: 56px 1fr; gap: 12px; align-items: center; padding: 10px 12px; border-radius: 10px; background: #EFE8DB"><b>19h20</b><span><b>Projetor 2</b> → Salão São José <span style="color: #6B5D57">(Ensaio do coral)</span></span></li>
+            <li style="display: grid; grid-template-columns: 56px 1fr; gap: 12px; align-items: center; padding: 10px 12px; border-radius: 10px; border: 1px dashed #CDBFAC"><b>21h</b><span>Recolher os 2 projetores</span></li>
+          </ul>
+        </section>
+
+        <!-- Certificados (atalho) -->
+        <section aria-labelledby="certs" style="border: 1px solid #E1D7C8; border-radius: 18px; padding: 18px 22px; display: flex; flex-wrap: wrap; align-items: center; gap: 16px">
+          <div style="flex: 1 1 200px; display: flex; flex-direction: column; gap: 2px">
+            <h2 id="certs" style="margin: 0; font-size: 15px; font-weight: 600">Certificados</h2>
+            <span style="color: #6B5D57">14 emitidos em outubro · último: Batismo, ontem</span>
+          </div>
+          <a href="../Gerar.dc.html" style="display: flex; align-items: center; min-height: 44px; padding: 0 16px; border: 1px solid #CDBFAC; border-radius: 10px; color: #221A17; font-weight: 600; text-decoration: none">Gerar certificado</a>
+        </section>
+      </div>
+    </div>
+  </main></div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>
