@@ -78,3 +78,34 @@ test('limite de rodadas de ferramenta encerra com mensagem fixa', function () {
     expect(end($eventos)->tipo)->toBe('fim')
         ->and(Mensagem::where('papel', PapelDaMensagem::Assistente)->whereNull('chamadas')->sole()->conteudo)->toBe('Não consegui concluir essa consulta. Pode reformular?');
 });
+
+test('texto de uma rodada antes da ferramenta fica na resposta final', function () {
+    $usuario = User::factory()->create();
+    $salao = Espaco::factory()->comHorarioComercial()->for($usuario)->create(['nome' => 'Salão paroquial']);
+    Http::fake(['openrouter.ai/*' => Http::sequence()
+        ->push(sseDoOpenRouter([chunkDeTexto('Vou consultar. '), chunkDeFerramenta(0, 'c1', 'verificar_disponibilidade', json_encode(['espaco' => $salao->id, 'data' => now()->addDays(3)->toDateString()]))]))
+        ->push(sseDoOpenRouter([chunkDeTexto('Está livre.')]))]);
+    $conversa = Conversa::factory()->for($usuario)->create();
+
+    eventos($usuario, $conversa, 'O salão está livre?');
+
+    $final = $conversa->mensagens()->where('papel', PapelDaMensagem::Assistente)->whereNull('chamadas')->sole();
+    $chamada = $conversa->mensagens()->where('papel', PapelDaMensagem::Assistente)->whereNotNull('chamadas')->sole();
+    expect($final->conteudo)->toBe('Vou consultar. Está livre.')
+        ->and($chamada->conteudo)->toBeNull();
+});
+
+test('interrupção no meio do texto grava o trecho já recebido', function () {
+    Http::fake(['openrouter.ai/*' => Http::response(sseDoOpenRouter([chunkDeTexto('Olá'), chunkDeTexto(', tudo bem?')]))]);
+    $conversa = Conversa::factory()->create();
+
+    $gerador = app(Assistente::class)->responder($conversa->user, $conversa, 'Oi');
+    foreach ($gerador as $evento) {
+        break;
+    }
+    unset($gerador);
+    gc_collect_cycles();
+
+    $parcial = $conversa->mensagens()->where('papel', PapelDaMensagem::Assistente)->sole();
+    expect($parcial->conteudo)->toBe('Olá')->and($parcial->erro)->toBeFalse();
+});

@@ -54,7 +54,40 @@ final class MontadorDeContexto
 
         $inicio = $recentes->search(fn (Mensagem $mensagem) => $mensagem->papel === PapelDaMensagem::Usuario);
 
-        return $inicio === false ? collect() : $recentes->slice($inicio)->values();
+        if ($inicio === false) {
+            return collect();
+        }
+
+        return $this->semChamadasOrfas($recentes->slice($inicio)->values());
+    }
+
+    /**
+     * Uma chamada sem resultado de ferramenta (ou um resultado sem chamada) faz o provedor recusar o pedido inteiro.
+     * Tira esses pares incompletos do contexto, mesmo que tenham sido gravados por uma interrupção.
+     *
+     * @param  Collection<int, Mensagem>  $mensagens
+     * @return Collection<int, Mensagem>
+     */
+    private function semChamadasOrfas(Collection $mensagens): Collection
+    {
+        $comResultado = $mensagens
+            ->where('papel', PapelDaMensagem::Ferramenta)
+            ->pluck('ferramenta_id')
+            ->all();
+
+        $mensagens = $mensagens->reject(fn (Mensagem $mensagem) => $mensagem->papel === PapelDaMensagem::Assistente
+            && $mensagem->chamadas !== null
+            && collect($mensagem->chamadas)->contains(fn (array $chamada) => ! in_array($chamada['id'], $comResultado, true)))
+            ->values();
+
+        $chamadas = $mensagens
+            ->filter(fn (Mensagem $mensagem) => $mensagem->papel === PapelDaMensagem::Assistente && $mensagem->chamadas !== null)
+            ->flatMap(fn (Mensagem $mensagem) => array_column($mensagem->chamadas, 'id'))
+            ->all();
+
+        return $mensagens
+            ->reject(fn (Mensagem $mensagem) => $mensagem->papel === PapelDaMensagem::Ferramenta && ! in_array($mensagem->ferramenta_id, $chamadas, true))
+            ->values();
     }
 
     /**

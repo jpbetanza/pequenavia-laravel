@@ -33,3 +33,14 @@ test('o corte do histórico nunca começa no meio de uma chamada de ferramenta',
 
     expect(array_column($mensagens, 'role'))->toBe(['system']);
 });
+
+test('chamada sem resultado e resultado sem chamada não vão para o contexto', function () {
+    $conversa = Conversa::factory()->create();
+    Mensagem::factory()->for($conversa)->create(['papel' => PapelDaMensagem::Usuario, 'conteudo' => 'Oi']);
+    Mensagem::factory()->for($conversa)->create(['papel' => PapelDaMensagem::Assistente, 'conteudo' => null, 'chamadas' => [['id' => 'c1', 'nome' => 'listar_cadastros', 'argumentos' => '{}']]]);
+    Mensagem::factory()->for($conversa)->create(['papel' => PapelDaMensagem::Ferramenta, 'conteudo' => '{}', 'ferramenta_id' => 'orfa']);
+
+    $mensagens = app(MontadorDeContexto::class)->montar($conversa->user, $conversa);
+
+    expect(array_column($mensagens, 'role'))->toBe(['system', 'user']);
+});
