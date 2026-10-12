@@ -3,9 +3,11 @@
 use App\Services\Assistente\ClienteOpenRouter;
 use App\Services\Assistente\FalhaDoModelo;
 use App\Services\Assistente\RespostaDoModelo;
+use GuzzleHttp\Psr7\FnStream;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
+use RuntimeException;
 
 beforeEach(function () {
     Http::preventStrayRequests();
@@ -98,4 +100,25 @@ test('timeout vira FalhaDoModelo', function () {
     Http::fake(fn () => throw new ConnectionException('timed out'));
 
     expect(fn () => rodar())->toThrow(fn (FalhaDoModelo $falha) => expect($falha->motivo)->toBe('timeout'));
+});
+
+test('queda do stream no meio da leitura vira FalhaDoModelo', function () {
+    $primeiroChunk = 'data: '.json_encode(chunkDeTexto('Começo'))."\n\n";
+    $leituras = 0;
+
+    $corpo = new FnStream([
+        'read' => function () use (&$leituras, $primeiroChunk) {
+            $leituras++;
+
+            if ($leituras > 1) {
+                throw new RuntimeException('conexão caiu no meio');
+            }
+
+            return $primeiroChunk;
+        },
+        'eof' => fn () => false,
+    ]);
+    Http::fake(['openrouter.ai/*' => Http::response($corpo)]);
+
+    expect(fn () => rodar())->toThrow(FalhaDoModelo::class);
 });

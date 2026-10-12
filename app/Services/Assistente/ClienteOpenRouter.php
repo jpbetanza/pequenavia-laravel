@@ -6,6 +6,7 @@ use Generator;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Psr\Http\Message\StreamInterface;
+use Throwable;
 
 /**
  * Conversa com o OpenRouter (API de chat no formato OpenAI) em streaming.
@@ -56,40 +57,46 @@ class ClienteOpenRouter
         $tokensEntrada = null;
         $tokensSaida = null;
 
-        foreach ($this->linhasDeDados($resposta->toPsrResponse()->getBody()) as $dados) {
-            if ($dados === '[DONE]') {
-                break;
+        try {
+            foreach ($this->linhasDeDados($resposta->toPsrResponse()->getBody()) as $dados) {
+                if ($dados === '[DONE]') {
+                    break;
+                }
+
+                $chunk = json_decode($dados, true);
+
+                if (! is_array($chunk)) {
+                    continue;
+                }
+
+                if (isset($chunk['error'])) {
+                    throw new FalhaDoModelo('stream');
+                }
+
+                if (isset($chunk['usage'])) {
+                    $tokensEntrada = $chunk['usage']['prompt_tokens'] ?? null;
+                    $tokensSaida = $chunk['usage']['completion_tokens'] ?? null;
+                }
+
+                $delta = $chunk['choices'][0]['delta'] ?? [];
+
+                if (is_string($delta['content'] ?? null) && $delta['content'] !== '') {
+                    $texto .= $delta['content'];
+                    yield $delta['content'];
+                }
+
+                foreach ($delta['tool_calls'] ?? [] as $parcial) {
+                    $indice = (int) ($parcial['index'] ?? 0);
+                    $chamadas[$indice] ??= ['id' => '', 'nome' => '', 'argumentos' => ''];
+                    $chamadas[$indice]['id'] = $parcial['id'] ?? $chamadas[$indice]['id'];
+                    $chamadas[$indice]['nome'] = $parcial['function']['name'] ?? $chamadas[$indice]['nome'];
+                    $chamadas[$indice]['argumentos'] .= $parcial['function']['arguments'] ?? '';
+                }
             }
-
-            $chunk = json_decode($dados, true);
-
-            if (! is_array($chunk)) {
-                continue;
-            }
-
-            if (isset($chunk['error'])) {
-                throw new FalhaDoModelo('stream');
-            }
-
-            if (isset($chunk['usage'])) {
-                $tokensEntrada = $chunk['usage']['prompt_tokens'] ?? null;
-                $tokensSaida = $chunk['usage']['completion_tokens'] ?? null;
-            }
-
-            $delta = $chunk['choices'][0]['delta'] ?? [];
-
-            if (is_string($delta['content'] ?? null) && $delta['content'] !== '') {
-                $texto .= $delta['content'];
-                yield $delta['content'];
-            }
-
-            foreach ($delta['tool_calls'] ?? [] as $parcial) {
-                $indice = (int) ($parcial['index'] ?? 0);
-                $chamadas[$indice] ??= ['id' => '', 'nome' => '', 'argumentos' => ''];
-                $chamadas[$indice]['id'] = $parcial['id'] ?? $chamadas[$indice]['id'];
-                $chamadas[$indice]['nome'] = $parcial['function']['name'] ?? $chamadas[$indice]['nome'];
-                $chamadas[$indice]['argumentos'] .= $parcial['function']['arguments'] ?? '';
-            }
+        } catch (FalhaDoModelo $falha) {
+            throw $falha;
+        } catch (Throwable) {
+            throw new FalhaDoModelo('stream');
         }
 
         ksort($chamadas);
