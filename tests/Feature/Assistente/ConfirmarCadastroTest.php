@@ -266,3 +266,108 @@ test('proposta antiga sem impressão digital confere a data de atualização', f
         ->assertUnprocessable()
         ->assertJsonPath('message', 'O cadastro mudou desde a proposta. Peça de novo.');
 });
+
+test('criar grupo que perdeu o nome numa corrida responde 422 com a mensagem da tela e não grava', function () {
+    $usuario = User::factory()->create();
+    $acao = propostaDeCadastro(ProporGrupo::class, $usuario, ['operacao' => 'criar', 'nome' => 'Coral']);
+
+    corridaPeloNome($usuario, 'Coral', 'creating', function () use ($usuario, $acao) {
+        $this->actingAs($usuario)->postJson(route('assistente.acoes.confirmar', $acao))
+            ->assertUnprocessable()
+            ->assertJsonPath('message', 'Já existe um grupo com este nome.');
+    });
+
+    // A gravação do assistente é desfeita junto com a transação (e o gancho também, que roda dentro dela).
+    expect(Grupo::count())->toBe(0)
+        ->and($acao->fresh()->status)->toBe(StatusDaAcao::Proposta);
+});
+
+test('alterar grupo para um nome que perdeu a corrida responde 422 com a mensagem da tela', function () {
+    $usuario = User::factory()->create();
+    Grupo::factory()->for($usuario)->create(['nome' => 'Catequese']);
+    $acao = propostaDeCadastro(ProporGrupo::class, $usuario, ['operacao' => 'alterar', 'alvo' => 'Catequese', 'nome' => 'Coral']);
+
+    corridaPeloNome($usuario, 'Coral', 'updating', function () use ($usuario, $acao) {
+        $this->actingAs($usuario)->postJson(route('assistente.acoes.confirmar', $acao))
+            ->assertUnprocessable()
+            ->assertJsonPath('message', 'Já existe um grupo com este nome.');
+    });
+
+    expect(Grupo::where('nome', 'Catequese')->exists())->toBeTrue()
+        ->and($acao->fresh()->status)->toBe(StatusDaAcao::Proposta);
+});
+
+/**
+ * Simula a corrida pelo nome: logo antes da gravação do assistente, outro grupo com o mesmo nome entra no banco
+ * (depois da validação, que ainda não o viu). O gancho é global do modelo, então sai no fim, mesmo se o teste falhar.
+ */
+function corridaPeloNome(User $usuario, string $nome, string $evento, Closure $depois): void
+{
+    $ja = false;
+
+    Grupo::{$evento}(function () use (&$ja, $usuario, $nome) {
+        if ($ja) {
+            return;
+        }
+
+        $ja = true;
+        Grupo::factory()->for($usuario)->create(['nome' => $nome]);
+    });
+
+    try {
+        $depois();
+    } finally {
+        Grupo::getEventDispatcher()->forget("eloquent.{$evento}: ".Grupo::class);
+    }
+}
+
+test('confirmar excluir_grupo apaga o grupo e deixa as reservas dele sem grupo', function () {
+    $usuario = User::factory()->create();
+    $grupo = Grupo::factory()->for($usuario)->create(['nome' => 'Coral']);
+    $reserva = Reserva::factory()->for($usuario)->create([
+        'espaco_id' => Espaco::factory()->for($usuario)->create()->id, 'grupo_id' => $grupo->id, 'data' => '2026-10-20',
+    ]);
+    $acao = propostaDeCadastro(ProporGrupo::class, $usuario, ['operacao' => 'excluir', 'alvo' => 'Coral']);
+
+    $this->actingAs($usuario)->postJson(route('assistente.acoes.confirmar', $acao))
+        ->assertOk()
+        ->assertJsonPath('acao.status', 'confirmada');
+
+    expect(Grupo::count())->toBe(0)
+        ->and(Reserva::count())->toBe(1)
+        ->and($reserva->fresh()->grupo_id)->toBeNull();
+});
+
+test('confirmar alteração de cadastro apagado depois da proposta responde 422', function () {
+    $usuario = User::factory()->create();
+    $grupo = Grupo::factory()->for($usuario)->create(['nome' => 'Catequese']);
+    $acao = propostaDeCadastro(ProporGrupo::class, $usuario, ['operacao' => 'alterar', 'alvo' => 'Catequese', 'coordenacao' => 'Bia']);
+
+    $grupo->delete();
+
+    $this->actingAs($usuario)->postJson(route('assistente.acoes.confirmar', $acao))
+        ->assertUnprocessable()
+        ->assertJsonPath('message', 'O cadastro não existe mais.');
+
+    expect(Grupo::count())->toBe(0)
+        ->and($acao->fresh()->status)->toBe(StatusDaAcao::Proposta);
+});
+
+test('confirmar com alvo_id de outro usuário, forjado nos dados da ação, responde 422 e não toca no cadastro alheio', function (string $operacao) {
+    $usuario = User::factory()->create();
+    $alheio = Grupo::factory()->for(User::factory()->create())->create(['nome' => 'Coral', 'coordenacao' => 'Ana']);
+    $acao = propostaDeCadastro(ProporGrupo::class, $usuario, ['operacao' => 'criar', 'nome' => 'Outro']);
+
+    $dados = $acao->dados;
+    $dados['operacao'] = $operacao;
+    $dados['alvo_id'] = $alheio->id;
+    $acao->update(['dados' => $dados]);
+
+    $this->actingAs($usuario)->postJson(route('assistente.acoes.confirmar', $acao))
+        ->assertUnprocessable()
+        ->assertJsonPath('message', 'O cadastro não existe mais.');
+
+    expect(Grupo::find($alheio->id))->not->toBeNull()
+        ->and($alheio->fresh()->coordenacao)->toBe('Ana')
+        ->and($acao->fresh()->status)->toBe(StatusDaAcao::Proposta);
+})->with(['alterar', 'excluir']);

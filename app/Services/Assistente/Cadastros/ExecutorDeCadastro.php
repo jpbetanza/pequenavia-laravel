@@ -6,6 +6,7 @@ use App\Models\AcaoProposta;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpResponseException;
 
@@ -24,13 +25,16 @@ final class ExecutorDeCadastro
      */
     public function executar(User $usuario, AcaoProposta $acao): ?string
     {
+        // Trava o dono: o nome único é conferido e gravado sem outro cadastro do mesmo usuário no meio (como no CriadorDeReservas).
+        User::query()->whereKey($usuario->id)->lockForUpdate()->firstOrFail();
+
         $proposta = $acao->dados;
         $entidade = $proposta['entidade'];
 
         if ($proposta['operacao'] === 'criar') {
             $dados = $this->validarFinal($usuario, $entidade, $proposta['final'], null);
 
-            return (string) $this->cadastros->gravador($entidade)->criar($usuario, $dados)->getKey();
+            return (string) $this->gravarComNomeUnico($entidade, fn () => $this->cadastros->gravador($entidade)->criar($usuario, $dados))->getKey();
         }
 
         $alvo = $this->alvoAtual($usuario, $entidade, $proposta['alvo_id'] ?? null);
@@ -38,7 +42,7 @@ final class ExecutorDeCadastro
 
         if ($proposta['operacao'] === 'alterar') {
             $dados = $this->validarFinal($usuario, $entidade, $proposta['final'], $alvo);
-            $this->cadastros->gravador($entidade)->atualizar($alvo, $dados);
+            $this->gravarComNomeUnico($entidade, fn () => $this->cadastros->gravador($entidade)->atualizar($alvo, $dados));
 
             return (string) $alvo->getKey();
         }
@@ -46,6 +50,24 @@ final class ExecutorDeCadastro
         $this->gravarExclusao($entidade, $alvo);
 
         return null;
+    }
+
+    /**
+     * Entre a validação e o insert/update, outro pedido pode ter pegado o nome. O banco recusa a linha duplicada:
+     * vira 422 com a mesma mensagem da tela, em vez de erro 500.
+     *
+     * @template T
+     *
+     * @param  callable(): T  $gravar
+     * @return T
+     */
+    private function gravarComNomeUnico(string $entidade, callable $gravar): mixed
+    {
+        try {
+            return $gravar();
+        } catch (UniqueConstraintViolationException) {
+            $this->recusar($this->cadastros->mensagens($entidade)['nome.unique'] ?? 'Já existe um cadastro com este nome.');
+        }
     }
 
     private function gravarExclusao(string $entidade, Model $alvo): void

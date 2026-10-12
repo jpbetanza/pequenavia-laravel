@@ -39,6 +39,17 @@ test('criar propõe o espaço com horários sem gravar e devolve o cartão com a
         ->and($cadastro['linhas'])->toContainEqual(['rotulo' => 'Horários', 'antes' => null, 'depois' => 'Segunda 08:00–22:00, Terça 08:00–22:00, Quarta 08:00–22:00, Quinta 08:00–22:00, Sexta 08:00–22:00']);
 });
 
+test('criar só com nome e capacidade não lista os campos vazios no cartão', function () {
+    [$usuario, $conversa] = usuarioComConversa();
+
+    app(ProporEspaco::class)->executar($usuario, $conversa, ['operacao' => 'criar', 'nome' => 'Sala 5', 'capacidade' => 12]);
+
+    $rotulos = array_column(AcaoProposta::sole()->dados['linhas'], 'rotulo');
+
+    expect($rotulos)->toContain('Nome', 'Capacidade', 'Cor')
+        ->not->toContain('Localização', 'Recursos', 'Duração máxima (min)');
+});
+
 test('criar sem cor usa bordo como padrão', function () {
     [$usuario, $conversa] = usuarioComConversa();
 

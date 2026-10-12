@@ -103,6 +103,8 @@ abstract class PropoeCadastro implements Ferramenta
         }
 
         $alvo = $criacao ? null : $this->resolverAlvo($usuario, $controle['alvo']);
+        // Impressão digital logo depois de achar o alvo: o que for lido daqui em diante já é comparado com este estado.
+        $impressao = $alvo === null ? null : $this->cadastros->impressao($alvo);
         $atual = $alvo === null ? [] : $this->atributosAtuais($alvo);
         $enviados = $this->normalizar(Arr::only($argumentos, array_keys($this->campos())));
 
@@ -137,7 +139,7 @@ abstract class PropoeCadastro implements Ferramenta
             $linhas,
             $avisos,
             $titulo,
-            $alvo === null ? null : $this->cadastros->impressao($alvo),
+            $impressao,
         );
         $acao = $proposta['acao'];
 
@@ -212,7 +214,7 @@ abstract class PropoeCadastro implements Ferramenta
     }
 
     /**
-     * Uma linha por campo: na criação, todo campo enviado (antes null); na alteração, só o que mudou.
+     * Uma linha por campo: na criação, cada campo com valor (antes null); na alteração, só o que mudou.
      *
      * @param  array<string, mixed>  $atual
      * @param  array<string, mixed>  $final
@@ -230,7 +232,12 @@ abstract class PropoeCadastro implements Ferramenta
             $depois = $this->formatar($definicao['tipo'], $final[$campo]);
 
             if ($criacao) {
-                $linhas[] = ['rotulo' => $definicao['rotulo'], 'antes' => null, 'depois' => $depois];
+                // Na criação, campo vazio (null ou lista vazia) não vira linha; nome e cor aparecem sempre.
+                $vazio = $final[$campo] === null || $final[$campo] === [];
+
+                if (! $vazio || in_array($campo, ['nome', 'cor'], true)) {
+                    $linhas[] = ['rotulo' => $definicao['rotulo'], 'antes' => null, 'depois' => $depois];
+                }
 
                 continue;
             }
