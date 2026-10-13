@@ -4,6 +4,7 @@ import { index as listarGrupos } from '@/routes/agendamentos/grupos';
 import { index as listarEspacos } from '@/routes/agendamentos/espacos';
 import type {
     AcaoProposta,
+    AcaoPropostaDeOperacao,
     EntidadeDeCadastro,
     OperacaoDeCadastro,
     StatusDaAcao,
@@ -65,4 +66,18 @@ export function normalizarAcao(
     }
 
     return dados;
+}
+
+/** Proposta de operação sobre a agenda (responder solicitação, mudar reserva, marcar equipamento)? */
+export function ehOperacao(acao: AcaoProposta): acao is AcaoPropostaDeOperacao {
+    return 'operacao' in acao;
+}
+
+/** Título da proposta, para avisos que citam uma delas. */
+export function tituloDaAcao(acao: AcaoProposta): string {
+    if (acao.tipo === 'criar_reserva') {
+        return acao.resumo.titulo;
+    }
+
+    return ehOperacao(acao) ? acao.operacao.titulo : acao.cadastro.titulo;
 }

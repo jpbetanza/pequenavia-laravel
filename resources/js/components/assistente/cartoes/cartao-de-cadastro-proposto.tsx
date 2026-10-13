@@ -11,15 +11,16 @@ type Props = {
     aoAtualizar: (acao: AcaoProposta) => void;
 };
 
-const CLASSES_DO_SELO: Record<AcaoPropostaDeCadastro['status'], string> = {
-    proposta: 'bg-aviso-fundo text-aviso',
-    confirmada: 'bg-sucesso-fundo text-sucesso',
-    descartada: 'bg-muted text-muted-foreground',
-    expirada: 'bg-muted text-muted-foreground',
-};
+export const CLASSES_DO_SELO: Record<AcaoPropostaDeCadastro['status'], string> =
+    {
+        proposta: 'bg-aviso-fundo text-aviso',
+        confirmada: 'bg-sucesso-fundo text-sucesso',
+        descartada: 'bg-muted text-muted-foreground',
+        expirada: 'bg-muted text-muted-foreground',
+    };
 
 /** Valor de uma linha: "antes → depois", com o antes riscado. Null vira "—". */
-function ValorDaLinha({
+export function ValorDaLinha({
     antes,
     depois,
 }: {

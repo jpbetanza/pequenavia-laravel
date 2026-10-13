@@ -31,6 +31,7 @@ final class MontadorDeContexto
             'hoje' => $agora->format('Y-m-d'),
             'diaDaSemana' => $agora->translatedFormat('l'),
             'hora' => $agora->format('H:i'),
+            'linkDoFormulario' => route('reservar.create', $usuario->agendaSlug()),
         ])->render();
 
         $historico = $this->historico($conversa);

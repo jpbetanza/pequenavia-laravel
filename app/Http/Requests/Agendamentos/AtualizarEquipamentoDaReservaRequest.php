@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Agendamentos;
 
+use App\Services\Agenda\EntregaDeEquipamentos;
 use Illuminate\Auth\Access\Response;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -14,7 +15,7 @@ use Illuminate\Validation\Rule;
 class AtualizarEquipamentoDaReservaRequest extends FormRequest
 {
     /** Ações aceitas, cada uma vira uma coluna de `reserva_equipamento`. */
-    public const ACOES = ['entregue', 'recolhido'];
+    public const ACOES = EntregaDeEquipamentos::ACOES;
 
     public function authorize(): Response
     {

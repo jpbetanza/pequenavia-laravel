@@ -17,16 +17,14 @@ use App\Models\Grupo;
 use App\Models\Reserva;
 use App\Models\Solicitacao;
 use App\Models\User;
-use App\Services\Agenda\ConflitosDeReservaException;
 use App\Services\Agenda\CriadorDeReservas;
+use App\Services\Agenda\EdicaoDeReservas;
 use App\Services\Agenda\Recorrencia;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
@@ -39,7 +37,10 @@ use Inertia\Response;
  */
 class ReservaController extends Controller
 {
-    public function __construct(private readonly CriadorDeReservas $criador) {}
+    public function __construct(
+        private readonly CriadorDeReservas $criador,
+        private readonly EdicaoDeReservas $edicao,
+    ) {}
 
     /**
      * Calendário da semana (padrão) ou do dia, com as reservas, espaços, equipamentos, grupos e solicitações pendentes do intervalo.
@@ -116,58 +117,12 @@ class ReservaController extends Controller
     public function update(UpdateReservaRequest $request, Reserva $reserva): RedirectResponse
     {
         $dados = $request->validated();
-        $user = $request->user();
         $escopo = EscopoDaReserva::from($dados['escopo'] ?? EscopoDaReserva::SoEsta->value);
         $espaco = $this->espacoDoDono($dados['espaco_id']);
         $grupo = $this->grupoDoDono($dados['grupo_id'] ?? null);
         $equipamentos = $this->equipamentosDoDono($dados['equipamentos']);
-        $membros = $this->membrosDaSerie($user, $reserva, $escopo);
-        $espacosOriginais = $membros->mapWithKeys(fn (Reserva $membro) => [$membro->id => $membro->espaco_id])->all();
 
-        DB::transaction(function () use ($user, $reserva, $espaco, $grupo, $dados, $equipamentos, $membros, $espacosOriginais): void {
-            $this->criador->travarAgendaDo($user);
-
-            foreach ($membros as $membro) {
-                $ehEsta = $membro->is($reserva);
-
-                $membro->fill([
-                    'espaco_id' => $espaco->id,
-                    'grupo_id' => $grupo?->id,
-                    'titulo' => $dados['titulo'],
-                    'inicio' => $dados['inicio'],
-                    'fim' => $dados['fim'],
-                    'pessoas' => $dados['pessoas'] ?? null,
-                    'observacoes' => $dados['observacoes'] ?? null,
-                    ...($ehEsta ? ['data' => $dados['data']] : []),
-                ])->save();
-
-                $membro->equipamentos()->sync($this->criador->pivotDosEquipamentos($equipamentos));
-            }
-
-            $conflitos = [];
-
-            foreach ($membros as $membro) {
-                $conflitosDaData = $this->criador->conflitosDaData(
-                    $espaco,
-                    CarbonImmutable::instance($membro->data)->startOfDay(),
-                    [
-                        'inicio' => $dados['inicio'],
-                        'fim' => $dados['fim'],
-                    ],
-                    $equipamentos,
-                    $membro->id,
-                    ignorarEspacoInativo: $espacosOriginais[$membro->id] === $espaco->id,
-                );
-
-                if ($conflitosDaData !== null) {
-                    $conflitos[] = $conflitosDaData;
-                }
-            }
-
-            if ($conflitos !== []) {
-                throw new ConflitosDeReservaException($conflitos);
-            }
-        });
+        $membros = $this->edicao->atualizar($request->user(), $reserva, $espaco, $grupo, $dados, $equipamentos, $escopo);
 
         $reserva->refresh();
 
@@ -183,10 +138,9 @@ class ReservaController extends Controller
     public function destroy(DestroyReservaRequest $request, Reserva $reserva): RedirectResponse
     {
         $escopo = EscopoDaReserva::from($request->validated('escopo') ?? EscopoDaReserva::SoEsta->value);
-        $membros = $this->membrosDaSerie($request->user(), $reserva, $escopo);
         $data = $reserva->data->toDateString();
 
-        Reserva::query()->whereIn('id', $membros->pluck('id'))->delete();
+        $membros = $this->edicao->excluir($request->user(), $reserva, $escopo);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => $membros->count() === 1 ? 'Reserva excluída.' : 'Reservas excluídas.']);
 
@@ -336,25 +290,6 @@ class ReservaController extends Controller
         }
 
         return $datas;
-    }
-
-    /**
-     * Reservas que a edição ou a exclusão atinge: só a própria, ou a série a partir da data dela.
-     *
-     * @return Collection<int, Reserva>
-     */
-    private function membrosDaSerie(User $user, Reserva $reserva, EscopoDaReserva $escopo): Collection
-    {
-        if ($escopo === EscopoDaReserva::SoEsta || $reserva->serie_id === null) {
-            return collect([$reserva]);
-        }
-
-        return Reserva::query()
-            ->where('user_id', $user->id)
-            ->where('serie_id', $reserva->serie_id)
-            ->where('data', '>=', $reserva->data->toDateString())
-            ->orderBy('data')
-            ->get();
     }
 
     private function espacoDoDono(string $id): Espaco

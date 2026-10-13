@@ -122,10 +122,25 @@ test('o prompt de sistema apresenta as ferramentas de cadastro e a regra de conf
     expect($instrucoes)->toContain('propor_espaco')
         ->toContain('propor_grupo')
         ->toContain('propor_equipamento')
-        ->toContain('Elas só preparam a mudança; a secretaria confirma no cartão.')
-        ->toContain('Nunca diga que algo foi cadastrado, alterado ou excluído antes disso.')
+        ->toContain('Toda mudança é uma proposta: aparece um cartão e a secretaria precisa clicar no botão de confirmar dele.')
+        ->toContain('Nunca diga que algo foi feito antes disso.')
         ->toContain('Para alterar, envie só os campos que mudam.')
         ->toContain('use fechado: true para fechar um dia')
         ->toContain('use listar_cadastros e pergunte antes de propor')
         ->toContain('Junte numa única chamada todas as mudanças do mesmo cadastro');
+});
+
+test('as instruções levam o link do formulário público da agenda e o guia do app', function () {
+    $usuario = User::factory()->create();
+    $conversa = Conversa::factory()->for($usuario)->create();
+
+    $instrucoes = app(MontadorDeContexto::class)->montar($usuario, $conversa)[0]['content'];
+
+    expect($instrucoes)
+        ->toContain(route('reservar.create', $usuario->fresh()->agendaSlug()))
+        ->toContain('Sobre o PequenaVia')
+        ->toContain('"Configurações" > "Notificações"')
+        ->toContain('responder_solicitacao')
+        ->toContain('propor_mudanca_na_reserva')
+        ->toContain('marcar_equipamento');
 });

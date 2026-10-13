@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { confirmar } from '@/actions/App/Http/Controllers/Assistente/AcaoPropostaController';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import { tituloDaAcao } from '@/lib/assistente/cadastro';
 import {
     acaoDoCorpoDeErro,
     mensagemDoCorpoDeErro,
@@ -17,12 +18,6 @@ type Props = {
     acoes: AcaoProposta[];
     aoAtualizarAcao: (acao: AcaoProposta) => void;
 };
-
-function tituloDa(acao: AcaoProposta): string {
-    return acao.tipo === 'criar_reserva'
-        ? acao.resumo.titulo
-        : acao.cadastro.titulo;
-}
 
 /**
  * Confirma, uma por uma e na ordem, todas as propostas pendentes de uma resposta (ex.: uma importação de planilha).
@@ -68,7 +63,7 @@ export function ConfirmarTodas({ acoes, aoAtualizarAcao }: Props) {
                             mensagemDoErro(erro);
 
                         toast.error(
-                            `Parei em “${tituloDa(acao)}”: ${motivo} As seguintes continuam pendentes.`,
+                            `Parei em “${tituloDaAcao(acao)}”: ${motivo} As seguintes continuam pendentes.`,
                         );
                     } else {
                         toast.error(mensagemDoErro(erro));

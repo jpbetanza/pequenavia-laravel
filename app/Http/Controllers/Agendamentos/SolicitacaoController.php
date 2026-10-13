@@ -12,8 +12,7 @@ use App\Models\Espaco;
 use App\Models\Solicitacao;
 use App\Models\User;
 use App\Services\Agenda\CartaoDeSolicitacao;
-use App\Services\Agenda\Conflito;
-use App\Services\Agenda\SolicitacaoInvalidaException;
+use App\Services\Agenda\RespostaASolicitacao;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -30,7 +29,10 @@ use Inertia\Response;
  */
 class SolicitacaoController extends Controller
 {
-    public function __construct(private readonly CartaoDeSolicitacao $cartoes) {}
+    public function __construct(
+        private readonly CartaoDeSolicitacao $cartoes,
+        private readonly RespostaASolicitacao $respostas,
+    ) {}
 
     /**
      * Lista as solicitações do status pedido (pendentes por padrão), com as contagens das três abas, o link do formulário
@@ -104,7 +106,7 @@ class SolicitacaoController extends Controller
         DB::transaction(function () use ($user, $solicitacao, $dados, $espacoId, $equipamentos): void {
             $this->travarAgendaDo($user);
             $solicitacao->refresh();
-            $this->exigirPendente($solicitacao, 'Só é possível editar uma solicitação pendente.');
+            $this->respostas->exigirPendente($solicitacao, 'Só é possível editar uma solicitação pendente.');
 
             $solicitacao->forceFill([
                 'espaco_id' => $espacoId,
@@ -134,45 +136,8 @@ class SolicitacaoController extends Controller
     public function aprovar(Request $request, Solicitacao $solicitacao): RedirectResponse
     {
         Gate::authorize('update', $solicitacao);
-        $user = $request->user();
 
-        DB::transaction(function () use ($user, $solicitacao): void {
-            $this->travarAgendaDo($user);
-            $solicitacao->refresh();
-            $this->exigirPendente($solicitacao, 'Esta solicitação já foi respondida e não pode ser aprovada.');
-
-            if ($solicitacao->espaco_id === null) {
-                throw new SolicitacaoInvalidaException('Escolha um espaço antes de aprovar.');
-            }
-
-            $conflitos = $this->cartoes->conflitos($solicitacao);
-
-            if ($conflitos !== []) {
-                throw new SolicitacaoInvalidaException(
-                    'Há conflito de horário, espaço ou equipamento. Resolva antes de aprovar.',
-                    array_map(fn (Conflito $conflito) => $conflito->toArray(), $conflitos),
-                );
-            }
-
-            $reserva = $user->reservas()->create([
-                'espaco_id' => $solicitacao->espaco_id,
-                'grupo_id' => $solicitacao->grupo_id,
-                'titulo' => $solicitacao->titulo,
-                'data' => $solicitacao->data->toDateString(),
-                'inicio' => $solicitacao->inicio,
-                'fim' => $solicitacao->fim,
-                'pessoas' => $solicitacao->pessoas,
-                'observacoes' => $solicitacao->observacoes,
-                'solicitacao_id' => $solicitacao->id,
-            ]);
-
-            $reserva->equipamentos()->attach($this->pivotDosEquipamentos($this->cartoes->equipamentosPedidos($solicitacao)));
-
-            $solicitacao->forceFill([
-                'status' => StatusSolicitacao::Aprovada,
-                'reserva_id' => $reserva->id,
-            ])->save();
-        });
+        $this->respostas->aprovar($request->user(), $solicitacao);
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Solicitação aprovada e reserva criada.']);
 
@@ -184,33 +149,11 @@ class SolicitacaoController extends Controller
      */
     public function recusar(RecusarSolicitacaoRequest $request, Solicitacao $solicitacao): RedirectResponse
     {
-        $user = $request->user();
-        $motivo = $request->validated('motivo_recusa');
-
-        DB::transaction(function () use ($user, $solicitacao, $motivo): void {
-            $this->travarAgendaDo($user);
-            $solicitacao->refresh();
-            $this->exigirPendente($solicitacao, 'Esta solicitação já foi respondida e não pode ser recusada.');
-
-            $solicitacao->forceFill([
-                'status' => StatusSolicitacao::Recusada,
-                'motivo_recusa' => $motivo,
-            ])->save();
-        });
+        $this->respostas->recusar($request->user(), $solicitacao, $request->validated('motivo_recusa'));
 
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Solicitação recusada.']);
 
         return to_route('agendamentos.solicitacoes.index');
-    }
-
-    /**
-     * @throws SolicitacaoInvalidaException
-     */
-    private function exigirPendente(Solicitacao $solicitacao, string $mensagem): void
-    {
-        if ($solicitacao->status !== StatusSolicitacao::Pendente) {
-            throw new SolicitacaoInvalidaException($mensagem);
-        }
     }
 
     /**
