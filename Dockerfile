@@ -18,7 +18,7 @@ RUN composer dump-autoload --optimize --no-scripts --no-interaction
 
 # Imagem base do PHP: FrankenPHP + extensões + Imagick (ImageMagick 7).
 FROM dunglas/frankenphp:1-php8.5-alpine AS base
-RUN install-php-extensions imagick gd pdo_pgsql pcntl opcache intl zip \
+RUN install-php-extensions imagick gd pdo_pgsql pcntl opcache intl zip gmp \
     && mkdir -p /config/caddy /data/caddy \
     && chown -R www-data:www-data /config /data
 COPY docker/php/uploads.ini /usr/local/etc/php/conf.d/zz-uploads.ini

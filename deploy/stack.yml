@@ -2,6 +2,7 @@
 #   APP_KEY, DB_PASSWORD, S3_ACCESS_KEY, S3_SECRET_KEY,
 #   GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET,
 #   MAIL_HOST, MAIL_PORT, MAIL_USERNAME, MAIL_PASSWORD, MAIL_FROM_ADDRESS
+# Opcionais: VAPID_PUBLIC_KEY e VAPID_PRIVATE_KEY (notificações no celular; gere com `php artisan push:gerar-chaves`).
 # Antes do primeiro deploy: publicar a imagem (docker push jpbetanza/pequenavia-laravel:latest).
 
 x-app-env: &app-env
@@ -38,6 +39,9 @@ x-app-env: &app-env
     MAIL_PORT: ${MAIL_PORT}
     MAIL_USERNAME: ${MAIL_USERNAME}
     MAIL_PASSWORD: ${MAIL_PASSWORD}
+    VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY:-}
+    VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY:-}
+    VAPID_SUBJECT: https://certificados.pequenavia.app.br
     MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS}
     MAIL_FROM_NAME: PequenaVia
 

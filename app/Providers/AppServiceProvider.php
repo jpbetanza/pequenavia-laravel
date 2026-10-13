@@ -12,6 +12,8 @@ use App\Services\Assistente\Ferramentas\ProporGrupo;
 use App\Services\Assistente\Ferramentas\ProporReserva;
 use App\Services\Assistente\Ferramentas\ResumoDeCertificados;
 use App\Services\Assistente\Ferramentas\VerificarDisponibilidade;
+use App\Services\Push\CanalDePush;
+use App\Services\Push\CanalWebPush;
 use Carbon\CarbonImmutable;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -28,6 +30,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->bind(CanalDePush::class, CanalWebPush::class);
+
         $this->app->singleton(CaixaDeFerramentas::class, fn ($app) => new CaixaDeFerramentas([
             $app->make(ConsultarAgenda::class),
             $app->make(VerificarDisponibilidade::class),
