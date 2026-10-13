@@ -7,6 +7,7 @@ use App\Models\Espaco;
 use App\Models\User;
 use App\Services\Assistente\Ferramentas\ResultadoDeFerramenta;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /*
@@ -20,8 +21,10 @@ use Tests\TestCase;
 |
 */
 
+// O bucket é sempre falso nos testes: nenhum teste deve depender do RustFS estar no ar.
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
+    ->beforeEach(fn () => Storage::fake('s3'))
     ->in('Feature');
 
 /*
