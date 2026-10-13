@@ -1,5 +1,5 @@
-import { List, SquarePen, X } from 'lucide-react';
-import { useEffect, useRef, useState } from 'react';
+import { List, SquarePen, Upload, X } from 'lucide-react';
+import { useEffect, useRef, useState, type DragEvent } from 'react';
 import { toast } from 'sonner';
 import {
     show as mostrarConversa,
@@ -8,6 +8,15 @@ import {
 import { store as enviarAoAssistente } from '@/actions/App/Http/Controllers/Assistente/MensagemController';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
+import {
+    AnexoRecusado,
+    type AnexoPreparado,
+    DICA_DOS_ANEXOS,
+    juntarAnexos,
+    MAX_ANEXOS,
+    prepararAnexo,
+    resumoDoAnexo,
+} from '@/lib/assistente/anexos';
 import { buscarJson, enviarMensagem } from '@/lib/assistente/enviar';
 import { deveDescartarConversa } from '@/lib/assistente/conversa-salva';
 import {
@@ -20,11 +29,14 @@ import { DICA_AGUARDE_RESPOSTA } from '@/lib/assistente/painel';
 import { enviarJson, mensagemDoErro } from '@/lib/http';
 import type {
     AcaoProposta,
+    AnexoDaMensagem,
     Cartao as TipoDeCartao,
     MensagemDoPainel,
 } from '@/types/assistente';
+import { Anexo } from './anexo';
 import { CampoDeMensagem } from './campo-de-mensagem';
 import { Cartao } from './cartoes/cartao';
+import { ConfirmarTodas } from './cartoes/confirmar-todas';
 import { LinhaDeStatus } from './linha-de-status';
 
 const SUGESTOES = [
@@ -39,6 +51,7 @@ type ConversaCarregada = {
         id: string;
         papel: 'usuario' | 'assistente';
         conteudo: string;
+        anexos?: AnexoDaMensagem[];
         cartoes: TipoDeCartao[];
         erro: boolean;
         criada_em: string;
@@ -61,6 +74,20 @@ type Props = {
     aoPerguntaEnviada?: () => void;
 };
 
+/** Propostas ainda pendentes nos cartões de uma resposta. */
+function propostasPendentes(mensagem: MensagemDoPainel): AcaoProposta[] {
+    return mensagem.cartoes.flatMap((cartao) =>
+        cartao.tipo === 'acao_proposta' && cartao.dados.status === 'proposta'
+            ? [cartao.dados]
+            : [],
+    );
+}
+
+/** O arrasto traz arquivos (e não texto ou um link da página)? */
+function trazArquivos(evento: DragEvent): boolean {
+    return evento.dataTransfer.types.includes('Files');
+}
+
 /** Marca como concluída a resposta que ficou pendente (parada pelo usuário ou stream que terminou sem `fim`). */
 function encerrarPendente(mensagens: MensagemDoPainel[]): MensagemDoPainel[] {
     return mensagens.map((mensagem) =>
@@ -76,7 +103,8 @@ function paraPainel(
     return {
         id: mensagem.id,
         papel: mensagem.papel,
-        conteudo: mensagem.conteudo,
+        conteudo: mensagem.conteudo ?? '',
+        anexos: mensagem.anexos ?? [],
         cartoes: mensagem.cartoes,
         erro: mensagem.erro,
         status: null,
@@ -103,9 +131,16 @@ export function ConversaDoAssistente({
     const [carregando, setCarregando] = useState(inicial !== null);
     const [enviando, setEnviando] = useState(false);
     const [texto, setTexto] = useState('');
+    const [anexos, setAnexos] = useState<AnexoPreparado[]>([]);
+    const [preparando, setPreparando] = useState(0);
+    const [arrastando, setArrastando] = useState(false);
     const registroRef = useRef<HTMLDivElement>(null);
     const emAndamento = useRef(false);
     const controleRef = useRef<AbortController | null>(null);
+    // Entrar num filho dispara dragleave no pai: conta as entradas para saber quando o arrasto saiu do painel.
+    const profundidadeDoArrasto = useRef(0);
+    // Anexos de cada pergunta enviada nesta sessão do painel, para "Tentar de novo" reenviá-los.
+    const anexosEnviados = useRef(new Map<string, AnexoPreparado[]>());
 
     useEffect(() => {
         if (inicial === null) {
@@ -179,10 +214,105 @@ export function ConversaDoAssistente({
         // Só ao montar a conversa nova: a pergunta inicial não muda depois disso.
     }, []);
 
-    async function enviar(pergunta: string) {
+    async function adicionarArquivos(arquivos: File[]) {
+        setPreparando((atual) => atual + 1);
+
+        try {
+            const lidos = await Promise.allSettled(arquivos.map(prepararAnexo));
+            const prontos = lidos.flatMap((lido) =>
+                lido.status === 'fulfilled' ? [lido.value] : [],
+            );
+
+            for (const lido of lidos) {
+                if (lido.status === 'rejected') {
+                    toast.error(
+                        lido.reason instanceof AnexoRecusado
+                            ? lido.reason.message
+                            : 'Não consegui ler um dos arquivos.',
+                    );
+                }
+            }
+
+            setAnexos((atuais) => {
+                const { anexos: juntos, recusadosPeloLimite } = juntarAnexos(
+                    atuais,
+                    prontos,
+                );
+
+                if (recusadosPeloLimite > 0) {
+                    toast.error(
+                        `Envie até ${MAX_ANEXOS} arquivos por mensagem.`,
+                    );
+                }
+
+                return juntos;
+            });
+        } finally {
+            setPreparando((atual) => atual - 1);
+        }
+    }
+
+    function aoEntrarArrastando(evento: DragEvent<HTMLDivElement>) {
+        if (!trazArquivos(evento)) {
+            return;
+        }
+
+        evento.preventDefault();
+        profundidadeDoArrasto.current++;
+        setArrastando(true);
+    }
+
+    function aoArrastarPorCima(evento: DragEvent<HTMLDivElement>) {
+        if (!trazArquivos(evento)) {
+            return;
+        }
+
+        // Sem isso o navegador não deixa soltar e abre o arquivo na aba.
+        evento.preventDefault();
+        evento.dataTransfer.dropEffect = 'copy';
+    }
+
+    function aoSairArrastando(evento: DragEvent<HTMLDivElement>) {
+        if (!trazArquivos(evento)) {
+            return;
+        }
+
+        profundidadeDoArrasto.current = Math.max(
+            0,
+            profundidadeDoArrasto.current - 1,
+        );
+
+        if (profundidadeDoArrasto.current === 0) {
+            setArrastando(false);
+        }
+    }
+
+    function aoSoltar(evento: DragEvent<HTMLDivElement>) {
+        if (!trazArquivos(evento)) {
+            return;
+        }
+
+        evento.preventDefault();
+        profundidadeDoArrasto.current = 0;
+        setArrastando(false);
+
+        const arquivos = Array.from(evento.dataTransfer.files);
+
+        if (arquivos.length > 0) {
+            void adicionarArquivos(arquivos);
+        }
+    }
+
+    async function enviar(
+        pergunta: string,
+        anexosDoEnvio: AnexoPreparado[] = [],
+    ) {
         const limpa = pergunta.trim();
 
-        if (limpa === '' || emAndamento.current) {
+        if (
+            (limpa === '' && anexosDoEnvio.length === 0) ||
+            emAndamento.current
+        ) {
             return;
         }
 
@@ -198,7 +328,10 @@ export function ConversaDoAssistente({
         let recebeuEvento = false;
         let desfecho = false;
         controleRef.current = controle;
-        setMensagens((atuais) => iniciarTroca(atuais, limpa, ids));
+        anexosEnviados.current.set(ids.usuario, anexosDoEnvio);
+        setMensagens((atuais) =>
+            iniciarTroca(atuais, limpa, ids, anexosDoEnvio.map(resumoDoAnexo)),
+        );
 
         try {
             let id = conversaId;
@@ -220,6 +353,7 @@ export function ConversaDoAssistente({
             await enviarMensagem(
                 enviarAoAssistente.url(id),
                 limpa,
+                anexosDoEnvio,
                 (evento) => {
                     recebeuEvento = true;
 
@@ -255,7 +389,7 @@ export function ConversaDoAssistente({
                     aplicarEvento(atuais, { tipo: 'erro', mensagem }),
                 );
             } else {
-                // Nada chegou: a troca some e a pergunta volta para o campo.
+                // Nada chegou: a troca some e a pergunta (com os anexos) volta para o campo.
                 setMensagens((atuais) =>
                     atuais.filter(
                         (mensagem) =>
@@ -264,6 +398,9 @@ export function ConversaDoAssistente({
                     ),
                 );
                 setTexto((atual) => (atual === '' ? limpa : atual));
+                setAnexos((atuais) =>
+                    atuais.length === 0 ? anexosDoEnvio : atuais,
+                );
 
                 if (!controle.signal.aborted) {
                     toast.error(mensagemDoErro(erro));
@@ -279,9 +416,11 @@ export function ConversaDoAssistente({
 
     function enviarDoCampo() {
         const pergunta = texto;
+        const anexosDoCampo = anexos;
 
         setTexto('');
-        void enviar(pergunta);
+        setAnexos([]);
+        void enviar(pergunta, anexosDoCampo);
     }
 
     function tentarDeNovo() {
@@ -293,10 +432,17 @@ export function ConversaDoAssistente({
             return;
         }
 
-        const pergunta = mensagens[indice].conteudo;
+        const { id, conteudo } = mensagens[indice];
+        // Anexos de uma conversa reaberta não estão mais no navegador: a pergunta volta sem eles, e o
+        // assistente ainda vê os arquivos na mensagem anterior, que continua no histórico.
+        const anexosDeNovo = anexosEnviados.current.get(id) ?? [];
+        const pergunta =
+            conteudo !== '' || anexosDeNovo.length > 0
+                ? conteudo
+                : 'Tente de novo com os arquivos que enviei.';
 
         setMensagens((atuais) => atuais.slice(0, indice));
-        void enviar(pergunta);
+        void enviar(pergunta, anexosDeNovo);
     }
 
     function atualizarAcao(acao: AcaoProposta) {
@@ -307,7 +453,30 @@ export function ConversaDoAssistente({
     const ultimaId = mensagens.at(-1)?.id;
 
     return (
-        <div className="flex min-h-0 flex-1 flex-col">
+        <div
+            className="relative flex min-h-0 flex-1 flex-col"
+            onDragEnter={aoEntrarArrastando}
+            onDragOver={aoArrastarPorCima}
+            onDragLeave={aoSairArrastando}
+            onDrop={aoSoltar}
+        >
+            {arrastando && (
+                <div
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-2 z-20 flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-primary bg-background/95 p-6 text-center"
+                >
+                    <span className="flex size-14 items-center justify-center rounded-full bg-primary/10 text-primary">
+                        <Upload aria-hidden="true" className="size-6" />
+                    </span>
+                    <span className="font-serif text-2xl font-semibold">
+                        Solte para anexar
+                    </span>
+                    <span className="max-w-64 text-sm text-muted-foreground">
+                        {DICA_DOS_ANEXOS}
+                    </span>
+                </div>
+            )}
+
             <header className="flex items-center gap-2 border-b py-3 pr-3 pl-5">
                 <div className="flex min-w-0 flex-1 flex-col">
                     <span className="font-serif text-2xl leading-tight font-semibold">
@@ -368,17 +537,43 @@ export function ConversaDoAssistente({
                 )}
 
                 {!carregando && vazia && (
-                    <p className="my-auto text-center text-muted-foreground">
-                        Pergunte sobre a agenda ou os certificados.
-                    </p>
+                    <div className="my-auto flex flex-col gap-1.5 text-center text-muted-foreground">
+                        <p>Pergunte sobre a agenda ou os certificados.</p>
+                        <p className="text-sm">
+                            Para cadastrar espaços, equipamentos ou grupos de
+                            uma vez, anexe ou arraste uma planilha.
+                        </p>
+                    </div>
                 )}
 
                 {mensagens.map((mensagem) =>
                     mensagem.papel === 'usuario' ? (
                         <div key={mensagem.id} className="flex justify-end">
-                            <p className="max-w-[85%] rounded-2xl rounded-br-sm bg-primary px-3.5 py-2.5 whitespace-pre-wrap text-primary-foreground">
-                                {mensagem.conteudo}
-                            </p>
+                            <div className="flex max-w-[85%] min-w-0 flex-col gap-2 rounded-2xl rounded-br-sm bg-primary px-3.5 py-2.5 text-primary-foreground">
+                                {mensagem.anexos.length > 0 && (
+                                    <ul
+                                        aria-label="Arquivos anexados"
+                                        className="-mx-1.5 flex flex-col gap-1.5"
+                                    >
+                                        {mensagem.anexos.map((anexo) => (
+                                            <li
+                                                key={anexo.id}
+                                                className="flex min-w-0"
+                                            >
+                                                <Anexo
+                                                    anexo={anexo}
+                                                    variante="mensagem"
+                                                />
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+                                {mensagem.conteudo !== '' && (
+                                    <p className="whitespace-pre-wrap">
+                                        {mensagem.conteudo}
+                                    </p>
+                                )}
+                            </div>
                         </div>
                     ) : (
                         <div
@@ -418,6 +613,14 @@ export function ConversaDoAssistente({
                                 />
                             ))}
 
+                            {!mensagem.pendente &&
+                                propostasPendentes(mensagem).length > 1 && (
+                                    <ConfirmarTodas
+                                        acoes={propostasPendentes(mensagem)}
+                                        aoAtualizarAcao={atualizarAcao}
+                                    />
+                                )}
+
                             {(mensagem.status !== null ||
                                 (mensagem.pendente &&
                                     mensagem.conteudo === '')) && (
@@ -439,6 +642,16 @@ export function ConversaDoAssistente({
                 aoEnviar={enviarDoCampo}
                 aoParar={() => controleRef.current?.abort()}
                 aoSugerir={(sugestao) => void enviar(sugestao)}
+                anexos={anexos}
+                preparandoAnexos={preparando > 0}
+                aoEscolherArquivos={(arquivos) =>
+                    void adicionarArquivos(arquivos)
+                }
+                aoRemoverAnexo={(id) =>
+                    setAnexos((atuais) =>
+                        atuais.filter((anexo) => anexo.id !== id),
+                    )
+                }
             />
         </div>
     );
