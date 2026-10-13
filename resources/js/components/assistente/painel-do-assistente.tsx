@@ -226,11 +226,18 @@ export function PainelDoAssistente() {
                     fechar();
                 }
             }}
+            // Abre deslizando da direita. Fechado, fica fora da tela e invisível (fora do foco e dos cliques):
+            // o `visibility` só vira hidden no fim da transição, então a saída também anima.
+            // No computador a margem negativa tira o espaço do painel, e a página se ajusta junto.
             className={cn(
-                aberto ? 'flex' : 'hidden',
+                'flex flex-col transition-[translate,margin,visibility] duration-300 ease-out motion-reduce:transition-none',
+                aberto ? 'visible translate-x-0' : 'invisible translate-x-full',
                 celular
-                    ? 'fixed inset-0 z-50 h-svh flex-col bg-background outline-none'
-                    : 'sticky top-16 h-[calc(100svh-4rem)] w-[420px] shrink-0 flex-col self-start border-l bg-card print:hidden',
+                    ? 'fixed inset-0 z-50 h-svh bg-background outline-none'
+                    : cn(
+                          'sticky top-16 h-[calc(100svh-4rem)] w-[420px] shrink-0 self-start border-l bg-card print:hidden',
+                          aberto ? 'mr-0' : '-mr-[420px]',
+                      ),
             )}
         >
             <ConteudoDoAssistente

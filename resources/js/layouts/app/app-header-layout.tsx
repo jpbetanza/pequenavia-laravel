@@ -13,7 +13,8 @@ export default function AppHeaderLayout({
         <ProvedorDoAssistente>
             <AppShell variant="header">
                 <BarraSuperior />
-                <div className="flex min-h-0 flex-1">
+                {/* Corta o painel do assistente enquanto ele desliza para dentro ou para fora. */}
+                <div className="flex min-h-0 flex-1 overflow-x-clip">
                     <main className="min-w-0 flex-1 overflow-x-clip">
                         {breadcrumbs.length > 1 && (
                             <div className="mx-auto max-w-[1376px] px-4 pt-4 md:px-8">
