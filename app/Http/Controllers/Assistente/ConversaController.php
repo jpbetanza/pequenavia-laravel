@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AcaoProposta;
 use App\Models\Conversa;
 use App\Models\Mensagem;
+use App\Services\Assistente\Anexos;
 use App\Services\Assistente\ResumoDaAcao;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -23,7 +24,10 @@ class ConversaController extends Controller
 {
     private const TITULO_INICIAL = 'Nova conversa';
 
-    public function __construct(private readonly ResumoDaAcao $resumo) {}
+    public function __construct(
+        private readonly ResumoDaAcao $resumo,
+        private readonly Anexos $anexos,
+    ) {}
 
     public function index(Request $request): JsonResponse
     {
@@ -87,6 +91,7 @@ class ConversaController extends Controller
                 'id' => $mensagem->id,
                 'papel' => $mensagem->papel->value,
                 'conteudo' => $mensagem->conteudo,
+                'anexos' => $this->anexos->resumo($mensagem->anexos),
                 'cartoes' => $this->cartoesAtuais($mensagem->cartoes ?? [], $acoes),
                 'erro' => $mensagem->erro,
                 'criada_em' => $mensagem->created_at?->toIso8601String(),

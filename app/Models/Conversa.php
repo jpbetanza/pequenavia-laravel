@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Jobs\RemoverAnexosDaConversa;
 use Database\Factories\ConversaFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
@@ -36,6 +37,8 @@ class Conversa extends Model
         static::saving(function (Conversa $conversa): void {
             $conversa->titulo_busca = Str::lower(Str::ascii($conversa->titulo));
         });
+
+        static::deleted(fn (Conversa $conversa) => RemoverAnexosDaConversa::dispatch($conversa->id));
     }
 
     /**

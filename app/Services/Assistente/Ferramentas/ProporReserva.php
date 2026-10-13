@@ -128,11 +128,13 @@ final class ProporReserva implements Ferramenta
         ];
 
         ['acao' => $acao, 'substituiu' => $substituiu] = DB::transaction(function () use ($usuario, $conversa, $dadosDaReserva): array {
-            $substituiu = ExpiracaoDePropostas::expirarPendentesComMesmaChave($conversa, ChaveDaProposta::de('criar_reserva', $dadosDaReserva));
+            $pedido = ExpiracaoDePropostas::pedidoAtual($conversa);
+            $substituiu = ExpiracaoDePropostas::expirarPendentesComMesmaChave($conversa, ChaveDaProposta::de('criar_reserva', $dadosDaReserva), $pedido);
 
             $acao = AcaoProposta::create([
                 'conversa_id' => $conversa->id,
                 'user_id' => $usuario->id,
+                'pedido_id' => $pedido,
                 'tipo' => 'criar_reserva',
                 'dados' => $dadosDaReserva,
                 'status' => StatusDaAcao::Proposta,
