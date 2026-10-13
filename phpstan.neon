@@ -1,6 +1,8 @@
 includes:
     - vendor/larastan/larastan/extension.neon
     - vendor/nesbot/carbon/extension.neon
+    # Erros que já existiam quando o CI passou a rodar o PHPStan; corrigir aos poucos e regenerar.
+    - phpstan-baseline.neon
 
 parameters:
     paths:

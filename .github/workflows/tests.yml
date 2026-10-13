@@ -13,6 +13,26 @@ jobs:
   ci:
     runs-on: ubuntu-latest
 
+    # Mesmo Postgres do compose.yaml (porta 54320, usuário pequenavia), que o .env.example espera.
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: pequenavia
+          POSTGRES_USER: pequenavia
+          POSTGRES_PASSWORD: secret
+        ports:
+          - 54320:5432
+        options: >-
+          --health-cmd "pg_isready -U pequenavia"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    # Variáveis de ambiente têm precedência sobre o .env copiado do .env.example.
+    env:
+      DB_PASSWORD: secret
+
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -31,6 +51,12 @@ jobs:
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: '22'
+
+      # O phpunit.xml usa o banco pequenavia_test (no compose ele vem do docker/postgres/init.sql).
+      - name: Create Test Database
+        run: psql -h 127.0.0.1 -p 54320 -U pequenavia -d pequenavia -c "CREATE DATABASE pequenavia_test OWNER pequenavia;"
+        env:
+          PGPASSWORD: secret
 
       - name: Setup Application
         run: composer setup
