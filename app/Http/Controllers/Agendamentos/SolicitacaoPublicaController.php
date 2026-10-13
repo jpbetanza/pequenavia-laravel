@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Agendamentos;
 use App\Enums\StatusSolicitacao;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Agendamentos\StoreSolicitacaoPublicaRequest;
+use App\Jobs\NotificarNovaSolicitacao;
 use App\Models\Equipamento;
 use App\Models\Espaco;
 use App\Models\Grupo;
+use App\Models\Solicitacao;
 use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
@@ -67,14 +69,15 @@ class SolicitacaoPublicaController extends Controller
     }
 
     /**
-     * Cria a solicitação pendente, com os equipamentos pedidos (uma unidade cada). Honeypot preenchido não chega aqui.
+     * Cria a solicitação pendente, com os equipamentos pedidos (uma unidade cada), e avisa a secretaria no celular.
+     * Honeypot preenchido não chega aqui.
      */
     public function store(StoreSolicitacaoPublicaRequest $request): RedirectResponse
     {
         $dono = $request->dono();
         $dados = $request->validated();
 
-        DB::transaction(function () use ($dono, $dados): void {
+        $solicitacao = DB::transaction(function () use ($dono, $dados): Solicitacao {
             $solicitacao = $dono->solicitacoes()->create([
                 'grupo_id' => $dados['grupo_id'],
                 'nome' => $dados['nome'],
@@ -94,7 +97,11 @@ class SolicitacaoPublicaController extends Controller
                     ->mapWithKeys(fn (string $equipamentoId) => [$equipamentoId => ['quantidade' => 1]])
                     ->all(),
             );
+
+            return $solicitacao;
         });
+
+        NotificarNovaSolicitacao::dispatch($solicitacao->id);
 
         return to_route('reservar.enviado', ['slug' => $request->route('slug')]);
     }

@@ -112,6 +112,12 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
         return $this->hasMany(Conversa::class);
     }
 
+    /** @return HasMany<InscricaoPush, $this> */
+    public function inscricoesPush(): HasMany
+    {
+        return $this->hasMany(InscricaoPush::class);
+    }
+
     /** @return HasMany<Espaco, $this> */
     public function espacos(): HasMany
     {

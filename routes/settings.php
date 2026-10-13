@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Settings\NotificacoesController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SecurityController;
 use Illuminate\Auth\Middleware\RequirePassword;
@@ -10,6 +11,13 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('settings/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('settings/profile', [ProfileController::class, 'update'])->name('profile.update');
+
+    Route::get('settings/notificacoes', [NotificacoesController::class, 'edit'])->name('notificacoes.edit');
+    Route::post('settings/notificacoes/inscricoes', [NotificacoesController::class, 'store'])->name('notificacoes.inscricoes.store');
+    Route::delete('settings/notificacoes/inscricoes', [NotificacoesController::class, 'destroy'])->name('notificacoes.inscricoes.destroy');
+    Route::post('settings/notificacoes/teste', [NotificacoesController::class, 'teste'])
+        ->middleware('throttle:6,1')
+        ->name('notificacoes.teste');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {
