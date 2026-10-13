@@ -15,6 +15,7 @@ import {
     ExemploDoAssistente,
     PainelDoAssistente,
 } from '@/components/welcome/exemplo-do-assistente';
+import { BannerDeInstalacao } from '@/components/banner-de-instalacao';
 import { Button } from '@/components/ui/button';
 import { home, inicio, login, register } from '@/routes';
 
@@ -446,6 +447,7 @@ export default function Welcome() {
                     <span>certificados.pequenavia.app.br</span>
                 </footer>
             </div>
+            <BannerDeInstalacao />
         </>
     );
 }

@@ -1,3 +1,4 @@
+import { BannerDeInstalacao } from '@/components/banner-de-instalacao';
 import AuthLayoutTemplate from '@/layouts/auth/auth-simple-layout';
 
 export default function AuthLayout({
@@ -18,6 +19,7 @@ export default function AuthLayout({
             painel={painel}
         >
             {children}
+            <BannerDeInstalacao />
         </AuthLayoutTemplate>
     );
 }
