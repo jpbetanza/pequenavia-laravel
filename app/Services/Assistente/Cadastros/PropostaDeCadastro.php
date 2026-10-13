@@ -49,11 +49,13 @@ final class PropostaDeCadastro
         ];
 
         return DB::transaction(function () use ($usuario, $conversa, $tipo, $dados): array {
-            $substituiu = ExpiracaoDePropostas::expirarPendentesComMesmaChave($conversa, ChaveDaProposta::de($tipo, $dados));
+            $pedido = ExpiracaoDePropostas::pedidoAtual($conversa);
+            $substituiu = ExpiracaoDePropostas::expirarPendentesComMesmaChave($conversa, ChaveDaProposta::de($tipo, $dados), $pedido);
 
             $acao = AcaoProposta::create([
                 'conversa_id' => $conversa->id,
                 'user_id' => $usuario->id,
+                'pedido_id' => $pedido,
                 'tipo' => $tipo,
                 'dados' => $dados,
                 'status' => StatusDaAcao::Proposta,

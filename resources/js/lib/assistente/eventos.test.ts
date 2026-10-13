@@ -57,6 +57,7 @@ const usuario = (id: string, conteudo: string): MensagemDoPainel => ({
     id,
     papel: 'usuario',
     conteudo,
+    anexos: [],
     cartoes: [],
     erro: false,
     status: null,
@@ -70,6 +71,7 @@ const assistente = (
     id,
     papel: 'assistente',
     conteudo: '',
+    anexos: [],
     cartoes: [],
     erro: false,
     status: null,
@@ -140,6 +142,27 @@ describe('iniciarTroca', () => {
         ]);
         expect(anteriores).toHaveLength(2);
     });
+
+    it('leva os anexos na mensagem do usuário', () => {
+        const anexo = {
+            id: 'x1',
+            nome: 'salas.xlsx',
+            tipo: 'planilha' as const,
+            tamanho: 2048,
+            truncado: false,
+        };
+
+        const [pergunta, resposta] = iniciarTroca(
+            [],
+            '',
+            { usuario: 'u1', assistente: 'a1' },
+            [anexo],
+        );
+
+        expect(pergunta.anexos).toEqual([anexo]);
+        expect(pergunta.conteudo).toBe('');
+        expect(resposta.anexos).toEqual([]);
+    });
 });
 
 describe('aplicarEvento', () => {
@@ -176,6 +199,7 @@ describe('aplicarEvento', () => {
             id: 'm-servidor',
             papel: 'assistente',
             conteudo: 'Aqui estão.',
+            anexos: [],
             cartoes: [cartaoReservas],
             erro: false,
             status: null,
@@ -326,7 +350,7 @@ describe('cartão de cadastro e de reserva juntos', () => {
         ]);
     });
 
-    it('proposta com a mesma chave expira a anterior ainda pendente', () => {
+    it('proposta com a mesma chave expira a anterior ainda pendente de uma resposta anterior', () => {
         const mensagens: MensagemDoPainel[] = [
             assistente('a1', {
                 cartoes: [
@@ -334,6 +358,8 @@ describe('cartão de cadastro e de reserva juntos', () => {
                     cartaoAcao(acaoDeCadastroComChave('c3', 'grupo:g2')),
                 ],
             }),
+            usuario('u2', 'Mude o nome'),
+            assistente('a2', { pendente: true }),
         ];
 
         const resultado = aplicarEvento(mensagens, {
@@ -344,7 +370,30 @@ describe('cartão de cadastro e de reserva juntos', () => {
         expect(resultado[0].cartoes).toEqual([
             cartaoAcao(acaoDeCadastroComChave('c1', 'grupo:g1', 'expirada')),
             cartaoAcao(acaoDeCadastroComChave('c3', 'grupo:g2')),
+        ]);
+        expect(resultado[2].cartoes).toEqual([
             cartaoAcao(acaoDeCadastroComChave('c2', 'grupo:g1')),
+        ]);
+    });
+
+    it('propostas com a mesma chave na mesma resposta convivem (importação)', () => {
+        const mensagens: MensagemDoPainel[] = [
+            assistente('a1', {
+                pendente: true,
+                cartoes: [
+                    cartaoAcao({ ...acao('r1', 'Festa'), chave: 'reserva' }),
+                ],
+            }),
+        ];
+
+        const resultado = aplicarEvento(mensagens, {
+            tipo: 'cartao',
+            cartao: cartaoAcao({ ...acao('r2', 'Festa 2'), chave: 'reserva' }),
+        });
+
+        expect(resultado[0].cartoes).toEqual([
+            cartaoAcao({ ...acao('r1', 'Festa'), chave: 'reserva' }),
+            cartaoAcao({ ...acao('r2', 'Festa 2'), chave: 'reserva' }),
         ]);
     });
 
@@ -356,6 +405,8 @@ describe('cartão de cadastro e de reserva juntos', () => {
                     cartaoAcao({ ...acao('r1', 'Festa'), chave: 'reserva' }),
                 ],
             }),
+            usuario('u2', 'Outra festa'),
+            assistente('a2', { pendente: true }),
         ];
 
         const resultado = aplicarEvento(mensagens, {
@@ -369,6 +420,8 @@ describe('cartão de cadastro e de reserva juntos', () => {
                 ...acao('r1', 'Festa', 'expirada'),
                 chave: 'reserva',
             }),
+        ]);
+        expect(resultado[2].cartoes).toEqual([
             cartaoAcao({ ...acao('r2', 'Festa 2'), chave: 'reserva' }),
         ]);
     });

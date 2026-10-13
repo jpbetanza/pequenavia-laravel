@@ -1,5 +1,6 @@
 import type {
     AcaoProposta,
+    AnexoDaMensagem,
     Cartao,
     EventoDoAssistente,
     MensagemDoPainel,
@@ -81,11 +82,12 @@ export function eventoDoAssistente(
     }
 }
 
-/** Acrescenta a pergunta do usuário e a resposta do assistente, ainda vazia e pendente. */
+/** Acrescenta a pergunta do usuário (com os anexos) e a resposta do assistente, ainda vazia e pendente. */
 export function iniciarTroca(
     mensagens: MensagemDoPainel[],
     texto: string,
     ids: { usuario: string; assistente: string },
+    anexos: AnexoDaMensagem[] = [],
 ): MensagemDoPainel[] {
     return [
         ...mensagens,
@@ -93,6 +95,7 @@ export function iniciarTroca(
             id: ids.usuario,
             papel: 'usuario',
             conteudo: texto,
+            anexos,
             cartoes: [],
             erro: false,
             status: null,
@@ -102,6 +105,7 @@ export function iniciarTroca(
             id: ids.assistente,
             papel: 'assistente',
             conteudo: '',
+            anexos: [],
             cartoes: [],
             erro: false,
             status: null,
@@ -123,29 +127,37 @@ function chaveDaAcao(acao: AcaoProposta): string {
 }
 
 /**
- * Com uma proposta nova, as propostas pendentes anteriores com a mesma chave já estão expiradas no servidor:
- * marca-as aqui também, para o cartão não oferecer Confirmar. Propostas de outra chave e a própria nova ficam como estão.
+ * Com uma proposta nova, as propostas pendentes de respostas anteriores com a mesma chave já estão expiradas no
+ * servidor: marca-as aqui também, para o cartão não oferecer Confirmar. Propostas da resposta atual convivem (uma
+ * importação propõe várias reservas de uma vez); as de outra chave e a própria nova ficam como estão.
  */
 function expirarPropostasAnteriores(
     mensagens: MensagemDoPainel[],
     nova: AcaoProposta,
 ): MensagemDoPainel[] {
     const chave = chaveDaAcao(nova);
+    const atual = mensagens.findLastIndex(
+        (mensagem) => mensagem.papel === 'assistente',
+    );
 
-    return mensagens.map((mensagem) => ({
-        ...mensagem,
-        cartoes: mensagem.cartoes.map((cartao) =>
-            cartao.tipo === 'acao_proposta' &&
-            cartao.dados.status === 'proposta' &&
-            cartao.dados.id !== nova.id &&
-            chaveDaAcao(cartao.dados) === chave
-                ? {
-                      tipo: 'acao_proposta',
-                      dados: { ...cartao.dados, status: 'expirada' },
-                  }
-                : cartao,
-        ),
-    }));
+    return mensagens.map((mensagem, indice) =>
+        indice === atual
+            ? mensagem
+            : {
+                  ...mensagem,
+                  cartoes: mensagem.cartoes.map((cartao) =>
+                      cartao.tipo === 'acao_proposta' &&
+                      cartao.dados.status === 'proposta' &&
+                      cartao.dados.id !== nova.id &&
+                      chaveDaAcao(cartao.dados) === chave
+                          ? {
+                                tipo: 'acao_proposta',
+                                dados: { ...cartao.dados, status: 'expirada' },
+                            }
+                          : cartao,
+                  ),
+              },
+    );
 }
 
 /** Aplica um evento do stream na última resposta do assistente. Devolve um array novo. */

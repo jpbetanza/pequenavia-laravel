@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>PequenaVia — anexos no celular</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&amp;family=Instrument+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#FBF8F2}
+a{color:#6E1F24}a:hover{color:#4E1418}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; display: flex; flex-direction: column; background: #FBF8F2; color: #221A17; font-family: 'Instrument Sans', system-ui, sans-serif; font-size: 15px; line-height: 1.45; overflow: hidden">
+  <div style="display: flex; align-items: center; gap: 4px; padding: 10px 8px 10px 16px; border-bottom: 1px solid #E1D7C8">
+    <div style="flex: 1; min-width: 0; display: flex; flex-direction: column">
+      <span style="font-family: 'Cormorant Garamond', Georgia, serif; font-size: 22px; font-weight: 600; line-height: 1.1">Assistente</span>
+      <span style="font-size: 12px; color: #6B5D57; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Datas do ofício da diocese</span>
+    </div>
+    <button type="button" aria-label="Ver conversas" style="width: 44px; height: 44px; border: none; border-radius: 10px; background: transparent; color: #4A3D38; cursor: pointer; display: flex; align-items: center; justify-content: center">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+    </button>
+    <button type="button" aria-label="Nova conversa" style="width: 44px; height: 44px; border: none; border-radius: 10px; background: transparent; color: #4A3D38; cursor: pointer; display: flex; align-items: center; justify-content: center">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+    </button>
+    <button type="button" aria-label="Fechar assistente" style="width: 44px; height: 44px; border: none; border-radius: 10px; background: transparent; color: #4A3D38; cursor: pointer; display: flex; align-items: center; justify-content: center">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+
+  <div role="log" aria-live="polite" style="flex: 1; min-height: 0; padding: 16px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto">
+    <div style="align-self: flex-end; max-width: 85%; padding: 10px 14px; border-radius: 16px 16px 4px 16px; background: #6E1F24; color: #FBF8F2; display: flex; flex-direction: column; gap: 8px">
+      <div style="margin: 0 -6px; display: flex; align-items: center; gap: 8px; padding: 4px 12px 4px 8px; border-radius: 12px; background: rgba(251, 248, 242, 0.12)">
+        <span style="width: 32px; height: 32px; flex: none; border-radius: 8px; background: rgba(251, 248, 242, 0.15); display: flex; align-items: center; justify-content: center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg>
+        </span>
+        <span style="display: flex; flex-direction: column; min-width: 0; line-height: 1.25">
+          <span style="font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">oficio-diocese.pdf</span>
+          <span style="font-size: 12px; color: rgba(251, 248, 242, 0.8)">PDF · 240 KB</span>
+        </span>
+      </div>
+      <span>Quais datas desse ofício batem com a nossa agenda?</span>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 8px">
+      <p style="margin: 0">O ofício marca a visita do bispo para <b>sábado, 25/10</b>, às 15h, na Igreja matriz.</p>
+      <p style="margin: 0">Nesse horário a matriz tem o <b>Ensaio do coral</b> (14:00–16:00). Quer que eu proponha mudar o ensaio para a manhã?</p>
+    </div>
+  </div>
+
+  <div style="padding: 10px 12px 16px; border-top: 1px solid #E1D7C8; display: flex; flex-direction: column; gap: 8px">
+    <label for="mensagem-anexos-celular" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Mensagem para o assistente</label>
+    <div style="display: flex; flex-direction: column; border: 1px solid #CDBFAC; border-radius: 14px; background: #FFFFFF">
+      <ul aria-label="Arquivos anexados" style="margin: 0; padding: 6px 6px 0; list-style: none; display: flex; flex-direction: column; gap: 6px">
+        <li style="display: flex; align-items: center; gap: 8px; padding: 0 2px 0 8px; border: 1px solid #E1D7C8; border-radius: 12px; background: #F8F4EC">
+          <span style="width: 32px; height: 32px; flex: none; border-radius: 8px; background: #FFFFFF; color: #6E1F24; display: flex; align-items: center; justify-content: center">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/><circle cx="10" cy="13" r="2"/><path d="m20 17-1.1-1.1a2 2 0 0 0-2.8 0L10 22"/></svg>
+          </span>
+          <span style="flex: 1; display: flex; flex-direction: column; min-width: 0; line-height: 1.25">
+            <span style="font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">quadro-de-horarios.jpg</span>
+            <span style="font-size: 12px; color: #6B5D57">Imagem · 1,2 MB</span>
+          </span>
+          <button type="button" aria-label="Remover quadro-de-horarios.jpg" style="width: 44px; height: 44px; flex: none; border: none; border-radius: 10px; background: transparent; color: #6B5D57; cursor: pointer; display: flex; align-items: center; justify-content: center">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+          </button>
+        </li>
+        <li style="display: flex; align-items: center; gap: 8px; padding: 0 2px 0 8px; border: 1px solid #E1D7C8; border-radius: 12px; background: #F8F4EC">
+          <span style="width: 32px; height: 32px; flex: none; border-radius: 8px; background: #FFFFFF; color: #6E1F24; display: flex; align-items: center; justify-content: center">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h2M14 13h2M8 17h2M14 17h2"/></svg>
+          </span>
+          <span style="flex: 1; display: flex; flex-direction: column; min-width: 0; line-height: 1.25">
+            <span style="font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">grupos-2027.xlsx</span>
+            <span style="font-size: 12px; color: #6B5D57">Planilha · 9 KB</span>
+          </span>
+          <button type="button" aria-label="Remover grupos-2027.xlsx" style="width: 44px; height: 44px; flex: none; border: none; border-radius: 10px; background: transparent; color: #6B5D57; cursor: pointer; display: flex; align-items: center; justify-content: center">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+          </button>
+        </li>
+      </ul>
+      <div style="display: flex; align-items: flex-end; gap: 4px; padding: 4px">
+        <button type="button" aria-label="Anexar arquivo" style="width: 44px; height: 44px; flex: none; border: none; border-radius: 10px; background: transparent; color: #6B5D57; cursor: pointer; display: flex; align-items: center; justify-content: center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+        </button>
+        <textarea id="mensagem-anexos-celular" rows="2" style="flex: 1; min-width: 0; border: none; outline: none; resize: none; padding: 10px 0; background: transparent; font: inherit; color: #221A17">Cadastre os grupos da planilha</textarea>
+        <button type="button" aria-label="Enviar mensagem" style="width: 44px; height: 44px; flex: none; border: none; border-radius: 10px; background: #6E1F24; color: #FBF8F2; cursor: pointer; display: flex; align-items: center; justify-content: center">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+    </div>
+    <span style="font-size: 12px; color: #6B5D57">O assistente só grava algo depois que você confirmar.</span>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

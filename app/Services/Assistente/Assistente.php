@@ -28,14 +28,21 @@ final class Assistente
     ) {}
 
     /**
+     * @param  list<array<string, mixed>>  $anexos  anexos já gravados (ver Anexos::guardar)
      * @return Generator<int, EventoDoAssistente>
      */
-    public function responder(User $usuario, Conversa $conversa, string $texto): Generator
+    public function responder(User $usuario, Conversa $conversa, ?string $texto, array $anexos = []): Generator
     {
-        $conversa->mensagens()->create(['papel' => PapelDaMensagem::Usuario, 'conteudo' => $texto]);
+        $texto = trim((string) $texto);
+
+        $conversa->mensagens()->create([
+            'papel' => PapelDaMensagem::Usuario,
+            'conteudo' => $texto,
+            'anexos' => $anexos === [] ? null : $anexos,
+        ]);
 
         if ($conversa->titulo === 'Nova conversa') {
-            $conversa->titulo = $this->tituloDe($texto);
+            $conversa->titulo = $texto !== '' ? $this->tituloDe($texto) : $this->tituloDosAnexos($anexos);
         }
 
         $conversa->ultima_mensagem_em = now();
@@ -188,6 +195,19 @@ final class Assistente
     private function juntar(string $textoVisivel, string $fixo): string
     {
         return $textoVisivel === '' ? $fixo : rtrim($textoVisivel).' '.$fixo;
+    }
+
+    /**
+     * Título de uma conversa que começou só com arquivos: o nome do primeiro e quantos mais vieram.
+     *
+     * @param  list<array<string, mixed>>  $anexos
+     */
+    private function tituloDosAnexos(array $anexos): string
+    {
+        $nome = (string) ($anexos[0]['nome'] ?? 'arquivo');
+        $outros = count($anexos) - 1;
+
+        return Str::limit($outros > 0 ? "{$nome} e mais {$outros}" : $nome, 60, '…');
     }
 
     /**

@@ -127,12 +127,6 @@ parameters:
 			path: app/Http/Controllers/Assistente/ConversaController.php
 
 		-
-			message: '#^Method App\\Http\\Controllers\\Assistente\\MensagemController\:\:store\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: app/Http/Controllers/Assistente/MensagemController.php
-
-		-
 			message: '#^Call to an undefined method Laravel\\Socialite\\Contracts\\User\:\:getRaw\(\)\.$#'
 			identifier: method.notFound
 			count: 1

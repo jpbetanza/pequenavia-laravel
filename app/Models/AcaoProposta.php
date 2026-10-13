@@ -22,12 +22,13 @@ use Illuminate\Support\Carbon;
  * @property array<string, mixed> $dados
  * @property StatusDaAcao $status
  * @property string|null $resultado_id
+ * @property string|null $pedido_id Mensagem do usuário que gerou a proposta.
  * @property Carbon|null $confirmada_em
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
 #[Table('acoes_propostas')]
-#[Fillable(['conversa_id', 'user_id', 'tipo', 'dados', 'status', 'resultado_id', 'confirmada_em'])]
+#[Fillable(['conversa_id', 'user_id', 'pedido_id', 'tipo', 'dados', 'status', 'resultado_id', 'confirmada_em'])]
 class AcaoProposta extends Model
 {
     /** @use HasFactory<AcaoPropostaFactory> */

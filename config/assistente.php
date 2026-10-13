@@ -8,4 +8,8 @@ return [
     'mensagens_no_contexto' => 30,
     'max_caracteres_mensagem' => 2000,
     'timeout_segundos' => 60,
+    // Anexos: planilhas e .txt chegam já convertidos em texto pelo navegador; imagem e PDF sobem como arquivo.
+    'max_anexos' => 5,
+    'max_kb_arquivo' => 5 * 1024,
+    'max_caracteres_anexo' => 60000,
 ];

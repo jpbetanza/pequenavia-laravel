@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>PequenaVia — importar planilha pelo assistente</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&amp;family=Instrument+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F0E6}
+a{color:#6E1F24}a:hover{color:#4E1418}
+</style>
+</helmet>
+<div style="min-height: 1240px; display: flex; flex-direction: column; background: #F5F0E6; color: #221A17; font-family: 'Instrument Sans', system-ui, sans-serif; font-size: 14px; line-height: 1.45">
+
+  <header style="display: flex; align-items: center; gap: 24px; padding: 0 24px; min-height: 64px; background: #FBF8F2; border-bottom: 1px solid #E1D7C8; flex-wrap: wrap">
+    <a href="../Painel.dc.html" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: #221A17">
+      <span style="width: 36px; height: 36px; border-radius: 999px; background: #F5F0E6; display: flex; align-items: center; justify-content: center"><img src="/_blob/50066c2efa3bd703f79bbba990bb7aa8" alt="" style="width: 28px; height: 28px; object-fit: contain"></span>
+      <span style="font-family: 'Cormorant Garamond', Georgia, serif; font-size: 23px; font-weight: 700">PequenaVia</span>
+    </a>
+    <nav aria-label="Navegação do app" style="display: flex; gap: 4px; flex: 1; flex-wrap: wrap">
+      <a href="../Painel.dc.html" style="display: flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 10px; color: #4A3D38; font-weight: 600; text-decoration: none">Início</a>
+      <a href="../agenda/Espacos.dc.html" aria-current="page" style="display: flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 10px; color: #6E1F24; font-weight: 600; text-decoration: underline; text-underline-offset: 6px">Agendamentos</a>
+      <a href="../Modelos.dc.html" style="display: flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 10px; color: #4A3D38; font-weight: 600; text-decoration: none">Certificados</a>
+    </nav>
+    <button type="button" aria-pressed="true" aria-controls="painel-assistente" style="display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border: 1px solid #6E1F24; border-radius: 999px; background: #F1DFDC; font: inherit; font-weight: 600; color: #6E1F24; cursor: pointer">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/><path d="M8.5 11h7M8.5 14h4"/></svg>
+      Assistente
+    </button>
+  </header>
+
+  <div style="flex: 1; display: flex; flex-wrap: wrap; min-height: 0">
+    <main style="flex: 999 1 420px; min-width: 0; padding: 28px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px">
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <h1 style="margin: 0; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 44px; font-weight: 600; line-height: 1">Espaços</h1>
+        <p style="margin: 0; color: #6B5D57">Os espaços confirmados no assistente aparecem aqui na hora.</p>
+      </div>
+      <ul style="margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px">
+        <li style="padding: 16px; border: 1px solid #E1D7C8; border-radius: 14px; background: #FBF8F2; display: flex; flex-direction: column; gap: 6px">
+          <span style="display: flex; align-items: center; gap: 8px; font-weight: 600"><span style="width: 10px; height: 10px; border-radius: 3px; background: #6E1F24"></span>Capela</span>
+          <span style="color: #6B5D57">80 pessoas · seg a sáb, 07:00–21:00</span>
+        </li>
+        <li style="padding: 16px; border: 1px solid #E1D7C8; border-radius: 14px; background: #FBF8F2; display: flex; flex-direction: column; gap: 6px">
+          <span style="display: flex; align-items: center; gap: 8px; font-weight: 600"><span style="width: 10px; height: 10px; border-radius: 3px; background: #2F5D8A"></span>Sala de catequese</span>
+          <span style="color: #6B5D57">35 pessoas · seg a sex, 08:00–18:00</span>
+        </li>
+        <li style="padding: 16px; border: 1px dashed #CDBFAC; border-radius: 14px; display: flex; flex-direction: column; gap: 6px; color: #6B5D57">
+          <span style="font-weight: 600; color: #4A3D38">Mais 2 a caminho</span>
+          <span>Aguardando a confirmação no assistente.</span>
+        </li>
+      </ul>
+    </main>
+
+    <aside id="painel-assistente" aria-label="Assistente" style="flex: 1 1 400px; max-width: 440px; box-sizing: border-box; background: #FBF8F2; border-left: 1px solid #E1D7C8; display: flex; flex-direction: column">
+      <div style="display: flex; align-items: center; gap: 8px; padding: 12px 12px 12px 20px; border-bottom: 1px solid #E1D7C8">
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column">
+          <span style="font-family: 'Cormorant Garamond', Georgia, serif; font-size: 24px; font-weight: 600; line-height: 1.1">Assistente</span>
+          <span style="font-size: 12px; color: #6B5D57; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Cadastre os espaços dessa planilha</span>
+        </div>
+        <a href="PainelConversas.dc.html" aria-label="Ver conversas" style="width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #4A3D38; text-decoration: none">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+        </a>
+        <button type="button" aria-label="Nova conversa" style="width: 44px; height: 44px; border: none; border-radius: 10px; background: transparent; color: #4A3D38; cursor: pointer; display: flex; align-items: center; justify-content: center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </button>
+        <button type="button" aria-label="Fechar assistente" style="width: 44px; height: 44px; border: none; border-radius: 10px; background: transparent; color: #4A3D38; cursor: pointer; display: flex; align-items: center; justify-content: center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+
+      <div role="log" aria-live="polite" style="flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto">
+        <div style="align-self: flex-end; max-width: 85%; padding: 10px 14px; border-radius: 16px 16px 4px 16px; background: #6E1F24; color: #FBF8F2; display: flex; flex-direction: column; gap: 8px">
+          <div style="margin: 0 -6px; display: flex; align-items: center; gap: 8px; padding: 4px 12px 4px 8px; border-radius: 12px; background: rgba(251, 248, 242, 0.12)">
+            <span style="width: 32px; height: 32px; flex: none; border-radius: 8px; background: rgba(251, 248, 242, 0.15); display: flex; align-items: center; justify-content: center">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h2M14 13h2M8 17h2M14 17h2"/></svg>
+            </span>
+            <span style="display: flex; flex-direction: column; min-width: 0; line-height: 1.25">
+              <span style="font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">espacos-paroquia.xlsx</span>
+              <span style="font-size: 12px; color: rgba(251, 248, 242, 0.8)">Planilha · 18 KB</span>
+            </span>
+          </div>
+          <span>Cadastre os espaços dessa planilha</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px">
+          <p style="margin: 0">Li a aba <b>Salas</b>: 4 linhas. Usei as colunas Nome, Capacidade e Recursos; os horários vieram de Abre e Fecha, de segunda a sábado.</p>
+          <p style="margin: 0">Salão paroquial e Sala 3 são novos. A <b>Capela</b> já existe: só a capacidade muda. A linha 5 (Sala 5) está sem capacidade e ficou de fora.</p>
+
+          <section aria-label="Proposta: cadastrar espaço Salão paroquial" style="border: 1px solid #CDBFAC; border-radius: 12px; background: #FFFFFF; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+            <span style="display: inline-flex; align-self: flex-start; align-items: center; padding: 2px 10px; border-radius: 999px; background: #F3E8CF; color: #5A4214; font-size: 12px; font-weight: 600">Aguardando sua confirmação</span>
+            <p style="margin: 0; font-size: 16px; font-weight: 600">Cadastrar espaço Salão paroquial</p>
+            <dl style="margin: 0; display: grid; grid-template-columns: 96px minmax(0, 1fr); row-gap: 6px; column-gap: 12px">
+              <dt style="color: #6B5D57">Capacidade</dt><dd style="margin: 0; font-weight: 500">120 pessoas</dd>
+              <dt style="color: #6B5D57">Recursos</dt><dd style="margin: 0; font-weight: 500">Som, projetor, cozinha</dd>
+              <dt style="color: #6B5D57">Horários</dt><dd style="margin: 0; font-weight: 500">Seg a sáb, 08:00–22:00</dd>
+            </dl>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap">
+              <button type="button" style="flex: 1 1 140px; min-height: 44px; border: none; border-radius: 10px; background: #6E1F24; color: #FBF8F2; font: inherit; font-weight: 600; cursor: pointer">Confirmar</button>
+              <button type="button" style="flex: 1 1 120px; min-height: 44px; border: 1px solid #CDBFAC; border-radius: 10px; background: #FBF8F2; color: #221A17; font: inherit; font-weight: 600; cursor: pointer">Descartar</button>
+            </div>
+          </section>
+
+          <section aria-label="Proposta: cadastrar espaço Sala 3" style="border: 1px solid #CDBFAC; border-radius: 12px; background: #FFFFFF; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+            <span style="display: inline-flex; align-self: flex-start; align-items: center; padding: 2px 10px; border-radius: 999px; background: #F3E8CF; color: #5A4214; font-size: 12px; font-weight: 600">Aguardando sua confirmação</span>
+            <p style="margin: 0; font-size: 16px; font-weight: 600">Cadastrar espaço Sala 3</p>
+            <dl style="margin: 0; display: grid; grid-template-columns: 96px minmax(0, 1fr); row-gap: 6px; column-gap: 12px">
+              <dt style="color: #6B5D57">Capacidade</dt><dd style="margin: 0; font-weight: 500">20 pessoas</dd>
+              <dt style="color: #6B5D57">Horários</dt><dd style="margin: 0; font-weight: 500">Seg a sex, 08:00–18:00</dd>
+            </dl>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap">
+              <button type="button" style="flex: 1 1 140px; min-height: 44px; border: none; border-radius: 10px; background: #6E1F24; color: #FBF8F2; font: inherit; font-weight: 600; cursor: pointer">Confirmar</button>
+              <button type="button" style="flex: 1 1 120px; min-height: 44px; border: 1px solid #CDBFAC; border-radius: 10px; background: #FBF8F2; color: #221A17; font: inherit; font-weight: 600; cursor: pointer">Descartar</button>
+            </div>
+          </section>
+
+          <section aria-label="Proposta: alterar espaço Capela" style="border: 1px solid #CDBFAC; border-radius: 12px; background: #FFFFFF; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+            <span style="display: inline-flex; align-self: flex-start; align-items: center; padding: 2px 10px; border-radius: 999px; background: #F3E8CF; color: #5A4214; font-size: 12px; font-weight: 600">Aguardando sua confirmação</span>
+            <p style="margin: 0; font-size: 16px; font-weight: 600">Alterar espaço Capela</p>
+            <dl style="margin: 0; display: grid; grid-template-columns: 96px minmax(0, 1fr); row-gap: 6px; column-gap: 12px">
+              <dt style="color: #6B5D57">Capacidade</dt><dd style="margin: 0; font-variant-numeric: tabular-nums"><span style="color: #6B5D57; text-decoration: line-through">80</span><span aria-hidden="true" style="margin: 0 6px">→</span><span style="font-weight: 500">100</span></dd>
+            </dl>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap">
+              <button type="button" style="flex: 1 1 140px; min-height: 44px; border: none; border-radius: 10px; background: #6E1F24; color: #FBF8F2; font: inherit; font-weight: 600; cursor: pointer">Confirmar</button>
+              <button type="button" style="flex: 1 1 120px; min-height: 44px; border: 1px solid #CDBFAC; border-radius: 10px; background: #FBF8F2; color: #221A17; font: inherit; font-weight: 600; cursor: pointer">Descartar</button>
+            </div>
+          </section>
+
+          <button type="button" style="align-self: flex-start; display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border: none; border-radius: 10px; background: #6E1F24; color: #FBF8F2; font: inherit; font-weight: 600; cursor: pointer">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 7 17l-5-5"/><path d="m22 10-7.5 7.5L13 16"/></svg>
+            Confirmar todas (3)
+          </button>
+        </div>
+      </div>
+
+      <form style="padding: 12px 16px 16px; border-top: 1px solid #E1D7C8; display: flex; flex-direction: column; gap: 10px">
+        <label for="mensagem-importacao" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Mensagem para o assistente</label>
+        <div style="display: flex; align-items: flex-end; gap: 4px; padding: 6px; border: 1px solid #CDBFAC; border-radius: 14px; background: #FFFFFF">
+          <button type="button" aria-label="Anexar arquivo" title="Planilhas, PDF, imagens ou texto · até 5 arquivos de 5 MB" style="width: 44px; height: 44px; flex: none; border: none; border-radius: 10px; background: transparent; color: #6B5D57; cursor: pointer; display: flex; align-items: center; justify-content: center">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+          </button>
+          <textarea id="mensagem-importacao" rows="2" placeholder="Pergunte ou anexe um arquivo…" style="flex: 1; min-width: 0; border: none; outline: none; resize: none; padding: 6px 0; background: transparent; font: inherit; color: #221A17"></textarea>
+          <button type="submit" aria-label="Enviar mensagem" style="width: 44px; height: 44px; flex: none; border: none; border-radius: 10px; background: #B78E91; color: #FBF8F2; cursor: not-allowed; display: flex; align-items: center; justify-content: center">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+        <span style="font-size: 12px; color: #6B5D57">O assistente só grava algo depois que você confirmar.</span>
+      </form>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1240}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

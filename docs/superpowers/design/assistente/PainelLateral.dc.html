@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>PequenaVia — assistente no painel lateral</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&amp;family=Instrument+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F0E6}
+a{color:#6E1F24}a:hover{color:#4E1418}
+</style>
+</helmet>
+<div style="min-height: 1000px; display: flex; flex-wrap: wrap; background: #F5F0E6; color: #221A17; font-family: 'Instrument Sans', system-ui, sans-serif; font-size: 14px; line-height: 1.45">
+
+  <aside style="flex: 1 1 248px; max-width: 248px; box-sizing: border-box; padding: 24px 16px; background: #EFE8DB; border-right: 1px solid #E1D7C8; display: flex; flex-direction: column; gap: 24px">
+    <a href="../Main.dc.html" style="display: flex; align-items: center; gap: 10px; padding: 0 8px; text-decoration: none; color: #221A17">
+      <span style="width: 36px; height: 36px; border-radius: 999px; background: #FBF8F2; display: flex; align-items: center; justify-content: center"><img src="/_blob/50066c2efa3bd703f79bbba990bb7aa8" alt="" style="width: 28px; height: 28px; object-fit: contain"></span>
+      <span style="font-family: 'Cormorant Garamond', Georgia, serif; font-size: 23px; font-weight: 700">PequenaVia</span>
+    </a>
+    <nav aria-label="Navegação do app" style="display: flex; flex-direction: column; gap: 6px">
+      <button type="button" aria-expanded="false" style="width: 100%; display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px; border: none; border-radius: 10px; background: transparent; font: inherit; font-size: 15px; font-weight: 600; color: #4A3D38; cursor: pointer; text-align: left">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M7 21h10M8 9h8M8 13h5"/></svg>
+        <span style="flex: 1">Certificados</span>
+      </button>
+      <div>
+        <button type="button" aria-expanded="true" style="width: 100%; display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px; border: none; border-radius: 10px; background: transparent; font: inherit; font-size: 15px; font-weight: 600; color: #221A17; cursor: pointer; text-align: left">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+          <span style="flex: 1">Agendamentos</span>
+        </button>
+        <div style="display: flex; flex-direction: column; gap: 2px; margin: 4px 0 0 22px; padding-left: 12px; border-left: 1px solid #D8CCBA">
+          <a href="../agenda/Calendario.dc.html" aria-current="page" style="display: flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: 8px; background: #FBF8F2; box-shadow: 0 1px 2px rgba(60, 30, 20, 0.08); color: #6E1F24; font-weight: 600; text-decoration: none">Calendário</a>
+          <a href="../agenda/Solicitacoes.dc.html" style="display: flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: 8px; color: #4A3D38; text-decoration: none">Solicitações</a>
+          <a href="../agenda/Espacos.dc.html" style="display: flex; align-items: center; min-height: 44px; padding: 0 12px; border-radius: 8px; color: #4A3D38; text-decoration: none">Espaços</a>
+        </div>
+      </div>
+    </nav>
+    <div style="margin-top: auto; display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-top: 1px solid #E1D7C8">
+      <span style="width: 34px; height: 34px; border-radius: 999px; background: #6E1F24; color: #FBF8F2; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 13px">AS</span>
+      <span style="display: flex; flex-direction: column; min-width: 0; line-height: 1.3"><span style="font-weight: 600">Ana Secretaria</span><span style="font-size: 13px; color: #6B5D57">Paróquia [NOME]</span></span>
+    </div>
+  </aside>
+
+  <div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+    <header style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 24px; border-bottom: 1px solid #E1D7C8">
+      <span style="color: #6B5D57">Agendamentos / Calendário</span>
+      <button type="button" aria-pressed="true" aria-controls="painel-assistente" style="display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border: 1px solid #6E1F24; border-radius: 999px; background: #F1DFDC; font: inherit; font-weight: 600; color: #6E1F24; cursor: pointer">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/><path d="M8.5 11h7M8.5 14h4"/></svg>
+        Assistente
+      </button>
+    </header>
+
+    <div style="flex: 1; display: flex; flex-wrap: wrap; min-height: 0">
+      <main style="flex: 999 1 420px; min-width: 0; padding: 28px 28px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px">
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <h1 style="margin: 0; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 44px; font-weight: 600; line-height: 1">Calendário</h1>
+          <p style="margin: 0; color: #6B5D57">A página continua visível e utilizável com o painel aberto.</p>
+        </div>
+        <section aria-label="Semana de 13 a 19 de outubro" style="flex: 1; min-height: 640px; background: #FBF8F2; border: 1px solid #E1D7C8; border-radius: 14px; display: grid; grid-template-columns: 52px repeat(5, minmax(0, 1fr)); overflow: hidden">
+          <div style="border-right: 1px solid #E1D7C8"></div>
+          <div style="border-right: 1px solid #EDE5D8; padding: 10px; font-weight: 600">Seg 13</div>
+          <div style="border-right: 1px solid #EDE5D8; padding: 10px; font-weight: 600">Ter 14</div>
+          <div style="border-right: 1px solid #EDE5D8; padding: 10px; font-weight: 600">Qua 15</div>
+          <div style="border-right: 1px solid #EDE5D8; padding: 10px; font-weight: 600">Qui 16</div>
+          <div style="padding: 10px; font-weight: 600; color: #6E1F24">Sáb 18</div>
+          <div style="border-right: 1px solid #E1D7C8; color: #6B5D57; font-size: 12px; padding: 6px; display: flex; flex-direction: column; gap: 76px"><span>08:00</span><span>10:00</span><span>12:00</span><span>14:00</span><span>16:00</span><span>18:00</span></div>
+          <div style="border-right: 1px solid #EDE5D8; padding: 6px"><div style="margin-top: 330px; padding: 8px; border-radius: 8px; background: #DFE4EE; color: #1F2A44; font-size: 12px"><b>Catequese</b><br>Sala de catequese</div></div>
+          <div style="border-right: 1px solid #EDE5D8; padding: 6px"></div>
+          <div style="border-right: 1px solid #EDE5D8; padding: 6px"><div style="margin-top: 90px; padding: 8px; border-radius: 8px; background: #E2EEE8; color: #1B3D30; font-size: 12px"><b>Reunião do conselho</b><br>Sala 2</div></div>
+          <div style="border-right: 1px solid #EDE5D8; padding: 6px"></div>
+          <div style="padding: 6px; background: #F8F1EC"><div style="margin-top: 50px; height: 150px; box-sizing: border-box; padding: 8px; border-radius: 8px; background: #F1DFDC; color: #521519; font-size: 12px"><b>Encontro de noivos</b><br>Salão paroquial · 09:00–12:00</div><div style="margin-top: 110px; height: 160px; box-sizing: border-box; padding: 8px; border-radius: 8px; border: 2px dashed #6E1F24; color: #6E1F24; font-size: 12px"><b>Prévia: Catequese</b><br>Salão · 14:00–17:00</div></div>
+        </section>
+      </main>
+
+      <aside id="painel-assistente" aria-label="Assistente" style="flex: 1 1 400px; max-width: 440px; box-sizing: border-box; background: #FBF8F2; border-left: 1px solid #E1D7C8; display: flex; flex-direction: column">
+        <div style="display: flex; align-items: center; gap: 8px; padding: 12px 12px 12px 20px; border-bottom: 1px solid #E1D7C8">
+          <div style="flex: 1; min-width: 0; display: flex; flex-direction: column">
+            <span style="font-family: 'Cormorant Garamond', Georgia, serif; font-size: 24px; font-weight: 600; line-height: 1.1">Assistente</span>
+            <span style="font-size: 12px; color: #6B5D57; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Salão no sábado à tarde</span>
+          </div>
+          <a href="PainelConversas.dc.html" aria-label="Ver conversas" style="width: 44px; height: 44px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #4A3D38; text-decoration: none">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+          </a>
+          <button type="button" aria-label="Nova conversa" style="width: 44px; height: 44px; border: none; border-radius: 10px; background: transparent; color: #4A3D38; cursor: pointer; display: flex; align-items: center; justify-content: center">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          </button>
+          <button type="button" aria-label="Fechar assistente" style="width: 44px; height: 44px; border: none; border-radius: 10px; background: transparent; color: #4A3D38; cursor: pointer; display: flex; align-items: center; justify-content: center">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+          </button>
+        </div>
+
+        <div role="log" aria-live="polite" style="flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto">
+          <div style="align-self: flex-end; max-width: 85%; padding: 10px 14px; border-radius: 16px 16px 4px 16px; background: #6E1F24; color: #FBF8F2">O salão paroquial está livre sábado à tarde?</div>
+
+          <div style="display: flex; flex-direction: column; gap: 10px; max-width: 100%">
+            <p style="margin: 0">Sábado, 18/10, o <b>Salão paroquial</b> tem uma reserva de manhã. À tarde está livre:</p>
+            <div style="border: 1px solid #E1D7C8; border-radius: 12px; background: #FFFFFF; overflow: hidden">
+              <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid #EDE5D8">
+                <span style="display: flex; align-items: center; gap: 8px; font-weight: 600"><span style="width: 10px; height: 10px; border-radius: 3px; background: #6E1F24"></span>Salão paroquial · Sáb 18/10</span>
+                <a href="../agenda/OcupacaoDia.dc.html" style="font-size: 13px; font-weight: 600">Ver o dia</a>
+              </div>
+              <div style="display: flex; flex-direction: column">
+                <div style="display: flex; gap: 12px; padding: 8px 14px; color: #6B5D57"><span style="width: 92px; font-variant-numeric: tabular-nums">09:00–12:00</span><span>Encontro de noivos</span></div>
+                <div style="display: flex; gap: 12px; padding: 8px 14px; background: #E2EEE8; color: #1B3D30; font-weight: 600"><span style="width: 92px; font-variant-numeric: tabular-nums">12:00–22:00</span><span>Livre</span></div>
+              </div>
+            </div>
+            <span style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #6B5D57">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              Consultou a agenda de sábado
+            </span>
+          </div>
+
+          <div style="align-self: flex-end; max-width: 85%; padding: 10px 14px; border-radius: 16px 16px 4px 16px; background: #6E1F24; color: #FBF8F2">Reserva das 14h às 17h para a catequese, com o projetor.</div>
+
+          <div style="display: flex; flex-direction: column; gap: 10px">
+            <p style="margin: 0">Antes de gravar, confira:</p>
+            <section aria-label="Reserva proposta" style="border: 1px solid #CDBFAC; border-radius: 12px; background: #FFFFFF; padding: 14px; display: flex; flex-direction: column; gap: 10px">
+              <span style="display: inline-flex; align-self: flex-start; align-items: center; gap: 6px; padding: 2px 10px; border-radius: 999px; background: #F3E8CF; color: #5A4214; font-size: 12px; font-weight: 600">Aguardando sua confirmação</span>
+              <dl style="margin: 0; display: grid; grid-template-columns: 96px minmax(0, 1fr); row-gap: 6px; column-gap: 12px">
+                <dt style="color: #6B5D57">Título</dt><dd style="margin: 0; font-weight: 600">Catequese</dd>
+                <dt style="color: #6B5D57">Grupo</dt><dd style="margin: 0">Catequese infantil</dd>
+                <dt style="color: #6B5D57">Espaço</dt><dd style="margin: 0">Salão paroquial</dd>
+                <dt style="color: #6B5D57">Quando</dt><dd style="margin: 0">Sáb 18/10, 14:00–17:00</dd>
+                <dt style="color: #6B5D57">Equipamento</dt><dd style="margin: 0">Projetor (1 de 1 livre)</dd>
+              </dl>
+              <span style="display: flex; align-items: center; gap: 6px; color: #24513F; font-weight: 600; font-size: 13px">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 5 5L20 7"/></svg>
+                Sem conflito
+              </span>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap">
+                <button type="button" style="flex: 1 1 140px; min-height: 44px; border: none; border-radius: 10px; background: #6E1F24; color: #FBF8F2; font: inherit; font-weight: 600; cursor: pointer">Confirmar reserva</button>
+                <button type="button" style="flex: 1 1 120px; min-height: 44px; border: 1px solid #CDBFAC; border-radius: 10px; background: #FBF8F2; color: #221A17; font: inherit; font-weight: 600; cursor: pointer">Abrir no painel</button>
+              </div>
+            </section>
+          </div>
+        </div>
+
+        <form style="padding: 12px 16px 16px; border-top: 1px solid #E1D7C8; display: flex; flex-direction: column; gap: 10px">
+          <div style="display: flex; gap: 6px; flex-wrap: wrap">
+            <button type="button" style="min-height: 36px; padding: 0 12px; border: 1px solid #E1D7C8; border-radius: 999px; background: #F5F0E6; font: inherit; font-size: 13px; color: #4A3D38; cursor: pointer">O que tem amanhã?</button>
+            <button type="button" style="min-height: 36px; padding: 0 12px; border: 1px solid #E1D7C8; border-radius: 999px; background: #F5F0E6; font: inherit; font-size: 13px; color: #4A3D38; cursor: pointer">Solicitações pendentes</button>
+          </div>
+          <label for="mensagem" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Mensagem para o assistente</label>
+          <div style="display: flex; align-items: flex-end; gap: 4px; padding: 6px; border: 1px solid #CDBFAC; border-radius: 14px; background: #FFFFFF">
+            <button type="button" aria-label="Anexar arquivo" title="Planilhas, PDF, imagens ou texto · até 5 arquivos de 5 MB" style="width: 44px; height: 44px; flex: none; border: none; border-radius: 10px; background: transparent; color: #6B5D57; cursor: pointer; display: flex; align-items: center; justify-content: center">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+            </button>
+            <textarea id="mensagem" rows="2" placeholder="Pergunte ou anexe um arquivo…" style="flex: 1; min-width: 0; border: none; outline: none; resize: none; padding: 6px 0; background: transparent; font: inherit; color: #221A17"></textarea>
+            <button type="submit" aria-label="Enviar mensagem" style="width: 44px; height: 44px; flex: none; border: none; border-radius: 10px; background: #6E1F24; color: #FBF8F2; cursor: pointer; display: flex; align-items: center; justify-content: center">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </button>
+          </div>
+          <span style="font-size: 12px; color: #6B5D57">O assistente só grava algo depois que você confirmar.</span>
+        </form>
+      </aside>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

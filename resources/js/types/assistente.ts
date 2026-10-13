@@ -143,10 +143,24 @@ export type TipoDeAcaoDeCadastro =
 
 export type AcaoProposta = AcaoPropostaDeReserva | AcaoPropostaDeCadastro;
 
+export type TipoDeAnexo = 'planilha' | 'texto' | 'imagem' | 'pdf';
+
+/** Arquivo anexado a uma mensagem do usuário, como o painel mostra (sem o conteúdo). */
+export type AnexoDaMensagem = {
+    id: string;
+    nome: string;
+    tipo: TipoDeAnexo;
+    /** Tamanho do arquivo original, em bytes. */
+    tamanho: number;
+    /** Planilha ou texto grande demais: só o começo foi para o assistente. */
+    truncado: boolean;
+};
+
 export type MensagemDoPainel = {
     id: string;
     papel: 'usuario' | 'assistente';
     conteudo: string;
+    anexos: AnexoDaMensagem[];
     cartoes: Cartao[];
     erro: boolean;
     status: string | null;

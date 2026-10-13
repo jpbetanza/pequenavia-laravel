@@ -11,10 +11,13 @@ use Illuminate\Support\Str;
 
 /**
  * Monta as mensagens enviadas ao modelo: as instruções do sistema e o histórico recente da conversa no formato OpenAI.
+ * Pedido com anexos vira uma lista de partes (texto, blocos `<anexo>`, imagens e PDFs); ver Anexos.
  * O corte nunca começa numa mensagem que não é do usuário, para não separar uma chamada de ferramenta do seu resultado.
  */
 final class MontadorDeContexto
 {
+    public function __construct(private readonly Anexos $anexos) {}
+
     /**
      * @return list<array<string, mixed>>
      */
@@ -125,7 +128,7 @@ final class MontadorDeContexto
     private function paraOModelo(Mensagem $mensagem): array
     {
         return match ($mensagem->papel) {
-            PapelDaMensagem::Usuario => ['role' => 'user', 'content' => $mensagem->conteudo],
+            PapelDaMensagem::Usuario => ['role' => 'user', 'content' => $this->anexos->conteudoParaOModelo($mensagem->conteudo, $mensagem->anexos ?? [])],
             PapelDaMensagem::Ferramenta => ['role' => 'tool', 'tool_call_id' => $mensagem->ferramenta_id, 'content' => $mensagem->conteudo],
             PapelDaMensagem::Assistente => $mensagem->chamadas === null
                 ? ['role' => 'assistant', 'content' => $mensagem->conteudo]

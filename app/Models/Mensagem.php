@@ -25,6 +25,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $tokens_entrada
  * @property int|null $tokens_saida
  * @property bool $erro
+ * @property list<array{id: string, nome: string, tipo: string, tamanho: int, caminho?: string|null, mime?: string|null, texto?: string|null, truncado?: bool}>|null $anexos
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -39,6 +40,7 @@ use Illuminate\Support\Carbon;
     'tokens_entrada',
     'tokens_saida',
     'erro',
+    'anexos',
 ])]
 class Mensagem extends Model
 {
@@ -57,6 +59,7 @@ class Mensagem extends Model
             'cartoes' => 'array',
             'chamadas' => 'array',
             'erro' => 'boolean',
+            'anexos' => 'array',
         ];
     }
 
