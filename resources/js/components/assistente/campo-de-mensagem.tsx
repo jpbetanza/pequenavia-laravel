@@ -38,7 +38,11 @@ export function CampoDeMensagem({
         }
 
         campo.style.height = 'auto';
-        campo.style.height = `${Math.min(campo.scrollHeight, ALTURA_MAXIMA)}px`;
+        const altura = campo.scrollHeight;
+        // Com o painel escondido (display: none) o campo mede 0; fixar 0px o deixaria com a altura
+        // só do padding, cortando o placeholder. Nesse caso vale a altura natural (rows).
+        campo.style.height =
+            altura === 0 ? '' : `${Math.min(altura, ALTURA_MAXIMA)}px`;
     }, [valor]);
 
     function aoTeclar(evento: KeyboardEvent<HTMLTextAreaElement>) {
