@@ -57,7 +57,7 @@ export function CampoDeMensagem({
         (valor.trim() !== '' || anexos.length > 0);
     const cheio = anexos.length >= MAX_ANEXOS;
 
-    // O campo cresce com o texto até ALTURA_MAXIMA e depois rola.
+    // Vazio, o campo tem uma linha, na altura dos botões; cresce com o texto até ALTURA_MAXIMA e depois rola.
     useEffect(() => {
         const campo = campoRef.current;
 
@@ -191,7 +191,7 @@ export function CampoDeMensagem({
                     <textarea
                         ref={campoRef}
                         id="mensagem-assistente"
-                        rows={2}
+                        rows={1}
                         maxLength={LIMITE}
                         value={valor}
                         disabled={enviando}
@@ -199,7 +199,7 @@ export function CampoDeMensagem({
                         onChange={(evento) => aoMudar(evento.target.value)}
                         onKeyDown={aoTeclar}
                         onPaste={aoColar}
-                        className="max-h-40 min-h-0 flex-1 resize-none bg-transparent py-2 outline-none placeholder:text-muted-foreground disabled:opacity-60"
+                        className="max-h-40 min-h-11 flex-1 resize-none bg-transparent py-2.5 leading-6 outline-none placeholder:text-muted-foreground disabled:opacity-60"
                     />
                     {enviando ? (
                         <Button
