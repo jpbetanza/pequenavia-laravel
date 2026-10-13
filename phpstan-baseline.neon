@@ -1,0 +1,499 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,string\|null\>\:\:each\(\) expects callable\(string\|null, int\)\: mixed, Closure\(string\)\: void given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Console/Commands/BaixarFontes.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,string\|null\>\:\:reject\(\) expects bool\|\(callable\(string\|null, int\)\: bool\)\|string\|null, Closure\(string\)\: bool given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Console/Commands/BaixarFontes.php
+
+		-
+			message: '#^Parameter \#1 \$espaco of method App\\Services\\Agenda\\VerificadorDeDisponibilidade\:\:sugestoes\(\) expects App\\Models\\Espaco, App\\Models\\Espaco\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Espaco\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Agendamentos/DisponibilidadeController.php
+
+		-
+			message: '#^Parameter \#1 \$espaco of method App\\Services\\Agenda\\VerificadorDeDisponibilidade\:\:verificar\(\) expects App\\Models\\Espaco, App\\Models\\Espaco\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\Espaco\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Agendamentos/DisponibilidadeController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Equipamento\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Agendamentos/EquipamentoController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Agendamentos\\EquipamentoController\:\:semana\(\) should return list\<array\{data\: string, pico\: int, quantidade\: int\}\> but returns array\<int, array\{data\: string, pico\: int, quantidade\: int\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/Agendamentos/EquipamentoController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Agendamentos\\EquipamentoController\:\:usosPorEquipamento\(\) should return Illuminate\\Support\\Collection\<string, list\<array\{data\: string, inicio\: string, fim\: string, quantidade\: int, espaco\: string\}\>\> but returns Illuminate\\Support\\Collection\<string, non\-empty\-list\<array\{data\: string, inicio\: string, fim\: string, quantidade\: int, espaco\: string\}\>\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/Agendamentos/EquipamentoController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Espaco\:\:\$reservas_na_semana\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Agendamentos/EspacoController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Agendamentos\\EspacoController\:\:recursosSugeridos\(\) should return list\<string\> but returns array\<TKey of \(int\|string\), TValue\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/Agendamentos/EspacoController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Agendamentos\\GrupoController\:\:reunioesFixasPorGrupo\(\) should return array\<string, list\<string\>\> but returns array\<array\<int, string\>\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/Agendamentos/GrupoController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Equipamento\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/Agendamentos/ReservaController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Agendamentos\\ReservaController\:\:espacosDoIntervalo\(\) should return list\<array\<string, mixed\>\> but returns array\<int, array\{id\: string, nome\: string, capacidade\: int\|null, ativo\: bool, cor\: ''azul''\|''bordo''\|''dourado''\|''roxo''\|''verde'', recursos_fixos\: array\<int, string\>, horarios\: array\<int, array\{dia_semana\: int, abre\: string, fecha\: string\}\>, bloqueios\: array\<int, array\{id\: string, inicio\: string, fim\: string, motivo\: string\}\>\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/Agendamentos/ReservaController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Agendamentos\\ReservaController\:\:reservasDoIntervalo\(\) should return list\<array\<string, mixed\>\> but returns array\<int, array\{id\: string, titulo\: string, data\: string, inicio\: string, fim\: string, pessoas\: int\|null, observacoes\: string\|null, serie_id\: string\|null, \.\.\.\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/Agendamentos/ReservaController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Agendamentos\\ReservaController\:\:solicitacoesPendentesDoIntervalo\(\) should return list\<array\<string, mixed\>\> but returns array\<int, array\{id\: string, titulo\: string, nome\: string, telefone\: string, data\: string, inicio\: string, fim\: string, pessoas\: int\|null, \.\.\.\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/Agendamentos/ReservaController.php
+
+		-
+			message: '#^Parameter \#4 \$dados of method App\\Services\\Agenda\\CriadorDeReservas\:\:criar\(\) expects array\{titulo\: string, inicio\: string, fim\: string, pessoas\?\: int\|null, observacoes\?\: string\|null, grupo_id\?\: string\|null\}, array\<string, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Agendamentos/ReservaController.php
+
+		-
+			message: '#^Unable to resolve the template type TKey in call to function collect$#'
+			identifier: argument.templateType
+			count: 1
+			path: app/Http/Controllers/Agendamentos/SolicitacaoPublicaController.php
+
+		-
+			message: '#^Unable to resolve the template type TValue in call to function collect$#'
+			identifier: argument.templateType
+			count: 1
+			path: app/Http/Controllers/Agendamentos/SolicitacaoPublicaController.php
+
+		-
+			message: '#^Parameter \#4 \$dados of method App\\Services\\Agenda\\CriadorDeReservas\:\:criar\(\) expects array\{titulo\: string, inicio\: string, fim\: string, pessoas\?\: int\|null, observacoes\?\: string\|null, grupo_id\?\: string\|null\}, array\<string, mixed\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Assistente/AcaoPropostaController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Conversa\:\:\$previa\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Assistente/ConversaController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Assistente\\ConversaController\:\:cartoesAtuais\(\) should return list\<array\{tipo\: string, dados\: array\<string, mixed\>\}\> but returns array\<int, array\{tipo\: string, dados\: array\<string, mixed\>\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/Assistente/ConversaController.php
+
+		-
+			message: '#^Parameter \#1 \$cartoes of method App\\Http\\Controllers\\Assistente\\ConversaController\:\:cartoesAtuais\(\) expects list\<array\{tipo\: string, dados\: array\<string, mixed\>\}\>, array\<int, array\<string, mixed\>\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Http/Controllers/Assistente/ConversaController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Assistente\\MensagemController\:\:store\(\) has no return type specified\.$#'
+			identifier: missingType.return
+			count: 1
+			path: app/Http/Controllers/Assistente/MensagemController.php
+
+		-
+			message: '#^Call to an undefined method Laravel\\Socialite\\Contracts\\User\:\:getRaw\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/Auth/GoogleController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Auth\\GoogleController\:\:redirect\(\) should return Illuminate\\Http\\RedirectResponse but returns Symfony\\Component\\HttpFoundation\\RedirectResponse\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/Auth/GoogleController.php
+
+		-
+			message: '#^Unable to resolve the template type TKey in call to function collect$#'
+			identifier: argument.templateType
+			count: 1
+			path: app/Http/Controllers/GeracaoCertificadoController.php
+
+		-
+			message: '#^Unable to resolve the template type TValue in call to function collect$#'
+			identifier: argument.templateType
+			count: 1
+			path: app/Http/Controllers/GeracaoCertificadoController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Equipamento\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/InicioController.php
+
+		-
+			message: '#^Cannot call method isoFormat\(\) on Carbon\\CarbonImmutable\|string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Http/Controllers/InicioController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\InicioController\:\:reservasDeHoje\(\) should return list\<array\<string, mixed\>\> but returns array\<int, array\{id\: string, titulo\: string, inicio\: string, fim\: string, espaco\: array\{nome\: string, cor\: ''azul''\|''bordo''\|''dourado''\|''roxo''\|''verde''\}, grupo_nome\: string\|null, equipamentos\: array\<int, array\{nome\: string, quantidade\: int\}\>, situacao\: ''em_andamento''\|''encerrada''\|''proxima''\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/InicioController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\InicioController\:\:solicitacoes\(\) should return array\{total\: int, primeiras\: list\<array\<string, mixed\>\>\} but returns array\{total\: int\<0, max\>, primeiras\: array\<int, non\-empty\-array\<string, mixed\>\>\}\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/InicioController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\ModeloCertificadoController\:\:resumo\(\) should return array\{id\: string, title\: string, description\: string\|null, imagem_url\: string, dono_nome\: string, eh_dono\: bool, pode_editar\: bool, campos_count\: int, \.\.\.\} but returns array\{id\: string, title\: string, description\: string\|null, imagem_url\: string, dono_nome\: string, eh_dono\: bool, pode_editar\: bool, campos_count\: int\<0, max\>, \.\.\.\}\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/ModeloCertificadoController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\ModeloCertificadoController\:\:salvarImagem\(\) should return string but returns string\|false\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/ModeloCertificadoController.php
+
+		-
+			message: '#^Access to an undefined property \(object\|string\)\:\:\$campos\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Requests/GerarCertificadoRequest.php
+
+		-
+			message: '#^Unable to resolve the template type TKey in call to function collect$#'
+			identifier: argument.templateType
+			count: 1
+			path: app/Http/Requests/GerarCertificadoRequest.php
+
+		-
+			message: '#^Unable to resolve the template type TValue in call to function collect$#'
+			identifier: argument.templateType
+			count: 1
+			path: app/Http/Requests/GerarCertificadoRequest.php
+
+		-
+			message: '#^Access to an undefined property \(object\|string\)\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Requests/SalvarCampoCertificadoRequest.php
+
+		-
+			message: '#^Access to an undefined property \(object\|string\)\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Requests/StoreCompartilhamentoRequest.php
+
+		-
+			message: '#^Access to an undefined property \(object\|string\)\:\:\$user\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Requests/StoreCompartilhamentoRequest.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Equipamento\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Services/Agenda/CartaoDeSolicitacao.php
+
+		-
+			message: '#^Method App\\Services\\Agenda\\CartaoDeSolicitacao\:\:equipamentosPedidos\(\) should return list\<array\{id\: string, quantidade\: int\}\> but returns array\<int, array\{id\: string, quantidade\: int\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Agenda/CartaoDeSolicitacao.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Equipamento\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Services/Agenda/PainelDeEquipamentosDeHoje.php
+
+		-
+			message: '#^Method App\\Services\\Agenda\\PainelDeEquipamentosDeHoje\:\:montar\(\) should return array\{rotulo\: string, movimentos\: list\<array\<string, mixed\>\>\} but returns array\{rotulo\: string, movimentos\: array\<int, array\{chave\: string, acao\: string, horario\: string, titulo\: string, espaco\: string, reserva_id\: string, itens\: list\<array\{equipamento_id\: string, nome\: string, quantidade\: int, marcado\: bool\}\>\}\>\}\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Agenda/PainelDeEquipamentosDeHoje.php
+
+		-
+			message: '#^Method App\\Services\\Agenda\\PainelDeEquipamentosDeHoje\:\:movimento\(\) should return array\{chave\: string, acao\: string, horario\: string, titulo\: string, espaco\: string, reserva_id\: string, itens\: list\<array\{equipamento_id\: string, nome\: string, quantidade\: int, marcado\: bool\}\>\} but returns array\{chave\: non\-falsy\-string, acao\: string, horario\: string, titulo\: string, espaco\: string, reserva_id\: string, itens\: array\<int, array\{equipamento_id\: string, nome\: string, quantidade\: int, marcado\: bool\}\>\}\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Agenda/PainelDeEquipamentosDeHoje.php
+
+		-
+			message: '#^Call to function in_array\(\) with arguments ''mensal''\|''nao''\|''semanal'', array\{''nao'', ''semanal'', ''mensal''\} and true will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: app/Services/Agenda/Recorrencia.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Equipamento\:\:\$pivot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Agenda/VerificadorDeDisponibilidade.php
+
+		-
+			message: '#^Method App\\Services\\Agenda\\VerificadorDeDisponibilidade\:\:regraBloqueio\(\) should return list\<App\\Services\\Agenda\\Conflito\> but returns array\<int, App\\Services\\Agenda\\Conflito\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Agenda/VerificadorDeDisponibilidade.php
+
+		-
+			message: '#^Method App\\Services\\Agenda\\VerificadorDeDisponibilidade\:\:regraSalaOcupada\(\) should return list\<App\\Services\\Agenda\\Conflito\> but returns array\<int, App\\Services\\Agenda\\Conflito\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Agenda/VerificadorDeDisponibilidade.php
+
+		-
+			message: '#^Method App\\Services\\Agenda\\VerificadorDeDisponibilidade\:\:sugestoes\(\) should return array\{espacos\: list\<array\{id\: string, nome\: string, capacidade\: int\|null\}\>, horario\: array\{inicio\: string, fim\: string\}\|null\} but returns array\{espacos\: array\<int, array\{id\: string, nome\: string, capacidade\: int\|null\}\>, horario\: array\{inicio\: string, fim\: string\}\|null\}\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Agenda/VerificadorDeDisponibilidade.php
+
+		-
+			message: '#^Property App\\Models\\Conversa\:\:\$ultima_mensagem_em \(Illuminate\\Support\\Carbon\|null\) does not accept Carbon\\CarbonImmutable\.$#'
+			identifier: assign.propertyType
+			count: 2
+			path: app/Services/Assistente/Assistente.php
+
+		-
+			message: '#^Result of yield from \(void\) is used\.$#'
+			identifier: generator.void
+			count: 2
+			path: app/Services/Assistente/Assistente.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$updated_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Assistente/Cadastros/ExecutorDeCadastro.php
+
+		-
+			message: '#^Call to an undefined method object\:\:atualizar\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Services/Assistente/Cadastros/ExecutorDeCadastro.php
+
+		-
+			message: '#^Call to an undefined method object\:\:criar\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Services/Assistente/Cadastros/ExecutorDeCadastro.php
+
+		-
+			message: '#^Call to an undefined method object\:\:excluir\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Services/Assistente/Cadastros/ExecutorDeCadastro.php
+
+		-
+			message: '#^PHPDoc tag @throws with type Symfony\\Component\\HttpKernel\\Exception\\HttpResponseException is not subtype of Throwable$#'
+			identifier: throws.notThrowable
+			count: 1
+			path: app/Services/Assistente/Cadastros/ExecutorDeCadastro.php
+
+		-
+			message: '#^Unable to resolve the template type T in call to method App\\Services\\Assistente\\Cadastros\\ExecutorDeCadastro\:\:gravarComNomeUnico\(\)$#'
+			identifier: argument.templateType
+			count: 2
+			path: app/Services/Assistente/Cadastros/ExecutorDeCadastro.php
+
+		-
+			message: '#^Method App\\Services\\Assistente\\Cadastros\\ExpiracaoDePropostas\:\:expirarPendentesComMesmaChave\(\) should return list\<string\> but returns array\<int, string\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Assistente/Cadastros/ExpiracaoDePropostas.php
+
+		-
+			message: '#^Offset ''dia'' on array\{dia\: string, abre\?\: string, fecha\?\: string, fechado\?\: bool\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: app/Services/Assistente/Cadastros/MescladorDeHorarios.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$updated_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/Assistente/Cadastros/PropostaDeCadastro.php
+
+		-
+			message: '#^Method App\\Services\\Assistente\\Ferramentas\\ProporEspaco\:\:bloqueiosAtuais\(\) should return list\<array\{inicio\: string, fim\: string, motivo\: string\}\> but returns array\<int, array\{inicio\: string, fim\: string, motivo\: string\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Assistente/Ferramentas/ProporEspaco.php
+
+		-
+			message: '#^Method App\\Services\\Assistente\\Ferramentas\\ProporEspaco\:\:horariosAtuais\(\) should return list\<array\{dia_semana\: int, abre\: string, fecha\: string\}\> but returns array\<int, array\{dia_semana\: int, abre\: string, fecha\: string\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Assistente/Ferramentas/ProporEspaco.php
+
+		-
+			message: '#^Method App\\Services\\Assistente\\Ferramentas\\ProporEspaco\:\:linhasExtras\(\) should return list\<array\{rotulo\: string, antes\: string\|null, depois\: string\|null\}\> but returns non\-empty\-array\<array\{rotulo\: ''Bloqueios''\|''Horários'', antes\: null, depois\: string\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Assistente/Ferramentas/ProporEspaco.php
+
+		-
+			message: '#^Method App\\Services\\Assistente\\Ferramentas\\ProporEspaco\:\:listaDe\(\) has parameter \$argumentos with no value type specified in iterable type array\.$#'
+			identifier: missingType.iterableValue
+			count: 1
+			path: app/Services/Assistente/Ferramentas/ProporEspaco.php
+
+		-
+			message: '#^Parameter \#2 \$mudancas of static method App\\Services\\Assistente\\Cadastros\\MescladorDeHorarios\:\:mesclar\(\) expects list\<array\{dia\: string, abre\?\: string, fecha\?\: string, fechado\?\: bool\}\>, list\<array\<string, mixed\>\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Assistente/Ferramentas/ProporEspaco.php
+
+		-
+			message: '#^Parameter \#5 \$equipamentos of method App\\Services\\Agenda\\VerificadorDeDisponibilidade\:\:sugestoes\(\) expects list\<array\{id\: string, quantidade\: int\}\>, array\<int, array\{id\: string, quantidade\: mixed\}\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Assistente/Ferramentas/ProporReserva.php
+
+		-
+			message: '#^Parameter \#5 \$equipamentos of method App\\Services\\Agenda\\VerificadorDeDisponibilidade\:\:verificar\(\) expects list\<array\{id\: string, quantidade\: int\}\>, array\<int, array\{id\: string, quantidade\: mixed\}\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Assistente/Ferramentas/ProporReserva.php
+
+		-
+			message: '#^Unable to resolve the template type TKey in call to function collect$#'
+			identifier: argument.templateType
+			count: 1
+			path: app/Services/Assistente/Ferramentas/ProporReserva.php
+
+		-
+			message: '#^Unable to resolve the template type TValue in call to function collect$#'
+			identifier: argument.templateType
+			count: 1
+			path: app/Services/Assistente/Ferramentas/ProporReserva.php
+
+		-
+			message: '#^Parameter \#1 \$consulta of method App\\Services\\Assistente\\Ferramentas\\ResolvedorDeCadastros\:\:encontrar\(\) expects Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>, Illuminate\\Database\\Eloquent\\Builder\<App\\Models\\Equipamento\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Assistente/Ferramentas/ResolvedorDeCadastros.php
+
+		-
+			message: '#^Parameter \#1 \$consulta of method App\\Services\\Assistente\\Ferramentas\\ResolvedorDeCadastros\:\:encontrar\(\) expects Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>, Illuminate\\Database\\Eloquent\\Builder\<App\\Models\\Espaco\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Assistente/Ferramentas/ResolvedorDeCadastros.php
+
+		-
+			message: '#^Parameter \#1 \$consulta of method App\\Services\\Assistente\\Ferramentas\\ResolvedorDeCadastros\:\:encontrar\(\) expects Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>, Illuminate\\Database\\Eloquent\\Builder\<App\\Models\\Grupo\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Assistente/Ferramentas/ResolvedorDeCadastros.php
+
+		-
+			message: '#^Method App\\Services\\Assistente\\Ferramentas\\VerificarDisponibilidade\:\:reservasDoDia\(\) should return list\<array\{inicio\: string, fim\: string, titulo\: string\}\> but returns array\<int, array\{inicio\: string, fim\: string, titulo\: string\}\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/Assistente/Ferramentas/VerificarDisponibilidade.php
+
+		-
+			message: '#^Parameter \#5 \$equipamentos of method App\\Services\\Agenda\\VerificadorDeDisponibilidade\:\:sugestoes\(\) expects list\<array\{id\: string, quantidade\: int\}\>, array\<int, array\{id\: string, quantidade\: int\}\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Assistente/Ferramentas/VerificarDisponibilidade.php
+
+		-
+			message: '#^Parameter \#5 \$equipamentos of method App\\Services\\Agenda\\VerificadorDeDisponibilidade\:\:verificar\(\) expects list\<array\{id\: string, quantidade\: int\}\>, array\<int, array\{id\: string, quantidade\: int\}\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Services/Assistente/Ferramentas/VerificarDisponibilidade.php
+
+		-
+			message: '#^Unable to resolve the template type TKey in call to function collect$#'
+			identifier: argument.templateType
+			count: 1
+			path: app/Services/Assistente/Ferramentas/VerificarDisponibilidade.php
+
+		-
+			message: '#^Unable to resolve the template type TValue in call to function collect$#'
+			identifier: argument.templateType
+			count: 1
+			path: app/Services/Assistente/Ferramentas/VerificarDisponibilidade.php
+
+		-
+			message: '#^Cannot call method format\(\) on Carbon\\CarbonImmutable\|string\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: app/Services/Assistente/MontadorDeContexto.php
+
+		-
+			message: '#^Cannot call method translatedFormat\(\) on Carbon\\CarbonImmutable\|string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Services/Assistente/MontadorDeContexto.php
+
+		-
+			message: '#^Unable to resolve the template type TKey in call to function collect$#'
+			identifier: argument.templateType
+			count: 1
+			path: app/Services/Assistente/ResumoDaAcao.php
+
+		-
+			message: '#^Unable to resolve the template type TValue in call to function collect$#'
+			identifier: argument.templateType
+			count: 1
+			path: app/Services/Assistente/ResumoDaAcao.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>nome" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 3
+			path: app/Services/Assistente/ResumoDaAcao.php
+
+		-
+			message: '#^Method App\\Services\\CatalogoFontes\:\:familias\(\) should return list\<string\> but returns array\<int, string\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/CatalogoFontes.php
+
+		-
+			message: '#^Method App\\Services\\CatalogoFontes\:\:pesosDisponiveis\(\) should return list\<int\> but returns array\<int, int\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Services/CatalogoFontes.php
