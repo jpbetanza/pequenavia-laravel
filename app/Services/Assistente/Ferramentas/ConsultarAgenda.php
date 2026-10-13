@@ -3,8 +3,10 @@
 namespace App\Services\Assistente\Ferramentas;
 
 use App\Models\Conversa;
+use App\Models\Equipamento;
 use App\Models\Reserva;
 use App\Models\User;
+use App\Services\Agenda\PivotDoEquipamento;
 use Carbon\CarbonImmutable;
 
 /**
@@ -73,7 +75,7 @@ final class ConsultarAgenda implements Ferramenta
             ->whereBetween('data', [$dados['inicio'], $dados['fim']])
             ->when($espaco, fn ($consulta) => $consulta->where('espaco_id', $espaco->id))
             ->when($grupo, fn ($consulta) => $consulta->where('grupo_id', $grupo->id))
-            ->with(['espaco', 'grupo'])
+            ->with(['espaco', 'grupo', 'equipamentos'])
             ->orderBy('data')
             ->orderBy('inicio')
             ->limit(self::LIMITE_DE_RESERVAS)
@@ -87,6 +89,16 @@ final class ConsultarAgenda implements Ferramenta
                 'espaco_nome' => $reserva->espaco->nome,
                 'espaco_cor' => $reserva->espaco->cor->value,
                 'grupo_nome' => $reserva->grupo?->nome,
+                'serie' => $reserva->serie_id !== null,
+                'equipamentos' => $reserva->equipamentos
+                    ->map(fn (Equipamento $equipamento) => [
+                        'nome' => $equipamento->nome,
+                        'quantidade' => PivotDoEquipamento::quantidade($equipamento),
+                        'entregue' => PivotDoEquipamento::entregueEm($equipamento) !== null,
+                        'recolhido' => PivotDoEquipamento::recolhidoEm($equipamento) !== null,
+                    ])
+                    ->values()
+                    ->all(),
             ])
             ->values()
             ->all();
@@ -94,12 +106,15 @@ final class ConsultarAgenda implements Ferramenta
         return new ResultadoDeFerramenta(
             paraOModelo: [
                 'reservas' => array_map(fn (array $reserva) => [
+                    'id' => $reserva['id'],
                     'titulo' => $reserva['titulo'],
                     'data' => $reserva['data'],
                     'inicio' => $reserva['inicio'],
                     'fim' => $reserva['fim'],
                     'espaco' => $reserva['espaco_nome'],
                     'grupo' => $reserva['grupo_nome'],
+                    'serie' => $reserva['serie'],
+                    'equipamentos' => $reserva['equipamentos'],
                 ], $reservas),
             ],
             cartao: [

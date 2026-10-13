@@ -6,10 +6,13 @@ use App\Services\Assistente\CaixaDeFerramentas;
 use App\Services\Assistente\Ferramentas\ConsultarAgenda;
 use App\Services\Assistente\Ferramentas\ListarCadastros;
 use App\Services\Assistente\Ferramentas\ListarSolicitacoes;
+use App\Services\Assistente\Ferramentas\MarcarEquipamento;
 use App\Services\Assistente\Ferramentas\ProporEquipamento;
 use App\Services\Assistente\Ferramentas\ProporEspaco;
 use App\Services\Assistente\Ferramentas\ProporGrupo;
+use App\Services\Assistente\Ferramentas\ProporMudancaNaReserva;
 use App\Services\Assistente\Ferramentas\ProporReserva;
+use App\Services\Assistente\Ferramentas\ResponderSolicitacao;
 use App\Services\Assistente\Ferramentas\ResumoDeCertificados;
 use App\Services\Assistente\Ferramentas\VerificarDisponibilidade;
 use App\Services\Push\CanalDePush;
@@ -42,6 +45,9 @@ class AppServiceProvider extends ServiceProvider
             $app->make(ProporGrupo::class),
             $app->make(ProporEquipamento::class),
             $app->make(ProporEspaco::class),
+            $app->make(ResponderSolicitacao::class),
+            $app->make(ProporMudancaNaReserva::class),
+            $app->make(MarcarEquipamento::class),
         ]));
     }
 

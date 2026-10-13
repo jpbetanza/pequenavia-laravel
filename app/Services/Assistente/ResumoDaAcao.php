@@ -8,6 +8,7 @@ use App\Models\Equipamento;
 use App\Models\Espaco;
 use App\Models\Grupo;
 use App\Services\Assistente\Cadastros\ChaveDaProposta;
+use App\Services\Assistente\Operacoes\Operacoes;
 
 /**
  * Monta o cartão `acao_proposta` com os nomes atuais dos cadastros. Cadastro apagado aparece como "removido".
@@ -19,6 +20,10 @@ final class ResumoDaAcao
      */
     public function paraCartao(AcaoProposta $acao): array
     {
+        if (Operacoes::ehOperacao($acao->tipo)) {
+            return $this->paraOperacao($acao);
+        }
+
         if ($acao->tipo !== 'criar_reserva') {
             return $this->paraCadastro($acao);
         }
@@ -87,6 +92,31 @@ final class ResumoDaAcao
             'resultado' => $acao->status === StatusDaAcao::Confirmada
                 ? ['cadastro_id' => $acao->resultado_id, 'entidade' => $dados['entidade']]
                 : null,
+        ];
+    }
+
+    /**
+     * Cartão de uma operação sobre a agenda (responder solicitação, alterar ou cancelar reserva, marcar equipamento).
+     * As linhas e os avisos são os do momento da proposta; o link aparece depois de confirmada.
+     *
+     * @return array{id: string, status: string, tipo: string, chave: string, operacao: array<string, mixed>, resultado: array{link: string}|null}
+     */
+    private function paraOperacao(AcaoProposta $acao): array
+    {
+        $dados = $acao->dados;
+
+        return [
+            'id' => $acao->id,
+            'status' => $acao->status->value,
+            'tipo' => $acao->tipo,
+            'chave' => ChaveDaProposta::de($acao->tipo, $dados),
+            'operacao' => [
+                'titulo' => $dados['titulo'],
+                'linhas' => $dados['linhas'] ?? [],
+                'avisos' => $dados['avisos'] ?? [],
+                ...Operacoes::APRESENTACAO[$acao->tipo],
+            ],
+            'resultado' => $acao->status === StatusDaAcao::Confirmada ? ['link' => $dados['link']] : null,
         ];
     }
 }

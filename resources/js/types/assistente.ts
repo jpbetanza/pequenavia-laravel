@@ -141,7 +141,46 @@ export type TipoDeAcaoDeCadastro =
     | 'alterar_equipamento'
     | 'excluir_equipamento';
 
-export type AcaoProposta = AcaoPropostaDeReserva | AcaoPropostaDeCadastro;
+/** Operação sobre o que já existe na agenda: responder solicitação, alterar ou cancelar reserva, marcar equipamento. */
+export type TipoDeOperacao =
+    | 'aprovar_solicitacao'
+    | 'recusar_solicitacao'
+    | 'alterar_reserva'
+    | 'cancelar_reserva'
+    | 'entregar_equipamento'
+    | 'recolher_equipamento';
+
+/** Operação que o assistente propôs. Os textos (botão, selo, aviso de sucesso) vêm do servidor. */
+export type AcaoPropostaDeOperacao = {
+    id: string;
+    status: StatusDaAcao;
+    tipo: TipoDeOperacao;
+    chave?: string;
+    operacao: {
+        titulo: string;
+        linhas: {
+            rotulo: string;
+            antes: string | null;
+            depois: string | null;
+        }[];
+        avisos: string[];
+        /** Texto do botão de confirmar. */
+        botao: string;
+        /** Selo depois de confirmada (ex.: "Aprovada"). */
+        feito: string;
+        /** Aviso depois de confirmar. */
+        sucesso: string;
+        /** Pinta o botão de vermelho (recusar, cancelar). */
+        destrutiva: boolean;
+    };
+    /** Depois de confirmada: onde ver o resultado. */
+    resultado: { link: string } | null;
+};
+
+export type AcaoProposta =
+    | AcaoPropostaDeReserva
+    | AcaoPropostaDeCadastro
+    | AcaoPropostaDeOperacao;
 
 export type TipoDeAnexo = 'planilha' | 'texto' | 'imagem' | 'pdf';
 

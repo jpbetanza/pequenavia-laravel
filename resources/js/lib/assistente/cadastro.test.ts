@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vite-plus/test';
-import { linkDoCadastro, normalizarAcao, rotuloDoSelo } from './cadastro';
+import type { AcaoProposta } from '@/types/assistente';
+import {
+    ehOperacao,
+    linkDoCadastro,
+    normalizarAcao,
+    rotuloDoSelo,
+    tituloDaAcao,
+} from './cadastro';
 
 describe('rotuloDoSelo', () => {
     it('pede confirmação enquanto a proposta está pendente, qualquer que seja a operação', () => {
@@ -86,5 +93,49 @@ describe('normalizarAcao', () => {
         });
 
         expect(cadastro.tipo).toBe('excluir_grupo');
+    });
+});
+
+describe('ehOperacao e tituloDaAcao', () => {
+    const operacao: AcaoProposta = {
+        id: 'a1',
+        status: 'proposta',
+        tipo: 'aprovar_solicitacao',
+        chave: 'solicitacao:s1',
+        operacao: {
+            titulo: 'Aprovar solicitação: Ensaio do coral',
+            linhas: [],
+            avisos: [],
+            botao: 'Aprovar solicitação',
+            feito: 'Aprovada',
+            sucesso: 'Solicitação aprovada e reserva criada.',
+            destrutiva: false,
+        },
+        resultado: null,
+    };
+    const cadastro: AcaoProposta = {
+        id: 'a2',
+        status: 'proposta',
+        tipo: 'criar_grupo',
+        cadastro: {
+            entidade: 'grupo',
+            operacao: 'criar',
+            titulo: 'Novo grupo: Coral',
+            linhas: [],
+            avisos: [],
+        },
+        resultado: null,
+    };
+
+    it('separa as operações sobre a agenda dos cadastros', () => {
+        expect(ehOperacao(operacao)).toBe(true);
+        expect(ehOperacao(cadastro)).toBe(false);
+    });
+
+    it('dá o título de qualquer proposta', () => {
+        expect(tituloDaAcao(operacao)).toBe(
+            'Aprovar solicitação: Ensaio do coral',
+        );
+        expect(tituloDaAcao(cadastro)).toBe('Novo grupo: Coral');
     });
 });

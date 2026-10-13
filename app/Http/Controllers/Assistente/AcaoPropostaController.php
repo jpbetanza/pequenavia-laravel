@@ -11,6 +11,8 @@ use App\Models\Grupo;
 use App\Models\User;
 use App\Services\Agenda\CriadorDeReservas;
 use App\Services\Assistente\Cadastros\ExecutorDeCadastro;
+use App\Services\Assistente\Operacoes\ExecutorDeOperacao;
+use App\Services\Assistente\Operacoes\Operacoes;
 use App\Services\Assistente\ResumoDaAcao;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\JsonResponse;
@@ -29,6 +31,7 @@ class AcaoPropostaController extends Controller
         private readonly CriadorDeReservas $criador,
         private readonly ResumoDaAcao $resumo,
         private readonly ExecutorDeCadastro $cadastros,
+        private readonly ExecutorDeOperacao $operacoes,
     ) {}
 
     public function confirmar(Request $request, AcaoProposta $acao): JsonResponse
@@ -38,6 +41,16 @@ class AcaoPropostaController extends Controller
         DB::transaction(function () use ($request, $acao): void {
             $pendente = $this->pendenteTravada($acao);
             $usuario = $request->user();
+
+            if (Operacoes::ehOperacao($pendente->tipo)) {
+                $pendente->update([
+                    'status' => StatusDaAcao::Confirmada,
+                    'resultado_id' => $this->operacoes->executar($usuario, $pendente),
+                    'confirmada_em' => now(),
+                ]);
+
+                return;
+            }
 
             if ($pendente->tipo !== 'criar_reserva') {
                 $cadastroId = $this->cadastros->executar($usuario, $pendente);
