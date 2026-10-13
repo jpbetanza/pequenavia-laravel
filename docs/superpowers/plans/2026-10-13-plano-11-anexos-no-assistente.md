@@ -16,7 +16,7 @@
 
 **Tech stack:** Laravel 13, Pest, Inertia 3 + React 19 + Tailwind 4 + shadcn, Wayfinder, SheetJS, Vitest.
 
-**Design de referência:** canvas "PequenaVia — telas reimaginadas", pasta `assistente/` (`PainelLateral`, `AssistenteCelular` atualizados com o clipe e os anexos; `PainelArrastando` novo, com a área de soltar e uma importação em andamento).
+**Design de referência:** `docs/superpowers/design/assistente/` (cópia da pasta `assistente/` do canvas "PequenaVia — telas reimaginadas"): `PainelLateral` e `AssistenteCelular` com o clipe; novos `ImportarPlanilha` (importação com "Confirmar todas"), `ArrastarArquivo` (área de soltar) e `AnexosCelular` (anexos prontos para envio).
 
 ## Restrições
 
