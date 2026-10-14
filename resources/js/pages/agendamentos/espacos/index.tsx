@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import { Building2, Info, Pencil, Plus } from 'lucide-react';
 import CabecalhoDaPagina from '@/components/cabecalho-da-pagina';
+import { ConviteDaTelaVazia } from '@/components/primeiros-passos/convite-da-tela-vazia';
 import { Button } from '@/components/ui/button';
 import { corDoEspaco } from '@/lib/agenda/cores';
 import { resumirHorarios } from '@/lib/agenda/horarios';
@@ -48,6 +49,10 @@ export default function Espacos({ espacos }: Props) {
                         </Button>
                     }
                 />
+
+                {espacos.length === 0 && (
+                    <ConviteDaTelaVazia cadastro="espacos" />
+                )}
 
                 {espacos.length === 0 ? (
                     <section

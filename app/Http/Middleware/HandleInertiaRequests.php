@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Enums\StatusSolicitacao;
+use App\Services\PrimeirosPassos\PrimeirosPassos;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -48,6 +49,7 @@ class HandleInertiaRequests extends Middleware
                     ->where('status', StatusSolicitacao::Pendente)
                     ->count(),
             ],
+            'primeiros_passos' => fn () => $request->user() === null ? null : app(PrimeirosPassos::class)->estado($request->user()),
             'assistente' => fn () => $request->user() === null ? null : [
                 'disponivel' => filled(config('assistente.chave')),
             ],

@@ -4,6 +4,11 @@ import { AtalhoDeCertificados } from '@/components/inicio/atalho-de-certificados
 import { HojeNasSalas } from '@/components/inicio/hoje-nas-salas';
 import { PedidosDoInicio } from '@/components/inicio/pedidos-do-inicio';
 import { SaudacaoDoInicio } from '@/components/inicio/saudacao-do-inicio';
+import {
+    BannerDeBoasVindas,
+    BannerDeConcluido,
+} from '@/components/primeiros-passos/banner-de-boas-vindas';
+import { FaixaDeAndamento } from '@/components/primeiros-passos/faixa-de-andamento';
 import { Button } from '@/components/ui/button';
 import { equipamentosParaSeparar, resumoDoDia } from '@/lib/inicio/resumo';
 import { index as equipamentos } from '@/routes/agendamentos/equipamentos';
@@ -16,7 +21,8 @@ export default function Inicio({
     equipamentos_hoje,
     certificados,
 }: PropsDoInicio) {
-    const { auth } = usePage().props;
+    const { auth, primeiros_passos: roteiro } = usePage().props;
+    const roteiroVisivel = roteiro !== null && !roteiro.adiado;
     const resumo = resumoDoDia({
         reservas: reservas.length,
         pedidos: solicitacoes.total,
@@ -27,11 +33,27 @@ export default function Inicio({
         <>
             <Head title="Início" />
             <div className="@container flex min-w-0 flex-col gap-6 p-4 md:p-7">
-                <SaudacaoDoInicio
-                    hoje={hoje}
-                    nome={auth.user.name}
-                    resumo={resumo}
-                />
+                {roteiroVisivel && roteiro.fase === 'inicio' ? (
+                    <BannerDeBoasVindas
+                        roteiro={roteiro}
+                        nome={auth.user.name}
+                    />
+                ) : roteiroVisivel && roteiro.fase === 'concluido' ? (
+                    <BannerDeConcluido
+                        roteiro={roteiro}
+                        nome={auth.user.name}
+                    />
+                ) : (
+                    <SaudacaoDoInicio
+                        hoje={hoje}
+                        nome={auth.user.name}
+                        resumo={resumo}
+                    />
+                )}
+
+                {roteiroVisivel && roteiro.fase === 'andamento' && (
+                    <FaixaDeAndamento roteiro={roteiro} />
+                )}
 
                 <div className="grid grid-cols-1 items-start gap-6 @4xl:grid-cols-2">
                     <HojeNasSalas reservas={reservas} />

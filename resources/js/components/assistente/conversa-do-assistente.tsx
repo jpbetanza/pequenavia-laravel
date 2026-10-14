@@ -6,6 +6,7 @@ import {
     store as criarConversa,
 } from '@/actions/App/Http/Controllers/Assistente/ConversaController';
 import { store as enviarAoAssistente } from '@/actions/App/Http/Controllers/Assistente/MensagemController';
+import type { PerguntaDeFora } from '@/hooks/use-assistente';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import {
@@ -33,7 +34,9 @@ import type {
     Cartao as TipoDeCartao,
     MensagemDoPainel,
 } from '@/types/assistente';
+import { FaixaDoRoteiroNoAssistente } from '@/components/primeiros-passos/faixa-do-roteiro-no-assistente';
 import { Anexo } from './anexo';
+import { BotaoCopiar } from './botao-copiar';
 import { CampoDeMensagem } from './campo-de-mensagem';
 import { Cartao } from './cartoes/cartao';
 import { ConfirmarTodas } from './cartoes/confirmar-todas';
@@ -70,7 +73,7 @@ type Props = {
     /** Avisa o painel quando a resposta começa e quando termina, para a lista desabilitar a troca de conversa. */
     aoMudarEnviando: (enviando: boolean) => void;
     /** Pergunta a enviar assim que esta conversa (nova) monta. */
-    perguntaInicial?: string | null;
+    perguntaInicial?: PerguntaDeFora | null;
     aoPerguntaEnviada?: () => void;
 };
 
@@ -207,31 +210,37 @@ export function ConversaDoAssistente({
 
         const agendado = window.setTimeout(() => {
             aoPerguntaEnviada?.();
-            void enviar(perguntaInicial);
+            void enviarDeFora(perguntaInicial);
         }, 0);
 
         return () => window.clearTimeout(agendado);
         // Só ao montar a conversa nova: a pergunta inicial não muda depois disso.
     }, []);
 
+    /** Lê os arquivos para anexar; os que não dão para ler viram um aviso e ficam de fora. */
+    async function lerArquivos(arquivos: File[]): Promise<AnexoPreparado[]> {
+        const lidos = await Promise.allSettled(arquivos.map(prepararAnexo));
+
+        for (const lido of lidos) {
+            if (lido.status === 'rejected') {
+                toast.error(
+                    lido.reason instanceof AnexoRecusado
+                        ? lido.reason.message
+                        : 'Não consegui ler um dos arquivos.',
+                );
+            }
+        }
+
+        return lidos.flatMap((lido) =>
+            lido.status === 'fulfilled' ? [lido.value] : [],
+        );
+    }
+
     async function adicionarArquivos(arquivos: File[]) {
         setPreparando((atual) => atual + 1);
 
         try {
-            const lidos = await Promise.allSettled(arquivos.map(prepararAnexo));
-            const prontos = lidos.flatMap((lido) =>
-                lido.status === 'fulfilled' ? [lido.value] : [],
-            );
-
-            for (const lido of lidos) {
-                if (lido.status === 'rejected') {
-                    toast.error(
-                        lido.reason instanceof AnexoRecusado
-                            ? lido.reason.message
-                            : 'Não consegui ler um dos arquivos.',
-                    );
-                }
-            }
+            const prontos = await lerArquivos(arquivos);
 
             setAnexos((atuais) => {
                 const { anexos: juntos, recusadosPeloLimite } = juntarAnexos(
@@ -249,6 +258,28 @@ export function ConversaDoAssistente({
             });
         } finally {
             setPreparando((atual) => atual - 1);
+        }
+    }
+
+    /** Pergunta vinda de fora do painel: lê os arquivos que vieram junto e envia tudo numa mensagem só. */
+    async function enviarDeFora({ texto, arquivos }: PerguntaDeFora) {
+        if (arquivos.length === 0) {
+            await enviar(texto);
+
+            return;
+        }
+
+        setPreparando((atual) => atual + 1);
+        let prontos: AnexoPreparado[];
+
+        try {
+            prontos = juntarAnexos([], await lerArquivos(arquivos)).anexos;
+        } finally {
+            setPreparando((atual) => atual - 1);
+        }
+
+        if (prontos.length > 0) {
+            await enviar(texto, prontos);
         }
     }
 
@@ -522,6 +553,8 @@ export function ConversaDoAssistente({
                 </Button>
             </header>
 
+            <FaixaDoRoteiroNoAssistente />
+
             <div
                 ref={registroRef}
                 role="log"
@@ -604,6 +637,12 @@ export function ConversaDoAssistente({
                                     </p>
                                 )
                             )}
+
+                            {!mensagem.erro &&
+                                !mensagem.pendente &&
+                                mensagem.conteudo !== '' && (
+                                    <BotaoCopiar texto={mensagem.conteudo} />
+                                )}
 
                             {mensagem.cartoes.map((cartao, indice) => (
                                 <Cartao

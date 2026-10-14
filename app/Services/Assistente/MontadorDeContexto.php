@@ -6,6 +6,7 @@ use App\Enums\PapelDaMensagem;
 use App\Models\Conversa;
 use App\Models\Mensagem;
 use App\Models\User;
+use App\Services\PrimeirosPassos\PrimeirosPassos;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
@@ -16,7 +17,10 @@ use Illuminate\Support\Str;
  */
 final class MontadorDeContexto
 {
-    public function __construct(private readonly Anexos $anexos) {}
+    public function __construct(
+        private readonly Anexos $anexos,
+        private readonly PrimeirosPassos $primeirosPassos,
+    ) {}
 
     /**
      * @return list<array<string, mixed>>
@@ -32,6 +36,7 @@ final class MontadorDeContexto
             'diaDaSemana' => $agora->translatedFormat('l'),
             'hora' => $agora->format('H:i'),
             'linkDoFormulario' => route('reservar.create', $usuario->agendaSlug()),
+            'primeirosPassos' => $this->primeirosPassos->estado($usuario),
         ])->render();
 
         $historico = $this->historico($conversa);

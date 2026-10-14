@@ -10,6 +10,7 @@ use App\Models\Solicitacao;
 use App\Models\User;
 use App\Services\Agenda\CartaoDeSolicitacao;
 use App\Services\Agenda\PainelDeEquipamentosDeHoje;
+use App\Services\PrimeirosPassos\PrimeirosPassos;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -25,11 +26,13 @@ class InicioController extends Controller
     public function __construct(
         private readonly CartaoDeSolicitacao $cartoes,
         private readonly PainelDeEquipamentosDeHoje $painelDeHoje,
+        private readonly PrimeirosPassos $primeirosPassos,
     ) {}
 
     public function __invoke(Request $request): Response
     {
         $user = $request->user();
+        $this->primeirosPassos->registrarInicio($user);
         $fuso = config('agendamentos.fuso');
         $agora = CarbonImmutable::now($fuso);
         $horaAtual = $agora->format('H:i');

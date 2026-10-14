@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>PequenaVia — espaços, ainda vazio</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&amp;family=Instrument+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F0E6}
+a{color:#6E1F24}a:hover{color:#4E1418}
+</style>
+</helmet>
+<div style="min-height: 900px; display: flex; flex-direction: column; background: #F5F0E6; color: #221A17; font-family: 'Instrument Sans', system-ui, sans-serif; font-size: 14px; line-height: 1.45">
+
+  <header style="display: flex; flex-direction: column; background: #FBF8F2; border-bottom: 1px solid #E1D7C8">
+    <div style="display: flex; align-items: center; gap: 24px; padding: 0 24px; min-height: 64px; flex-wrap: wrap">
+      <a href="Inicio.dc.html" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: #221A17">
+        <span style="width: 36px; height: 36px; border-radius: 999px; background: #F5F0E6; display: flex; align-items: center; justify-content: center"><img src="/_blob/50066c2efa3bd703f79bbba990bb7aa8" alt="" style="width: 28px; height: 28px; object-fit: contain"></span>
+        <span style="font-family: 'Cormorant Garamond', Georgia, serif; font-size: 23px; font-weight: 700">PequenaVia</span>
+      </a>
+      <nav aria-label="Navegação do app" style="display: flex; gap: 4px; flex: 1; flex-wrap: wrap">
+        <a href="Inicio.dc.html" style="display: flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 10px; color: #4A3D38; font-weight: 600; text-decoration: none">Início</a>
+        <a href="EspacosVazio.dc.html" aria-current="page" style="display: flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 10px; color: #6E1F24; font-weight: 600; text-decoration: underline; text-underline-offset: 6px">Agendamentos</a>
+        <a href="../Modelos.dc.html" style="display: flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 10px; color: #4A3D38; font-weight: 600; text-decoration: none">Certificados</a>
+      </nav>
+      <a href="ConversaGuiada.dc.html" style="display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border: 1px solid #CDBFAC; border-radius: 999px; background: #FBF8F2; font-weight: 600; color: #221A17; text-decoration: none">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/><path d="M8.5 11h7M8.5 14h4"/></svg>
+        Assistente
+      </a>
+    </div>
+    <nav aria-label="Páginas de Agendamentos" style="display: flex; gap: 4px; padding: 0 24px; flex-wrap: wrap">
+      <a href="../agenda/Calendario.dc.html" style="display: flex; align-items: center; min-height: 44px; padding: 0 12px; color: #4A3D38; text-decoration: none">Calendário</a>
+      <a href="../agenda/Solicitacoes.dc.html" style="display: flex; align-items: center; min-height: 44px; padding: 0 12px; color: #4A3D38; text-decoration: none">Solicitações</a>
+      <a href="EspacosVazio.dc.html" aria-current="page" style="display: flex; align-items: center; min-height: 44px; padding: 0 12px; color: #6E1F24; font-weight: 600; text-decoration: none; box-shadow: inset 0 -2px 0 #6E1F24">Espaços</a>
+      <a href="../agenda/Equipamentos.dc.html" style="display: flex; align-items: center; min-height: 44px; padding: 0 12px; color: #4A3D38; text-decoration: none">Equipamentos</a>
+      <a href="../agenda/Grupos.dc.html" style="display: flex; align-items: center; min-height: 44px; padding: 0 12px; color: #4A3D38; text-decoration: none">Grupos e pastorais</a>
+    </nav>
+  </header>
+
+  <main style="flex: 1; width: 100%; max-width: 1120px; margin: 0 auto; padding: 32px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px">
+    <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap">
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <h1 style="margin: 0; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 44px; font-weight: 600; line-height: 1">Espaços</h1>
+        <p style="margin: 0; color: #6B5D57">Salas e lugares que podem ser reservados.</p>
+      </div>
+      <a href="../agenda/EditarEspaco.dc.html" style="display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border: 1px solid #CDBFAC; border-radius: 10px; color: #221A17; font-weight: 600; text-decoration: none">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Novo espaço</a>
+    </div>
+
+    <!-- Convite: a tela vazia vira o começo da conversa -->
+    <section aria-labelledby="nenhum" style="border: 1px solid #E1D7C8; border-radius: 20px; background: #FBF8F2; padding: 28px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 28px">
+      <div style="display: flex; flex-direction: column; gap: 16px">
+        <h2 id="nenhum" style="margin: 0; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 34px; font-weight: 600; line-height: 1.05">Nenhum espaço ainda. Conte ao assistente como são as salas.</h2>
+        <p style="margin: 0; color: #4A3D38; font-size: 15px">Escreva do jeito que você falaria. Ele entende nome, quantas pessoas cabem, os recursos e os horários, e prepara o cadastro para você confirmar.</p>
+        <form style="display: flex; flex-direction: column; gap: 8px" onsubmit="return false">
+          <label for="descricao-salas" style="font-weight: 600">Descreva os espaços</label>
+          <div style="display: flex; align-items: flex-end; gap: 6px; padding: 6px; border: 1px solid #CDBFAC; border-radius: 14px; background: #FFFFFF">
+            <textarea id="descricao-salas" rows="3" style="flex: 1; min-width: 0; border: none; outline: none; resize: none; padding: 8px 6px; background: transparent; font: inherit; font-size: 15px; color: #221A17">Salão paroquial para 120 pessoas, com som e projetor, de segunda a sábado das 8h às 22h</textarea>
+            <button type="submit" style="display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border: none; border-radius: 10px; background: #6E1F24; color: #FBF8F2; font: inherit; font-weight: 600; cursor: pointer; white-space: nowrap">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/></svg>Enviar ao assistente</button>
+          </div>
+          <span style="font-size: 13px; color: #6B5D57">Abre o painel do assistente com este texto. Nada é gravado antes de você confirmar.</span>
+        </form>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 12px">
+        <label for="planilha-espacos" style="flex: 1; min-height: 180px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 24px; border: 1.5px dashed #CDBFAC; border-radius: 16px; background: #F5F0E6; text-align: center; cursor: pointer">
+          <span style="width: 48px; height: 48px; border-radius: 14px; background: #EFE8DB; display: flex; align-items: center; justify-content: center; color: #6E1F24">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M20 15v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-4"/></svg>
+          </span>
+          <b style="font-size: 15px">Solte a planilha das salas aqui</b>
+          <span style="color: #6B5D57">Excel, CSV, PDF ou até a foto de uma lista. O assistente lê e propõe tudo de uma vez.</span>
+          <input id="planilha-espacos" type="file" accept=".xlsx,.xls,.csv,.pdf,image/*" style="position: absolute; width: 1px; height: 1px; opacity: 0">
+        </label>
+        <p style="margin: 0; color: #6B5D57">Prefere preencher campo a campo? Use <a href="../agenda/EditarEspaco.dc.html" style="font-weight: 600">Novo espaço</a>.</p>
+      </div>
+    </section>
+
+    <!-- Próximo passo do roteiro, discreto -->
+    <aside aria-label="Primeiros passos" style="display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-radius: 14px; background: #EFE8DB; flex-wrap: wrap">
+      <span style="font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #6E1F24">Primeiros passos · 0 de 5</span>
+      <span style="flex: 1 1 240px; color: #4A3D38">Depois dos espaços vêm equipamentos, grupos, o link do formulário e os avisos no celular.</span>
+      <a href="Inicio.dc.html" style="font-weight: 600; text-decoration: none">Ver o roteiro →</a>
+    </aside>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import DialogoDeEquipamento from '@/components/agendamentos/dialogo-de-equipamento';
 import PainelDeEquipamentosDeHoje from '@/components/agendamentos/painel-de-equipamentos-de-hoje';
 import CabecalhoDaPagina from '@/components/cabecalho-da-pagina';
+import { ConviteDaTelaVazia } from '@/components/primeiros-passos/convite-da-tela-vazia';
 import { Button } from '@/components/ui/button';
 import {
     Table,
@@ -110,6 +111,10 @@ export default function Equipamentos({ equipamentos, hoje }: Props) {
                         </Button>
                     }
                 />
+
+                {equipamentos.length === 0 && (
+                    <ConviteDaTelaVazia cadastro="equipamentos" />
+                )}
 
                 <section
                     aria-label="Equipamentos cadastrados"

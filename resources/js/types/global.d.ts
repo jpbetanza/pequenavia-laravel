@@ -1,4 +1,5 @@
 import type { Auth } from '@/types/auth';
+import type { PrimeirosPassos } from '@/types/primeiros-passos';
 
 declare module 'react' {
     interface InputHTMLAttributes<T> {
@@ -14,6 +15,7 @@ declare module '@inertiajs/core' {
             sidebarOpen: boolean;
             agenda: { solicitacoes_pendentes: number } | null;
             assistente: { disponivel: boolean } | null;
+            primeiros_passos: PrimeirosPassos | null;
             [key: string]: unknown;
         };
     }
