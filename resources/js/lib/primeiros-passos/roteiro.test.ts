@@ -14,6 +14,7 @@ const roteiro: PrimeirosPassos = {
     total: 5,
     atual: 'formulario',
     adiado: false,
+    mostrar_modal: false,
     passos: [
         {
             chave: 'espacos',

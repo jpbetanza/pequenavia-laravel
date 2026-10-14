@@ -173,3 +173,31 @@
         print-color-adjust: exact;
     }
 }
+
+/* Modal de boas-vindas: sobe ao abrir; os cards entram pelo lado para onde se navega. */
+@keyframes boas-vindas-fundo {
+    from {
+        opacity: 0;
+    }
+}
+
+@keyframes boas-vindas-subir {
+    from {
+        opacity: 0;
+        transform: translateY(40px);
+    }
+}
+
+@keyframes boas-vindas-da-direita {
+    from {
+        opacity: 0;
+        transform: translateX(36px);
+    }
+}
+
+@keyframes boas-vindas-da-esquerda {
+    from {
+        opacity: 0;
+        transform: translateX(-36px);
+    }
+}
