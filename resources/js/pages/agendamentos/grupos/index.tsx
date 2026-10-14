@@ -3,6 +3,7 @@ import { Pencil, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 import DialogoDeGrupo from '@/components/agendamentos/dialogo-de-grupo';
 import CabecalhoDaPagina from '@/components/cabecalho-da-pagina';
+import { ConviteDaTelaVazia } from '@/components/primeiros-passos/convite-da-tela-vazia';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -66,6 +67,10 @@ export default function Grupos({ grupos }: Props) {
                         </>
                     }
                 />
+
+                {grupos.length === 0 && (
+                    <ConviteDaTelaVazia cadastro="grupos" />
+                )}
 
                 <section
                     aria-label="Grupos e pastorais cadastrados"

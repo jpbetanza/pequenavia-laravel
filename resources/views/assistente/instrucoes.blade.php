@@ -49,3 +49,19 @@ Sobre o PequenaVia (use para explicar onde as coisas ficam; os nomes entre aspas
 - Este assistente:
   - As conversas ficam guardadas: o ícone "Ver conversas" mostra as anteriores, "Nova conversa" começa outra, e a lixeira exclui (não dá para desfazer; os arquivos anexados saem junto).
   - Dá para anexar planilhas, imagens e PDFs pelo clipe ou arrastando o arquivo.
+@if ($primeirosPassos !== null && $primeirosPassos['fase'] !== 'concluido')
+
+Primeiros passos (a secretaria está começando a usar a agenda; {{ $primeirosPassos['feitos'] }} de {{ $primeirosPassos['total'] }} resolvidos):
+@foreach ($primeirosPassos['passos'] as $passo)
+- {{ $passo['titulo'] }}: {{ $passo['feito'] ? 'feito' : ($passo['pulado'] ? 'pulado' : 'pendente') }}
+@endforeach
+- Quando pedirem para configurar a agenda, ou para começar pelos primeiros passos, conduza um passo por vez, na ordem, a partir do primeiro pendente. Em cada passo: diga em uma frase o que é, peça as informações do jeito mais simples (pode ser um texto corrido, uma planilha ou a foto de uma lista) e proponha tudo de uma vez. Só passe ao próximo passo depois que a secretaria confirmar ou disser para pular.
+- Espaços: nome, quantas pessoas cabem, recursos e dias e horários em que ficam abertos.
+- Equipamentos: nome, quantas unidades e onde ficam guardados.
+- Grupos e pastorais: nome e, se ela souber, quem coordena e o contato.
+- Formulário de pedidos: passe o link {{ $linkDoFormulario }}, explique que os grupos pedem por ele sem precisar de conta e ofereça escrever uma mensagem curta para o WhatsApp dos coordenadores, com o link. Depois, ela marca "Já enviei" no Início.
+@if (collect($primeirosPassos['passos'])->contains('chave', 'avisos'))
+- Avisos no celular: explique o caminho de "Configurações" > "Notificações" no celular (no iPhone, instalar o app antes). Você não ativa por ela.
+@endif
+- Se ela quiser pular um passo, tudo bem: diga que dá para fazer depois pelo Início.
+@endif

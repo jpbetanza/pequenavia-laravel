@@ -1,6 +1,6 @@
 import { router, usePage } from '@inertiajs/react';
 import { useEffect, useRef, useState } from 'react';
-import { useAssistente } from '@/hooks/use-assistente';
+import { type PerguntaDeFora, useAssistente } from '@/hooks/use-assistente';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { chaveDaConversaSalva } from '@/lib/assistente/conversa-salva';
 import { deveFecharAoNavegar } from '@/lib/assistente/painel';
@@ -77,7 +77,8 @@ function ConteudoDoAssistente({ userId, aberto, aoFechar }: ConteudoProps) {
         lerConversaSalva(chave),
     );
     const [sessao, setSessao] = useState(0);
-    const [perguntaInicial, setPerguntaInicial] = useState<string | null>(null);
+    const [perguntaInicial, setPerguntaInicial] =
+        useState<PerguntaDeFora | null>(null);
 
     // Pergunta vinda de fora (ex.: Início) abre uma conversa nova. Espera a resposta em andamento terminar.
     useEffect(() => {

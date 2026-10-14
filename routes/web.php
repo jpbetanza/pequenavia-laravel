@@ -19,6 +19,7 @@ use App\Http\Controllers\GeracaoCertificadoController;
 use App\Http\Controllers\HistoricoController;
 use App\Http\Controllers\InicioController;
 use App\Http\Controllers\ModeloCertificadoController;
+use App\Http\Controllers\PrimeirosPassosController;
 use App\Http\Middleware\GarantirAssistenteConfigurado;
 use Illuminate\Support\Facades\Route;
 
@@ -43,6 +44,7 @@ Route::middleware('guest')->group(function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', fn () => to_route('inicio'))->name('dashboard');
     Route::get('inicio', InicioController::class)->name('inicio');
+    Route::post('primeiros-passos', [PrimeirosPassosController::class, 'update'])->name('primeiros-passos.update');
 
     Route::get('historico', [HistoricoController::class, 'index'])->name('historico.index');
 

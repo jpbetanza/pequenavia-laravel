@@ -12,12 +12,15 @@ type ValorDoAssistente = {
     alternar: () => void;
     fechar: () => void;
     /** Pergunta enviada de fora do painel (ex.: Início), ainda não entregue à conversa. */
-    perguntaPendente: string | null;
-    /** Abre o painel e manda a pergunta numa conversa nova. */
-    perguntar: (texto: string) => void;
+    perguntaPendente: PerguntaDeFora | null;
+    /** Abre o painel e manda a pergunta numa conversa nova, com os arquivos anexados (ex.: planilha solta no Início). */
+    perguntar: (texto: string, arquivos?: File[]) => void;
     /** A conversa avisa que pegou a pergunta. */
     consumirPergunta: () => void;
 };
+
+/** Pergunta que vem de fora do painel: o texto e, opcionalmente, arquivos para anexar. */
+export type PerguntaDeFora = { texto: string; arquivos: File[] };
 
 const ContextoDoAssistente = createContext<ValorDoAssistente | null>(null);
 
@@ -51,9 +54,8 @@ function gravarAberto(aberto: boolean): void {
 
 export function ProvedorDoAssistente({ children }: { children: ReactNode }) {
     const [aberto, setAberto] = useState(lerAberto);
-    const [perguntaPendente, setPerguntaPendente] = useState<string | null>(
-        null,
-    );
+    const [perguntaPendente, setPerguntaPendente] =
+        useState<PerguntaDeFora | null>(null);
 
     function definir(novo: boolean) {
         setAberto(novo);
@@ -70,14 +72,14 @@ export function ProvedorDoAssistente({ children }: { children: ReactNode }) {
                 alternar: () => definir(!aberto),
                 fechar: () => definir(false),
                 perguntaPendente,
-                perguntar: (texto: string) => {
+                perguntar: (texto: string, arquivos: File[] = []) => {
                     const limpa = texto.trim();
 
-                    if (limpa === '') {
+                    if (limpa === '' && arquivos.length === 0) {
                         return;
                     }
 
-                    setPerguntaPendente(limpa);
+                    setPerguntaPendente({ texto: limpa, arquivos });
                     definir(true);
                 },
                 consumirPergunta: () => setPerguntaPendente(null),

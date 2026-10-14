@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>PequenaVia — configuração em andamento</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&amp;family=Instrument+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F0E6}
+a{color:#6E1F24}a:hover{color:#4E1418}
+</style>
+</helmet>
+<div style="min-height: 1080px; display: flex; flex-direction: column; background: #F5F0E6; color: #221A17; font-family: 'Instrument Sans', system-ui, sans-serif; font-size: 14px; line-height: 1.45">
+
+  <header style="display: flex; align-items: center; gap: 24px; padding: 0 24px; min-height: 64px; background: #FBF8F2; border-bottom: 1px solid #E1D7C8; flex-wrap: wrap">
+    <a href="Inicio.dc.html" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: #221A17">
+      <span style="width: 36px; height: 36px; border-radius: 999px; background: #F5F0E6; display: flex; align-items: center; justify-content: center"><img src="/_blob/50066c2efa3bd703f79bbba990bb7aa8" alt="" style="width: 28px; height: 28px; object-fit: contain"></span>
+      <span style="font-family: 'Cormorant Garamond', Georgia, serif; font-size: 23px; font-weight: 700">PequenaVia</span>
+    </a>
+    <nav aria-label="Navegação do app" style="display: flex; gap: 4px; flex: 1; flex-wrap: wrap">
+      <a href="Progresso.dc.html" aria-current="page" style="display: flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 10px; color: #6E1F24; font-weight: 600; text-decoration: underline; text-underline-offset: 6px">Início</a>
+      <a href="../agenda/Calendario.dc.html" style="display: flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 10px; color: #4A3D38; font-weight: 600; text-decoration: none">Agendamentos</a>
+      <a href="../Modelos.dc.html" style="display: flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 10px; color: #4A3D38; font-weight: 600; text-decoration: none">Certificados</a>
+    </nav>
+    <button type="button" aria-pressed="true" aria-controls="painel-assistente" style="display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border: 1px solid #6E1F24; border-radius: 999px; background: #F1DFDC; font: inherit; font-weight: 600; color: #6E1F24; cursor: pointer">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12Z"/><path d="M8.5 11h7M8.5 14h4"/></svg>
+      Assistente
+    </button>
+  </header>
+
+  <div style="flex: 1; display: flex; flex-wrap: wrap; min-height: 0">
+    <main style="flex: 999 1 420px; min-width: 0; padding: 28px; box-sizing: border-box; display: flex; flex-direction: column; gap: 20px">
+
+      <!-- Faixa de progresso: o banner encolhe quando a agenda já tem dados -->
+      <section aria-labelledby="faltam" style="background: #FBF8F2; border: 1px solid #E1D7C8; border-radius: 18px; padding: 20px 22px; display: flex; flex-direction: column; gap: 16px">
+        <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap">
+          <div style="flex: 1 1 260px; display: flex; flex-direction: column; gap: 2px">
+            <span style="font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #6E1F24">Primeiros passos · 3 de 5</span>
+            <h1 id="faltam" style="margin: 0; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 32px; font-weight: 600; line-height: 1.05">Faltam dois passos para os pedidos chegarem sozinhos</h1>
+          </div>
+          <ul aria-label="Feito" style="list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px">
+            <li style="display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 99px; background: #E2EEE8; color: #1B3D30; font-size: 13px; font-weight: 600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>3 espaços</li>
+            <li style="display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 99px; background: #E2EEE8; color: #1B3D30; font-size: 13px; font-weight: 600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>4 equipamentos</li>
+            <li style="display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 99px; background: #E2EEE8; color: #1B3D30; font-size: 13px; font-weight: 600"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>6 grupos</li>
+          </ul>
+        </div>
+        <div role="progressbar" aria-label="Configuração" aria-valuemin="0" aria-valuemax="5" aria-valuenow="3" style="height: 6px; border-radius: 99px; background: #EFE8DB; overflow: hidden"><div style="width: 60%; height: 100%; background: #6E1F24"></div></div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 12px">
+          <div style="padding: 16px; border-radius: 14px; background: #F1DFDC; display: flex; flex-direction: column; gap: 10px">
+            <span style="font-size: 12px; font-weight: 600; color: #6E1F24">Passo 4 · com o assistente agora</span>
+            <b style="font-size: 16px">Mandar o link do formulário para os grupos</b>
+            <div style="display: flex; align-items: center; gap: 8px; padding: 6px 6px 6px 12px; border-radius: 10px; background: #FFFFFF; border: 1px solid #E1D7C8">
+              <span style="flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-variant-numeric: tabular-nums">pequenavia.app/reservar/k3m9q2xa7d</span>
+              <button type="button" style="min-height: 36px; padding: 0 12px; border: 1px solid #CDBFAC; border-radius: 8px; background: #FBF8F2; font: inherit; font-weight: 600; color: #221A17; cursor: pointer">Copiar</button>
+            </div>
+          </div>
+          <div style="padding: 16px; border-radius: 14px; border: 1px solid #E1D7C8; display: flex; flex-direction: column; gap: 10px">
+            <span style="font-size: 12px; font-weight: 600; color: #6B5D57">Passo 5</span>
+            <b style="font-size: 16px">Receber avisos no celular</b>
+            <span style="color: #4A3D38">Abra o PequenaVia no celular e ative os avisos. No iPhone, instale o app antes.</span>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px">
+              <button type="button" style="min-height: 40px; padding: 0 14px; border: 1px solid #CDBFAC; border-radius: 10px; background: #FBF8F2; font: inherit; font-weight: 600; color: #221A17; cursor: pointer">Mostrar QR code do app</button>
+              <button type="button" style="min-height: 40px; padding: 0 10px; border: none; background: transparent; font: inherit; font-weight: 600; color: #6E1F24; text-decoration: underline; text-underline-offset: 4px; cursor: pointer">Perguntar ao assistente</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr)); gap: 20px; align-items: start">
+        <section aria-labelledby="hoje" style="background: #FBF8F2; border: 1px solid #E1D7C8; border-radius: 18px; padding: 22px; display: flex; flex-direction: column; gap: 12px">
+          <h2 id="hoje" style="margin: 0; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 28px; font-weight: 600; line-height: 1">Hoje nas salas</h2>
+          <p style="margin: 0; color: #6B5D57">Nenhuma reserva hoje. Os espaços já estão prontos para receber.</p>
+          <a href="../agenda/NovaReserva.dc.html" style="align-self: flex-start; display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border-radius: 10px; background: #6E1F24; color: #FBF8F2; font-weight: 600; text-decoration: none">Nova reserva</a>
+        </section>
+        <section aria-labelledby="cadastros" style="background: #FBF8F2; border: 1px solid #E1D7C8; border-radius: 18px; padding: 22px; display: flex; flex-direction: column; gap: 10px">
+          <h2 id="cadastros" style="margin: 0; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 28px; font-weight: 600; line-height: 1">O que já está cadastrado</h2>
+          <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column">
+            <li style="display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid #EDE4D3"><span>Salão paroquial, Capela, Sala de catequese</span><a href="../agenda/Espacos.dc.html" style="font-weight: 600; text-decoration: none; white-space: nowrap">Espaços →</a></li>
+            <li style="display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid #EDE4D3"><span>2 projetores, caixa de som, microfone sem fio</span><a href="../agenda/Equipamentos.dc.html" style="font-weight: 600; text-decoration: none; white-space: nowrap">Equipamentos →</a></li>
+            <li style="display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid #EDE4D3"><span>Catequese, Coral, Pastoral da Juventude e mais 3</span><a href="../agenda/Grupos.dc.html" style="font-weight: 600; text-decoration: none; white-space: nowrap">Grupos →</a></li>
+          </ul>
+        </section>
+      </div>
+    </main>
+
+    <aside id="painel-assistente" aria-label="Assistente" style="flex: 1 1 400px; max-width: 460px; box-sizing: border-box; background: #FBF8F2; border-left: 1px solid #E1D7C8; display: flex; flex-direction: column">
+      <div style="display: flex; align-items: center; gap: 8px; padding: 12px 12px 12px 20px; border-bottom: 1px solid #E1D7C8">
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column">
+          <span style="font-family: 'Cormorant Garamond', Georgia, serif; font-size: 24px; font-weight: 600; line-height: 1.1">Assistente</span>
+          <span style="font-size: 12px; color: #6B5D57">Configuração da agenda</span>
+        </div>
+        <button type="button" aria-label="Fechar assistente" style="width: 44px; height: 44px; border: none; border-radius: 10px; background: transparent; color: #4A3D38; cursor: pointer; display: flex; align-items: center; justify-content: center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px; padding: 10px 20px; background: #F3E8CF; color: #5A4214; border-bottom: 1px solid #E8D7B0">
+        <span style="font-weight: 600">Passo 4 de 5 · Formulário de pedidos</span>
+      </div>
+
+      <div role="log" aria-live="polite" style="flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 16px">
+        <div style="display: flex; flex-direction: column; gap: 6px; padding: 10px 12px; border-radius: 12px; background: #E2EEE8; color: #1B3D30">
+          <b>Grupos e pastorais: 6 cadastrados.</b>
+          <span>Catequese, Coral, Pastoral da Juventude, Pastoral Familiar, Terço dos homens e Dízimo.</span>
+        </div>
+
+        <p style="margin: 0">Agora o <b>formulário de pedidos</b>. Com este link, qualquer coordenador pede uma reserva sem precisar de conta, e o pedido chega para você aprovar:</p>
+        <p style="margin: 0; padding: 10px 12px; border-radius: 10px; background: #FFFFFF; border: 1px solid #E1D7C8; font-variant-numeric: tabular-nums">pequenavia.app/reservar/k3m9q2xa7d</p>
+        <p style="margin: 0">Quer que eu escreva uma mensagem para mandar no grupo de WhatsApp dos coordenadores?</p>
+
+        <div style="align-self: flex-end; max-width: 85%; padding: 10px 14px; border-radius: 16px 16px 4px 16px; background: #6E1F24; color: #FBF8F2">Sim, curtinha</div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px">
+          <p style="margin: 0">Aqui está:</p>
+          <blockquote style="margin: 0; padding: 12px 14px; border-radius: 12px; background: #FFFFFF; border: 1px solid #CDBFAC; display: flex; flex-direction: column; gap: 8px">
+            <span>Olá, coordenadores! A partir de agora os pedidos de sala da paróquia são feitos por este link: pequenavia.app/reservar/k3m9q2xa7d. É só escolher o dia, o horário e o espaço. A secretaria confirma por aqui. Qualquer dúvida, é só chamar.</span>
+          </blockquote>
+          <div style="display: flex; flex-wrap: wrap; gap: 8px">
+            <button type="button" style="display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 16px; border: none; border-radius: 10px; background: #6E1F24; color: #FBF8F2; font: inherit; font-weight: 600; cursor: pointer">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+              Copiar mensagem
+            </button>
+            <button type="button" style="min-height: 44px; padding: 0 14px; border: 1px solid #CDBFAC; border-radius: 10px; background: #FBF8F2; font: inherit; font-weight: 600; color: #221A17; cursor: pointer">Marcar como enviado</button>
+          </div>
+        </div>
+      </div>
+
+      <form style="padding: 12px 16px 16px; border-top: 1px solid #E1D7C8; display: flex; flex-direction: column; gap: 10px">
+        <label for="mensagem-progresso" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Mensagem para o assistente</label>
+        <div style="display: flex; align-items: flex-end; gap: 4px; padding: 6px; border: 1px solid #CDBFAC; border-radius: 14px; background: #FFFFFF">
+          <button type="button" aria-label="Anexar arquivo" style="width: 44px; height: 44px; flex: none; border: none; border-radius: 10px; background: transparent; color: #6B5D57; cursor: pointer; display: flex; align-items: center; justify-content: center">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+          </button>
+          <textarea id="mensagem-progresso" rows="1" placeholder="Pergunte ou anexe um arquivo…" style="flex: 1; min-width: 0; min-height: 44px; box-sizing: border-box; border: none; outline: none; resize: none; padding: 11px 0; background: transparent; font: inherit; color: #221A17"></textarea>
+          <button type="submit" aria-label="Enviar mensagem" style="width: 44px; height: 44px; flex: none; border: none; border-radius: 10px; background: #B78E91; color: #FBF8F2; cursor: not-allowed; display: flex; align-items: center; justify-content: center">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+        <span style="font-size: 12px; color: #6B5D57">O assistente só grava algo depois que você confirmar.</span>
+      </form>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1080}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

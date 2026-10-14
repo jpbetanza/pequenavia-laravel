@@ -23,7 +23,14 @@ function comInicialMaiuscula(texto: string): string {
     return texto.charAt(0).toUpperCase() + texto.slice(1);
 }
 
-function PerguntaAoAssistente() {
+/** Campo de pergunta com sugestões, no cartão escuro do topo. */
+export function PerguntaAoAssistente({
+    rotulo = 'Pergunte ao assistente',
+    sugestoes = SUGESTOES,
+}: {
+    rotulo?: string;
+    sugestoes?: string[];
+}) {
     const { perguntar } = useAssistente();
     const [texto, setTexto] = useState('');
     const vazia = texto.trim() === '';
@@ -48,7 +55,7 @@ function PerguntaAoAssistente() {
                 className="flex items-center gap-2 text-sm font-semibold"
             >
                 <Sparkles aria-hidden="true" className="size-4" />
-                Pergunte ao assistente
+                {rotulo}
             </label>
             <div className="flex items-center gap-2 rounded-2xl bg-background py-1.5 pr-1.5 pl-4 text-foreground">
                 <input
@@ -70,7 +77,7 @@ function PerguntaAoAssistente() {
                 </Button>
             </div>
             <div className="flex flex-wrap gap-2">
-                {SUGESTOES.map((sugestao) => (
+                {sugestoes.map((sugestao) => (
                     <button
                         key={sugestao}
                         type="button"
