@@ -2,7 +2,12 @@ import { router } from '@inertiajs/react';
 import PrimeirosPassosController from '@/actions/App/Http/Controllers/PrimeirosPassosController';
 import type { ChaveDoPasso } from '@/types/primeiros-passos';
 
-export type AcaoDoRoteiro = 'pular' | 'adiar' | 'dispensar' | 'link_enviado';
+export type AcaoDoRoteiro =
+    | 'pular'
+    | 'adiar'
+    | 'dispensar'
+    | 'link_enviado'
+    | 'modal_visto';
 
 /** Grava uma escolha no roteiro e recarrega as props, sem mexer na rolagem nem no estado da página. */
 export function aplicarAoRoteiro(acao: AcaoDoRoteiro, passo?: ChaveDoPasso) {

@@ -23,6 +23,8 @@ export type PrimeirosPassos = {
     atual: ChaveDoPasso | null;
     /** "Agora não": some do Início até amanhã. */
     adiado: boolean;
+    /** O modal de boas-vindas ainda não foi visto (só no primeiro acesso). */
+    mostrar_modal: boolean;
     passos: PassoDoRoteiro[];
     contagens: { espacos: number; equipamentos: number; grupos: number };
     /** Null até a agenda ganhar o endereço (o Início garante). */

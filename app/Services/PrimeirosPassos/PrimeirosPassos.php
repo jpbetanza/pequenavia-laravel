@@ -27,13 +27,13 @@ final class PrimeirosPassos
         'avisos' => ['titulo' => 'Avisos no celular', 'descricao' => 'Saiba na hora quando chegar um pedido'],
     ];
 
-    public const ACOES = ['pular', 'adiar', 'dispensar', 'link_enviado'];
+    public const ACOES = ['pular', 'adiar', 'dispensar', 'link_enviado', 'modal_visto'];
 
     /**
      * Estado do roteiro para a tela, ou null quando não deve aparecer: dispensado, ou tudo feito sem nunca ter começado
      * (quem já chegou com a agenda pronta não vê boas-vindas). Só lê: o começo é gravado pelo Início (registrarInicio).
      *
-     * @return array{fase: 'inicio'|'andamento'|'concluido', feitos: int, total: int, atual: string|null, adiado: bool, passos: list<array{chave: string, titulo: string, descricao: string, feito: bool, pulado: bool}>, contagens: array{espacos: int, equipamentos: int, grupos: int}, link_do_formulario: string|null}|null
+     * @return array{fase: 'inicio'|'andamento'|'concluido', feitos: int, total: int, atual: string|null, adiado: bool, mostrar_modal: bool, passos: list<array{chave: string, titulo: string, descricao: string, feito: bool, pulado: bool}>, contagens: array{espacos: int, equipamentos: int, grupos: int}, link_do_formulario: string|null}|null
      */
     public function estado(User $usuario): ?array
     {
@@ -89,6 +89,8 @@ final class PrimeirosPassos
             'total' => $total,
             'atual' => $atual['chave'] ?? null,
             'adiado' => isset($guardado['adiado_ate']) && CarbonImmutable::parse($guardado['adiado_ate'])->isFuture(),
+            // O modal de boas-vindas aparece uma vez, no primeiro acesso, antes de qualquer passo resolvido.
+            'mostrar_modal' => $resolvidos === 0 && ! isset($guardado['modal_visto_em']),
             'passos' => $passos,
             'contagens' => $contagens,
             // O endereço só existe depois que a agenda ganha o slug (o Início garante isso).
@@ -119,7 +121,7 @@ final class PrimeirosPassos
     /**
      * Aplica uma escolha da pessoa no roteiro.
      *
-     * @param  'pular'|'adiar'|'dispensar'|'link_enviado'  $acao
+     * @param  'pular'|'adiar'|'dispensar'|'link_enviado'|'modal_visto'  $acao
      */
     public function aplicar(User $usuario, string $acao, ?string $passo = null): void
     {
@@ -130,6 +132,7 @@ final class PrimeirosPassos
             'adiar' => ['adiado_ate' => now()->addDay()->toIso8601String()],
             'dispensar' => ['dispensado_em' => now()->toIso8601String()],
             'link_enviado' => ['link_enviado_em' => now()->toIso8601String()],
+            'modal_visto' => ['modal_visto_em' => now()->toIso8601String()],
         };
 
         $this->guardar($usuario, $mudanca);

@@ -9,6 +9,7 @@ import {
     BannerDeConcluido,
 } from '@/components/primeiros-passos/banner-de-boas-vindas';
 import { FaixaDeAndamento } from '@/components/primeiros-passos/faixa-de-andamento';
+import { ModalDeBoasVindas } from '@/components/primeiros-passos/modal-de-boas-vindas';
 import { Button } from '@/components/ui/button';
 import { equipamentosParaSeparar, resumoDoDia } from '@/lib/inicio/resumo';
 import { index as equipamentos } from '@/routes/agendamentos/equipamentos';
@@ -49,6 +50,10 @@ export default function Inicio({
                         nome={auth.user.name}
                         resumo={resumo}
                     />
+                )}
+
+                {roteiroVisivel && roteiro.mostrar_modal && (
+                    <ModalDeBoasVindas />
                 )}
 
                 {roteiroVisivel && roteiro.fase === 'andamento' && (

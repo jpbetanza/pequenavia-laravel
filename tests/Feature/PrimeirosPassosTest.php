@@ -166,3 +166,25 @@ it('o assistente sabe do roteiro enquanto ele não termina', function () {
 
     expect($instrucoes)->not->toContain('Primeiros passos (');
 });
+
+it('o modal de boas-vindas aparece só no primeiro acesso e some depois de visto', function () {
+    $this->actingAs($this->usuario)->get(route('inicio'))
+        ->assertInertia(fn (Assert $pagina) => $pagina->where('primeiros_passos.mostrar_modal', true));
+
+    $this->actingAs($this->usuario)
+        ->from(route('inicio'))
+        ->post(route('primeiros-passos.update'), ['acao' => 'modal_visto'])
+        ->assertRedirect(route('inicio'));
+
+    $this->actingAs($this->usuario)->get(route('inicio'))
+        ->assertInertia(fn (Assert $pagina) => $pagina
+            ->where('primeiros_passos.mostrar_modal', false)
+            ->where('primeiros_passos.fase', 'inicio'));
+});
+
+it('quem já resolveu algum passo não vê o modal', function () {
+    Espaco::factory()->for($this->usuario)->create();
+
+    $this->actingAs($this->usuario)->get(route('inicio'))
+        ->assertInertia(fn (Assert $pagina) => $pagina->where('primeiros_passos.mostrar_modal', false));
+});
