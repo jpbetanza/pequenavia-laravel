@@ -12,7 +12,9 @@
             }
         </style>
 
+        {{-- O rosto da logo, com traço mais grosso para ler em 16px --}}
         <link rel="icon" href="/favicon.ico" sizes="any">
+        <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96.png">
         <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 
         {{-- Instalação como aplicativo (PWA) --}}

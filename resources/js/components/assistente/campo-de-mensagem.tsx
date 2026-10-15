@@ -24,10 +24,8 @@ type Props = {
     valor: string;
     aoMudar: (valor: string) => void;
     enviando: boolean;
-    sugestoes: string[];
     aoEnviar: () => void;
     aoParar: () => void;
-    aoSugerir: (texto: string) => void;
     /** Anexos prontos para ir com a próxima mensagem. */
     anexos: AnexoPreparado[];
     /** Arquivos sendo lidos (planilhas grandes levam um instante). */
@@ -40,10 +38,8 @@ export function CampoDeMensagem({
     valor,
     aoMudar,
     enviando,
-    sugestoes,
     aoEnviar,
     aoParar,
-    aoSugerir,
     anexos,
     preparandoAnexos,
     aoEscolherArquivos,
@@ -113,20 +109,6 @@ export function CampoDeMensagem({
                 }
             }}
         >
-            <div className="flex flex-wrap gap-1.5">
-                {sugestoes.map((sugestao) => (
-                    <button
-                        key={sugestao}
-                        type="button"
-                        disabled={enviando}
-                        onClick={() => aoSugerir(sugestao)}
-                        className="min-h-11 rounded-full border bg-muted/40 px-3.5 text-sm text-foreground hover:bg-muted disabled:opacity-60"
-                    >
-                        {sugestao}
-                    </button>
-                ))}
-            </div>
-
             <label htmlFor="mensagem-assistente" className="sr-only">
                 Mensagem para o assistente
             </label>

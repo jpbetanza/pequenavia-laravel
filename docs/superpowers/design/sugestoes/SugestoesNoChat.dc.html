@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>PequenaVia — sugestões dentro da conversa</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&amp;family=Instrument+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F0E6}
+@keyframes sg-entrar{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes sg-ponto{0%,80%,100%{opacity:.25}40%{opacity:1}}
+.sg-entrar{animation:sg-entrar .35s cubic-bezier(.16,.84,.3,1) both}
+.sg-chip{transition:background .15s,border-color .15s}
+.sg-chip:hover{background:#F3E8CF;border-color:#E8D7B0}
+.sg-chip:focus-visible{outline:2px solid #6E1F24;outline-offset:2px}
+.sg-p1,.sg-p2,.sg-p3{animation:sg-ponto 1.2s infinite}
+.sg-p2{animation-delay:.15s}.sg-p3{animation-delay:.3s}
+@media (prefers-reduced-motion: reduce){.sg-entrar,.sg-p1,.sg-p2,.sg-p3{animation:none}}
+</style>
+</helmet>
+<div style="position: relative; height: 900px; overflow: hidden; display: flex; background: #F5F0E6; color: #221A17; font-family: 'Instrument Sans', system-ui, sans-serif; font-size: 14px; line-height: 1.45">
+
+  <!-- O Início, atrás do painel -->
+  <main style="flex: 1; min-width: 0; padding: 28px 32px; box-sizing: border-box; display: flex; flex-direction: column; gap: 24px">
+    <!-- Só na prévia: troca a situação para ver como as sugestões mudam -->
+    <div role="group" aria-label="Situação da prévia" style="align-self: flex-start; display: flex; align-items: center; gap: 4px; padding: 4px; border: 1px dashed #CDBFAC; border-radius: 999px; background: #FBF8F2">
+      <span style="padding: 0 10px; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #8A7A70">Prévia</span>
+      <button type="button" onClick="{{ verPendencias }}" aria-pressed="{{ emPendencias }}" style="{{ estiloPendencias }}">Com pendências</button>
+      <button type="button" onClick="{{ verTranquilo }}" aria-pressed="{{ emTranquilo }}" style="{{ estiloTranquilo }}">Dia tranquilo</button>
+      <button type="button" onClick="{{ verPrimeiro }}" aria-pressed="{{ emPrimeiro }}" style="{{ estiloPrimeiro }}">Primeiro acesso</button>
+    </div>
+    <div style="border-radius: 22px; background: #221A17; color: #F5F0E6; padding: 28px 30px; display: flex; flex-direction: column; gap: 8px">
+      <span style="font-size: 13px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #D9B97A">Quinta, 15 de outubro</span>
+      <span style="font-family: 'Cormorant Garamond', Georgia, serif; font-size: 46px; font-weight: 600; line-height: 1">Boa tarde, Ana.</span>
+      <span style="color: #D8CEC2; font-size: 16px">{{ resumoDoDia }}</span>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px">
+      <div style="height: 360px; border-radius: 18px; background: #FBF8F2; border: 1px solid #E1D7C8"></div>
+      <div style="height: 360px; border-radius: 18px; background: #FBF8F2; border: 1px solid #E1D7C8"></div>
+    </div>
+  </main>
+
+  <aside aria-label="Assistente" style="flex: none; width: 440px; box-sizing: border-box; background: #FBF8F2; border-left: 1px solid #E1D7C8; display: flex; flex-direction: column">
+    <div style="display: flex; align-items: center; gap: 8px; padding: 12px 12px 12px 20px; border-bottom: 1px solid #E1D7C8">
+      <div style="flex: 1; min-width: 0; display: flex; flex-direction: column">
+        <span style="font-family: 'Cormorant Garamond', Georgia, serif; font-size: 24px; font-weight: 600; line-height: 1.1">Assistente</span>
+        <span style="font-size: 12px; color: #6B5D57">{{ subtitulo }}</span>
+      </div>
+      <button type="button" onClick="{{ novaConversa }}" aria-label="Nova conversa" title="Nova conversa" style="width: 44px; height: 44px; border: none; border-radius: 10px; background: transparent; color: #4A3D38; cursor: pointer; display: flex; align-items: center; justify-content: center">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+      </button>
+      <span aria-hidden="true" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #4A3D38">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </span>
+    </div>
+
+    <div role="log" aria-live="polite" style="flex: 1; min-height: 0; padding: 20px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto">
+
+      <!-- Conversa vazia: o assistente abre a conversa e oferece por onde começar -->
+      <sc-if value="{{ vazia }}" hint-placeholder-val="{{ true }}">
+        <div class="sg-entrar" style="margin-top: auto; display: flex; flex-direction: column; gap: 12px">
+          <span aria-hidden="true" style="width: 32px; height: 32px; border-radius: 999px; background: #F3E8CF; color: #8A6420; display: flex; align-items: center; justify-content: center">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/></svg>
+          </span>
+          <p style="margin: 0; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 24px; font-weight: 600; line-height: 1.15">{{ saudacao }}</p>
+          <p style="margin: 0; color: #4A3D38">{{ abertura }}</p>
+
+          <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 4px">
+            <span style="font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #8A7A70">{{ rotulo }}</span>
+            <ul aria-label="Sugestões" style="list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px">
+              <li><button type="button" class="sg-chip" onClick="{{ sugerir1 }}" style="display: flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 11px; border: 1px solid #E1D7C8; border-radius: 999px; background: #FFFFFF; font: inherit; font-size: 13px; color: #4A3D38; cursor: pointer"><sc-if value="{{ destaque }}" hint-placeholder-val="{{ true }}"><span aria-hidden="true" style="width: 7px; height: 7px; border-radius: 999px; background: #B8892F"></span></sc-if>{{ chip1 }}</button></li>
+              <li><button type="button" class="sg-chip" onClick="{{ sugerir2 }}" style="display: flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 11px; border: 1px solid #E1D7C8; border-radius: 999px; background: #FFFFFF; font: inherit; font-size: 13px; color: #4A3D38; cursor: pointer">{{ chip2 }}</button></li>
+              <li><button type="button" class="sg-chip" onClick="{{ sugerir3 }}" style="display: flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 11px; border: 1px solid #E1D7C8; border-radius: 999px; background: #FFFFFF; font: inherit; font-size: 13px; color: #4A3D38; cursor: pointer">{{ chip3 }}</button></li>
+              <li><button type="button" class="sg-chip" onClick="{{ sugerir4 }}" style="display: flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 11px; border: 1px solid #E1D7C8; border-radius: 999px; background: #FFFFFF; font: inherit; font-size: 13px; color: #4A3D38; cursor: pointer">{{ chip4 }}</button></li>
+            </ul>
+          </div>
+        </div>
+      </sc-if>
+
+      <!-- Depois da primeira mensagem: as sugestões somem e a conversa segue -->
+      <sc-if value="{{ conversando }}" hint-placeholder-val="{{ false }}">
+        <div class="sg-entrar" style="align-self: flex-end; max-width: 85%; padding: 10px 14px; border-radius: 16px 16px 4px 16px; background: #6E1F24; color: #FBF8F2">{{ pergunta }}</div>
+        <sc-if value="{{ pensando }}" hint-placeholder-val="{{ false }}">
+          <span aria-label="O assistente está respondendo" style="display: flex; gap: 4px; padding: 4px 2px">
+            <span class="sg-p1" style="width: 6px; height: 6px; border-radius: 999px; background: #8A7A70"></span>
+            <span class="sg-p2" style="width: 6px; height: 6px; border-radius: 999px; background: #8A7A70"></span>
+            <span class="sg-p3" style="width: 6px; height: 6px; border-radius: 999px; background: #8A7A70"></span>
+          </span>
+        </sc-if>
+        <sc-if value="{{ respondido }}" hint-placeholder-val="{{ false }}">
+          <p class="sg-entrar" style="margin: 0">{{ resposta }}</p>
+        </sc-if>
+      </sc-if>
+    </div>
+
+    <!-- O campo fica só com o campo: nada de sugestões aqui -->
+    <form onSubmit="{{ enviar }}" style="padding: 12px 16px 16px; border-top: 1px solid #E1D7C8; display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; align-items: flex-end; gap: 4px; padding: 6px; border: 1px solid #CDBFAC; border-radius: 14px; background: #FFFFFF">
+        <span aria-hidden="true" style="width: 44px; height: 44px; flex: none; color: #6B5D57; display: flex; align-items: center; justify-content: center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+        </span>
+        <span style="flex: 1; min-width: 0; padding: 12px 0; color: #8A7A70">Pergunte ou anexe um arquivo…</span>
+        <span aria-hidden="true" style="width: 44px; height: 44px; flex: none; border-radius: 10px; background: #6E1F24; color: #FBF8F2; display: flex; align-items: center; justify-content: center">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </span>
+      </div>
+      <span style="font-size: 12px; color: #6B5D57">O assistente só grava algo depois que você confirmar.</span>
+    </form>
+  </aside>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"situacao":{"editor":"enum","options":["pendencias","tranquilo","primeiro"],"default":"pendencias"},"$preview":{"width":1440,"height":900}}'>
+// A ordem é a regra: o que espera a secretaria, depois a agenda, depois uma ação.
+// No primeiro acesso, a configuração toma o lugar. Nunca mais de quatro.
+var SITUACOES = {
+  pendencias: {
+    resumo: '4 reservas hoje e 2 pedidos esperando resposta.',
+    saudacao: 'Boa tarde, Ana.',
+    abertura: '2 pedidos esperam resposta e o projetor ainda não voltou. Posso cuidar disso com você.',
+    rotulo: 'Para hoje',
+    destaque: true,
+    chips: [
+      ['Responder os 2 pedidos', 'Os 2 pedidos: o batizado da família Souza (Igreja, sáb 24/10, sem conflito) e o encontro de jovens (Salão, dom 25/10, choca com a catequese). Quer aprovar o primeiro?'],
+      ['Projetor a devolver', 'O projetor saiu com a Pastoral da Juventude ontem, na reunião das 19h, e ainda não foi marcado como devolvido. Marco agora?'],
+      ['O que tem hoje?', 'Hoje são 4 reservas: missa às 7h, catequese às 14h no Salão, terço às 18h e coral às 19h na Igreja.'],
+      ['Reservar um espaço', 'Claro. Qual espaço, em que dia e horário? Confiro se está livre antes de propor.']
+    ]
+  },
+  tranquilo: {
+    resumo: '2 reservas hoje. Nada esperando resposta.',
+    saudacao: 'Boa tarde, Ana.',
+    abertura: 'Nada pendente por aqui. Posso consultar a agenda, reservar ou gerar certificados.',
+    rotulo: 'Para começar',
+    destaque: false,
+    chips: [
+      ['O que tem amanhã?', 'Amanhã, sexta 16/10, há 3 reservas: catequese às 14h, coral às 19h e conselho às 20h.'],
+      ['Livre sábado à tarde?', 'Sábado à tarde estão livres o Salão paroquial e a Sala 2. A Igreja tem casamento às 16h.'],
+      ['Reservar um espaço', 'Claro. Qual espaço, em que dia e horário? Confiro se está livre antes de propor.'],
+      ['Certificados deste mês', 'Em outubro foram emitidos 18 certificados: 12 de batismo e 6 de crisma.']
+    ]
+  },
+  primeiro: {
+    resumo: 'Sua agenda está quase pronta: faltam 3 passos.',
+    saudacao: 'Bem-vinda, Ana.',
+    abertura: 'Vamos deixar a agenda pronta? Faço o trabalho chato: é só me mandar uma planilha ou ir respondendo.',
+    rotulo: 'Para configurar',
+    destaque: true,
+    chips: [
+      ['Continuar a configuração', 'Falta cadastrar os grupos. Quais pastorais e movimentos usam os espaços? Pode listar ou anexar uma planilha.'],
+      ['Espaços por planilha', 'Anexe a planilha (Excel ou CSV) com os nomes dos espaços. Mostro o que entendi antes de cadastrar.'],
+      ['Link do formulário', 'Este é o link do formulário de reservas para enviar aos grupos: pequenavia.app/reservar/sao-jose'],
+      ['O que você sabe fazer?', 'Consulto a agenda, proponho e remarco reservas, respondo pedidos, marco equipamentos e gero certificados. Nada é gravado sem você confirmar.']
+    ]
+  }
+};
+
+var BASE = 'min-height: 32px; padding: 0 12px; border-radius: 999px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; ';
+var LIGADO = BASE + 'border: none; background: #221A17; color: #F5F0E6';
+var DESLIGADO = BASE + 'border: none; background: transparent; color: #4A3D38';
+
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { situacao: props.situacao ?? 'pendencias', pergunta: null, respondido: false };
+  }
+
+  componentWillUnmount() {
+    clearTimeout(this.espera);
+  }
+
+  perguntar(indice) {
+    var self = this;
+    clearTimeout(this.espera);
+    this.setState({ pergunta: indice, respondido: false });
+    this.espera = setTimeout(function () { self.setState({ respondido: true }); }, 1100);
+  }
+
+  trocar(situacao) {
+    clearTimeout(this.espera);
+    this.setState({ situacao: situacao, pergunta: null, respondido: false });
+  }
+
+  renderVals() {
+    var self = this;
+    var atual = SITUACOES[this.state.situacao];
+    var pergunta = this.state.pergunta;
+    var situacao = this.state.situacao;
+
+    return {
+      resumoDoDia: atual.resumo,
+      saudacao: atual.saudacao,
+      abertura: atual.abertura,
+      rotulo: atual.rotulo,
+      destaque: atual.destaque,
+      chip1: atual.chips[0][0],
+      chip2: atual.chips[1][0],
+      chip3: atual.chips[2][0],
+      chip4: atual.chips[3][0],
+      vazia: pergunta === null,
+      conversando: pergunta !== null,
+      pensando: pergunta !== null && !this.state.respondido,
+      respondido: this.state.respondido,
+      pergunta: pergunta !== null ? atual.chips[pergunta][0] : '',
+      resposta: pergunta !== null ? atual.chips[pergunta][1] : '',
+      subtitulo: pergunta !== null ? atual.chips[pergunta][0] : 'Nova conversa',
+      sugerir1: function () { self.perguntar(0); },
+      sugerir2: function () { self.perguntar(1); },
+      sugerir3: function () { self.perguntar(2); },
+      sugerir4: function () { self.perguntar(3); },
+      emPendencias: situacao === 'pendencias',
+      emTranquilo: situacao === 'tranquilo',
+      emPrimeiro: situacao === 'primeiro',
+      estiloPendencias: situacao === 'pendencias' ? LIGADO : DESLIGADO,
+      estiloTranquilo: situacao === 'tranquilo' ? LIGADO : DESLIGADO,
+      estiloPrimeiro: situacao === 'primeiro' ? LIGADO : DESLIGADO,
+      verPendencias: function () { self.trocar('pendencias'); },
+      verTranquilo: function () { self.trocar('tranquilo'); },
+      verPrimeiro: function () { self.trocar('primeiro'); },
+      enviar: function (evento) { evento.preventDefault(); },
+      novaConversa: function () {
+        clearTimeout(self.espera);
+        self.setState({ pergunta: null, respondido: false });
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>
