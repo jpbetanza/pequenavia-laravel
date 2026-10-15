@@ -11,6 +11,7 @@ use App\Http\Controllers\Agendamentos\SolicitacaoPublicaController;
 use App\Http\Controllers\Assistente\AcaoPropostaController;
 use App\Http\Controllers\Assistente\ConversaController;
 use App\Http\Controllers\Assistente\MensagemController;
+use App\Http\Controllers\Assistente\SugestoesController;
 use App\Http\Controllers\Auth\GoogleController;
 use App\Http\Controllers\CampoCertificadoController;
 use App\Http\Controllers\CompartilhamentoController;
@@ -108,6 +109,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('assistente')->name('assistente.')->middleware(GarantirAssistenteConfigurado::class)->group(function () {
         Route::post('acoes/{acao}/confirmar', [AcaoPropostaController::class, 'confirmar'])->name('acoes.confirmar');
         Route::post('acoes/{acao}/descartar', [AcaoPropostaController::class, 'descartar'])->name('acoes.descartar');
+        Route::get('sugestoes', SugestoesController::class)->name('sugestoes');
         Route::get('conversas', [ConversaController::class, 'index'])->name('conversas.index');
         Route::post('conversas', [ConversaController::class, 'store'])->name('conversas.store');
         Route::get('conversas/{conversa}', [ConversaController::class, 'show'])->name('conversas.show');

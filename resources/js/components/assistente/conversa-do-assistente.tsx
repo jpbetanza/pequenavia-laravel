@@ -38,15 +38,10 @@ import { FaixaDoRoteiroNoAssistente } from '@/components/primeiros-passos/faixa-
 import { Anexo } from './anexo';
 import { BotaoCopiar } from './botao-copiar';
 import { CampoDeMensagem } from './campo-de-mensagem';
+import { SugestoesDaConversa } from './sugestoes-da-conversa';
 import { Cartao } from './cartoes/cartao';
 import { ConfirmarTodas } from './cartoes/confirmar-todas';
 import { LinhaDeStatus } from './linha-de-status';
-
-const SUGESTOES = [
-    'O que tem amanhã?',
-    'Solicitações pendentes',
-    'Certificados emitidos este mês',
-];
 
 type ConversaCarregada = {
     conversa: { id: string; titulo: string };
@@ -570,13 +565,10 @@ export function ConversaDoAssistente({
                 )}
 
                 {!carregando && vazia && (
-                    <div className="my-auto flex flex-col gap-1.5 text-center text-muted-foreground">
-                        <p>Pergunte sobre a agenda ou os certificados.</p>
-                        <p className="text-sm">
-                            Para cadastrar espaços, equipamentos ou grupos de
-                            uma vez, anexe ou arraste uma planilha.
-                        </p>
-                    </div>
+                    <SugestoesDaConversa
+                        desabilitado={enviando}
+                        aoSugerir={(pergunta) => void enviar(pergunta)}
+                    />
                 )}
 
                 {mensagens.map((mensagem) =>
@@ -677,10 +669,8 @@ export function ConversaDoAssistente({
                 valor={texto}
                 aoMudar={setTexto}
                 enviando={enviando}
-                sugestoes={SUGESTOES}
                 aoEnviar={enviarDoCampo}
                 aoParar={() => controleRef.current?.abort()}
-                aoSugerir={(sugestao) => void enviar(sugestao)}
                 anexos={anexos}
                 preparandoAnexos={preparando > 0}
                 aoEscolherArquivos={(arquivos) =>
