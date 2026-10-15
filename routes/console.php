@@ -11,3 +11,6 @@ Artisan::command('inspire', function () {
 // Classificação das conversas paradas para o painel de gestão: 05:00 e 17:00, horário de Brasília.
 Schedule::command('gestao:classificar')->dailyAt('05:00')->timezone('America/Sao_Paulo')->withoutOverlapping();
 Schedule::command('gestao:classificar')->dailyAt('17:00')->timezone('America/Sao_Paulo')->withoutOverlapping();
+
+// Lembrete de continuar a configuração da agenda para quem parou no meio: uma vez por dia, de manhã.
+Schedule::command('primeiros-passos:lembrar')->dailyAt('09:30')->timezone('America/Sao_Paulo')->withoutOverlapping();

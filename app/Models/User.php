@@ -36,7 +36,7 @@ use Laravel\Passport\HasApiTokens;
  * @property string|null $two_factor_recovery_codes
  * @property Carbon|null $two_factor_confirmed_at
  * @property string|null $remember_token
- * @property array{iniciado_em?: string, pulados?: list<string>, link_enviado_em?: string, adiado_ate?: string, dispensado_em?: string, modal_visto_em?: string}|null $primeiros_passos
+ * @property array{iniciado_em?: string, pulados?: list<string>, link_enviado_em?: string, adiado_ate?: string, dispensado_em?: string, modal_visto_em?: string, lembrado_em?: string, lembretes?: int}|null $primeiros_passos
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
