@@ -13,7 +13,7 @@ services:
         environment:
             PORTAINER_URL: https://painel.aotomatika.com.br
             # Entre aspas: sem elas, um valor só de dígitos vira número no YAML.
-            PORTAINER_MCP_AUTH_TOKEN: "${MCP_TOKEN}"
+            PORTAINER_MCP_AUTH_TOKEN: '${MCP_TOKEN}'
             PORTAINER_MCP_ALLOWED_HOSTS: mcp.aotomatika.com.br
             # O TLS fica no Traefik; o container só aceita as requisições que vêm dele.
             PORTAINER_MCP_TRUST_PROXY_TLS: '1'
