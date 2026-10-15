@@ -41,18 +41,18 @@ final class ConversasDaGestao
     ) {}
 
     /**
-     * Conversas classificadas no período (pela data da classificação), 25 por página.
+     * Conversas classificadas no período (pela data da classificação), 25 por página. Sem página, usa a da URL.
      *
      * @param  Filtros  $filtros
      * @return LengthAwarePaginator<int, array<string, mixed>>
      */
-    public function lista(PeriodoDoPainel $periodo, array $filtros): LengthAwarePaginator
+    public function lista(PeriodoDoPainel $periodo, array $filtros, ?int $pagina = null): LengthAwarePaginator
     {
         $pagina = $this->consulta($periodo, $filtros)
             ->with(['conversa:id,titulo', 'user:id,name'])
             ->orderByDesc('classificacoes_de_conversa.classificada_em')
             ->orderBy('classificacoes_de_conversa.id')
-            ->paginate(self::POR_PAGINA)
+            ->paginate(self::POR_PAGINA, page: $pagina)
             ->withQueryString();
 
         // Os títulos nascem da primeira mensagem e podem trazer dados pessoais: mascara com os nomes do cliente.

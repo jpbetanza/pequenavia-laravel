@@ -16,6 +16,7 @@ use App\Services\Assistente\Ferramentas\ProporReserva;
 use App\Services\Assistente\Ferramentas\ResponderSolicitacao;
 use App\Services\Assistente\Ferramentas\ResumoDeCertificados;
 use App\Services\Assistente\Ferramentas\VerificarDisponibilidade;
+use App\Services\Gestao\EscopoDaGestao;
 use App\Services\Push\CanalDePush;
 use App\Services\Push\CanalWebPush;
 use Carbon\CarbonImmutable;
@@ -27,6 +28,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Laravel\Passport\Passport;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -36,6 +38,9 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(CanalDePush::class, CanalWebPush::class);
+
+        // Uma escolha de escopo por requisição, compartilhada pelos serviços da gestão.
+        $this->app->scoped(EscopoDaGestao::class);
 
         $this->app->singleton(CaixaDeFerramentas::class, fn ($app) => new CaixaDeFerramentas([
             $app->make(ConsultarAgenda::class),
@@ -71,6 +76,11 @@ class AppServiceProvider extends ServiceProvider
     protected function configureGestao(): void
     {
         Gate::define('gestao', fn (User $usuario): bool => $usuario->admin);
+
+        // OAuth do MCP da gestão: tela de autorização própria e tokens curtos, renovados pelo refresh token.
+        Passport::authorizationView('mcp.autorizar');
+        Passport::tokensExpireIn(CarbonImmutable::now()->addDay());
+        Passport::refreshTokensExpireIn(CarbonImmutable::now()->addDays(30));
     }
 
     /**
