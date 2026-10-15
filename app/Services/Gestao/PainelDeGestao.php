@@ -38,7 +38,7 @@ final class PainelDeGestao
 
     private const HORARIOS_DA_RODADA = ['05:00', '17:00'];
 
-    private const FRUSTRACAO_ALTA = 1.5;
+    public const FRUSTRACAO_ALTA = 1.5;
 
     private const ATENCAO_A_PARTIR_DE = 0.25;
 
@@ -46,12 +46,12 @@ final class PainelDeGestao
 
     private const FATOR_DE_ERROS_DO_ASSISTENTE = 2;
 
-    private const CASO = "COALESCE(classificacoes_de_conversa.correcao->>'caso_de_uso', classificacoes_de_conversa.caso_de_uso)";
+    public const CASO = "COALESCE(classificacoes_de_conversa.correcao->>'caso_de_uso', classificacoes_de_conversa.caso_de_uso)";
 
-    private const RESULTADO = "COALESCE(classificacoes_de_conversa.correcao->>'resultado', classificacoes_de_conversa.resultado)";
+    public const RESULTADO = "COALESCE(classificacoes_de_conversa.correcao->>'resultado', classificacoes_de_conversa.resultado)";
 
     /** Correção com tema nulo quer dizer "nenhum tema", por isso a chave é testada com IS NOT NULL no JSON. */
-    private const TEMA = "CASE WHEN classificacoes_de_conversa.correcao->'tema_id' IS NOT NULL THEN classificacoes_de_conversa.correcao->>'tema_id' ELSE classificacoes_de_conversa.tema_id::text END";
+    public const TEMA = "CASE WHEN classificacoes_de_conversa.correcao->'tema_id' IS NOT NULL THEN classificacoes_de_conversa.correcao->>'tema_id' ELSE classificacoes_de_conversa.tema_id::text END";
 
     private const TEMAS_ATIVOS = "SELECT id::text FROM temas_de_pedido WHERE juntado_em_id IS NULL AND situacao <> 'descartado'";
 
@@ -718,7 +718,7 @@ final class PainelDeGestao
     /**
      * Custo estimado do assistente. Sem os dois preços configurados, não há valor (null).
      */
-    private function custoDoAssistente(int $entrada, int $saida): ?float
+    public function custoDoAssistente(int $entrada, int $saida): ?float
     {
         $precoEntrada = config('gestao.preco_assistente_entrada_por_milhao');
         $precoSaida = config('gestao.preco_assistente_saida_por_milhao');
@@ -973,7 +973,7 @@ final class PainelDeGestao
         return $total === 0 ? null : round($parte * 100 / $total, 1);
     }
 
-    private function data(mixed $momento): ?string
+    public function data(mixed $momento): ?string
     {
         if ($momento === null) {
             return null;

@@ -115,7 +115,7 @@ class EstadoDaConversa
      *
      * @return list<string>
      */
-    private function nomes(Conversa $conversa): array
+    public function nomes(Conversa $conversa): array
     {
         $conversa->loadMissing('user');
 

@@ -5,7 +5,9 @@ namespace App\Models;
 use App\Enums\SituacaoDoTema;
 use Database\Factories\TemaDePedidoFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Attributes\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -40,6 +42,17 @@ class TemaDePedido extends Model
     protected function casts(): array
     {
         return ['situacao' => SituacaoDoTema::class];
+    }
+
+    /**
+     * Temas que ainda valem: não juntados a outro e não descartados.
+     *
+     * @param  Builder<TemaDePedido>  $consulta
+     */
+    #[Scope]
+    protected function ativos(Builder $consulta): void
+    {
+        $consulta->whereNull('juntado_em_id')->where('situacao', '<>', SituacaoDoTema::Descartado->value);
     }
 
     /** @return BelongsTo<TemaDePedido, $this> */
