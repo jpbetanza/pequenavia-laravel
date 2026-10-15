@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>PequenaVia — nova versão no celular</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&amp;family=Instrument+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#F5F0E6}
+@keyframes nvc-subir{from{opacity:0;transform:translate(-50%,24px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes nvc-girar{to{transform:rotate(360deg)}}
+.nvc-aviso{animation:nvc-subir .5s cubic-bezier(.16,.84,.3,1) .3s both}
+.nvc-girando{animation:nvc-girar .9s linear infinite}
+@media (prefers-reduced-motion: reduce){.nvc-aviso{animation:none}.nvc-girando{animation-duration:2.4s}}
+</style>
+</helmet>
+<div style="position: relative; width: 390px; height: 844px; overflow: hidden; background: #F5F0E6; color: #221A17; font-family: 'Instrument Sans', system-ui, sans-serif; font-size: 14px; line-height: 1.45">
+
+  <header style="display: flex; align-items: center; gap: 8px; padding: 0 12px 0 16px; min-height: 60px; background: #FBF8F2; border-bottom: 1px solid #E1D7C8">
+    <span style="display: flex; align-items: center; gap: 8px; flex: 1">
+      <span style="width: 32px; height: 32px; border-radius: 999px; background: #F5F0E6; display: flex; align-items: center; justify-content: center"><img src="/_blob/50066c2efa3bd703f79bbba990bb7aa8" alt="" style="width: 24px; height: 24px; object-fit: contain"></span>
+      <span style="font-family: 'Cormorant Garamond', Georgia, serif; font-size: 21px; font-weight: 700">PequenaVia</span>
+    </span>
+    <span aria-hidden="true" style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; color: #4A3D38"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h16M4 12h16M4 17h16"/></svg></span>
+  </header>
+
+  <main aria-hidden="true" style="padding: 16px; display: flex; flex-direction: column; gap: 14px">
+    <div style="border-radius: 20px; background: #221A17; color: #F5F0E6; padding: 20px; display: flex; flex-direction: column; gap: 6px">
+      <span style="font-size: 12px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; color: #D9B97A">Quinta, 15 de outubro</span>
+      <span style="font-family: 'Cormorant Garamond', Georgia, serif; font-size: 36px; font-weight: 600; line-height: 1">Boa tarde, Ana.</span>
+      <span style="color: #D8CEC2">4 reservas hoje e 2 pedidos esperando.</span>
+    </div>
+    <div style="height: 230px; border-radius: 18px; background: #FBF8F2; border: 1px solid #E1D7C8"></div>
+    <div style="height: 180px; border-radius: 18px; background: #FBF8F2; border: 1px solid #E1D7C8"></div>
+  </main>
+
+  <sc-if value="{{ aberto }}" hint-placeholder-val="{{ true }}">
+    <section class="nvc-aviso" role="status" aria-live="polite" aria-label="{{ texto }}" style="position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); width: max-content; max-width: calc(100% - 24px); box-sizing: border-box; display: flex; align-items: center; gap: 8px; padding: 4px 4px 4px 12px; border-radius: 999px; background: #221A17; color: #F5F0E6; box-shadow: 0 12px 32px rgba(34, 26, 23, 0.3)">
+      <svg aria-hidden="true" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#D9B97A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex: none"><path d="M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8z"/></svg>
+      <b style="font-weight: 600; white-space: nowrap">{{ titulo }}</b>
+      <sc-if value="{{ podeAdiar }}" hint-placeholder-val="{{ true }}">
+        <button type="button" onClick="{{ adiar }}" aria-label="Depois" style="width: 36px; height: 36px; flex: none; border: none; border-radius: 999px; background: transparent; color: #BFB3A8; cursor: pointer; display: flex; align-items: center; justify-content: center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </sc-if>
+      <button type="button" onClick="{{ atualizar }}" disabled="{{ atualizando }}" style="display: flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 14px; border: none; border-radius: 999px; background: #D9B97A; font: inherit; font-weight: 600; color: #221A17; cursor: pointer">
+        <svg class="{{ classeDoIcone }}" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+        {{ rotuloDoBotao }}
+      </button>
+    </section>
+  </sc-if>
+
+  <sc-if value="{{ lembrete }}" hint-placeholder-val="{{ false }}">
+    <button type="button" onClick="{{ reabrir }}" aria-label="Nova versão disponível: atualizar" style="position: absolute; right: 16px; bottom: 20px; width: 52px; height: 52px; border: none; border-radius: 999px; background: #221A17; color: #D9B97A; box-shadow: 0 10px 28px rgba(34, 26, 23, 0.3); cursor: pointer; display: flex; align-items: center; justify-content: center">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+      <span aria-hidden="true" style="position: absolute; top: 8px; right: 8px; width: 10px; height: 10px; border-radius: 999px; background: #D9B97A; border: 2px solid #221A17"></span>
+    </button>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { estado: 'aberto' };
+  }
+
+  componentWillUnmount() {
+    clearTimeout(this.volta);
+  }
+
+  renderVals() {
+    var self = this;
+    var estado = this.state.estado;
+    var atualizando = estado === 'atualizando';
+
+    return {
+      aberto: estado !== 'adiado',
+      lembrete: estado === 'adiado',
+      atualizando: atualizando,
+      podeAdiar: !atualizando,
+      titulo: atualizando ? 'Atualizando…' : 'Nova versão',
+      texto: atualizando ? 'Recarregando a página.' : 'Nova versão disponível. Atualize para usar a mais recente.',
+      rotuloDoBotao: atualizando ? 'Atualizando' : 'Atualizar',
+      classeDoIcone: atualizando ? 'nvc-girando' : '',
+      atualizar: function () {
+        self.setState({ estado: 'atualizando' });
+        clearTimeout(self.volta);
+        self.volta = setTimeout(function () { self.setState({ estado: 'aberto' }); }, 2200);
+      },
+      adiar: function () { self.setState({ estado: 'adiado' }); },
+      reabrir: function () { self.setState({ estado: 'aberto' }); }
+    };
+  }
+}
+</script>
+</body>
+</html>

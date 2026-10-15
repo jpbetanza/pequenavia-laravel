@@ -16,6 +16,13 @@ return [
     'name' => env('APP_NAME', 'Laravel'),
 
     /*
+    | Versão publicada (o SHA do commit, gravado na imagem pela CI). O site compara com a versão com que abriu
+    | para avisar que há uma nova. Vazio em desenvolvimento: vale a impressão do manifesto do Vite.
+    */
+
+    'versao' => env('APP_VERSION'),
+
+    /*
     |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------

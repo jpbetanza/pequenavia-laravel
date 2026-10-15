@@ -201,3 +201,11 @@
         transform: translateX(-36px);
     }
 }
+
+/* Aviso de nova versão: sobe ao aparecer. */
+@keyframes nova-versao-subir {
+    from {
+        opacity: 0;
+        transform: translateY(24px);
+    }
+}

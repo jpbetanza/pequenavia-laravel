@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Enums\StatusSolicitacao;
 use App\Services\PrimeirosPassos\PrimeirosPassos;
+use App\Support\VersaoDoSite;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -40,6 +41,7 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'name' => config('app.name'),
+            'versao' => VersaoDoSite::atual(),
             'auth' => [
                 'user' => $request->user(),
             ],

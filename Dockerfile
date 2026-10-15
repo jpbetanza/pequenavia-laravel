@@ -41,6 +41,9 @@ RUN npm ci --no-audit --no-fund \
     && rm -rf node_modules /root/.npm /root/.cache
 
 FROM base AS runtime
+# SHA do commit, vindo da CI: o site usa para avisar que há uma versão nova.
+ARG APP_VERSION=
+ENV APP_VERSION=${APP_VERSION}
 COPY --chown=www-data:www-data . .
 COPY --from=vendor --chown=www-data:www-data /app/vendor ./vendor
 COPY --from=assets --chown=www-data:www-data /app/public/build ./public/build

@@ -11,6 +11,8 @@ declare module '@inertiajs/core' {
     export interface InertiaConfig {
         sharedPageProps: {
             name: string;
+            /** Versão do site no ar (SHA do commit ou impressão do manifesto). */
+            versao: string;
             auth: Auth;
             sidebarOpen: boolean;
             agenda: { solicitacoes_pendentes: number } | null;
