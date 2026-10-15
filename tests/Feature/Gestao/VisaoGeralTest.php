@@ -92,6 +92,36 @@ it('separa o dia por resolvidas e não resolvidas, com parcial contando como nã
             ->where('por_dia.0.resolvidas', 0));
 });
 
+it('deixa as conversas que aguardam a secretaria fora da taxa de resolvidas e das não resolvidas', function () {
+    $ana = User::factory()->create(['admin' => false, 'name' => 'Ana']);
+    classificacaoDaParoquia($ana, ['resultado' => ResultadoDaConversa::Resolvida->value]);
+    classificacaoDaParoquia($ana, ['resultado' => ResultadoDaConversa::NaoResolvida->value]);
+    classificacaoDaParoquia($ana, ['resultado' => ResultadoDaConversa::Aguardando->value]);
+    classificacaoDaParoquia($ana, ['resultado' => ResultadoDaConversa::Aguardando->value]);
+
+    $this->actingAs(gestorDoPainel())
+        ->get(route('gestao.index'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('resumo.resolvidas_pct', 50)
+            ->where('clientes.0.resolvidas_pct', 50)
+            ->where('por_dia.29.resolvidas', 1)
+            ->where('por_dia.29.nao_resolvidas', 1)
+            ->where('por_dia.29.aguardando', 2));
+
+    $this->actingAs(gestorDoPainel())
+        ->get(route('gestao.conversas.index'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('matriz.0.total', 4)
+            ->where('matriz.0.aguardando', 2)
+            ->where('matriz.0.nao_resolvida', 1));
+
+    $this->actingAs(gestorDoPainel())
+        ->get(route('gestao.clientes.show', $ana))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('assistente.resolvidas_pct', 50)
+            ->where('casos.0.aguardando', 2));
+});
+
 it('ordena os casos de uso pelo efetivo e calcula o percentual', function () {
     $ana = User::factory()->create(['admin' => false]);
     classificacaoDaParoquia($ana, ['caso_de_uso' => 'reserva']);

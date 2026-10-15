@@ -21,16 +21,17 @@ Você vê o que o gestor do projeto vê em `/gestao`. O objetivo é descobrir **
 
 ## Glossário dos campos
 
-| Campo                  | Valores e significado                                                                                                                                               |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `caso` / `caso_de_uso` | `consultar_agenda`, `reserva` (criar ou mudar), `solicitacoes`, `cadastro` (espaços, equipamentos, grupos), `certificados`, `duvida_app`, `fora_do_escopo`, `outro` |
-| `resultado`            | `resolvida`, `parcial` (conta como não resolvida nos gráficos), `nao_resolvida`                                                                                     |
-| `frustracao`           | Nota de 0 a 3: abaixo de 0,75 é calma, até 1,5 é neutra, até 2,25 é frustrada mas educada, acima disso é muito frustrada. **1,5 ou mais conta como "frustrada"**    |
-| `a_revisar`            | O JEV ficou com confiança abaixo de 0,6 em algum rótulo. Vale conferir à mão                                                                                        |
-| `pedido_fora`          | A pessoa pediu algo que o app ainda não faz                                                                                                                         |
-| `tema`                 | O pedido não atendido, agrupado. A situação pode ser `novo`, `acompanhando`, `planejado` ou `descartado`                                                            |
-| `periodo`              | 7, 30 ou 90 dias contando hoje. Os números de "anterior" são da janela de mesmo tamanho logo antes                                                                  |
-| `incluir_gestores`     | Por padrão ficam de fora as contas de gestão, que são as conversas de teste do gestor. Use `true` para incluí-las                                                   |
+| Campo                  | Valores e significado                                                                                                                                                                                                                                                                     |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `caso` / `caso_de_uso` | `consultar_agenda`, `reserva` (criar ou mudar), `solicitacoes`, `cadastro` (espaços, equipamentos, grupos), `certificados`, `duvida_app`, `fora_do_escopo`, `outro`                                                                                                                       |
+| `resultado`            | `resolvida`; `parcial` (conta como não resolvida nos gráficos); `nao_resolvida`; `aguardando`: a conversa parou esperando a secretaria responder há menos de 3 dias. Ela fica fora da taxa de resolvidas. Se a secretaria não voltar, a conversa é reclassificada e fecha como abandonada |
+| `frustracao`           | Nota de 0 a 3: abaixo de 0,75 é calma, até 1,5 é neutra, até 2,25 é frustrada mas educada, acima disso é muito frustrada. **1,5 ou mais conta como "frustrada"**                                                                                                                          |
+| `abandonada`           | A conversa parou esperando a secretaria, que não voltou em 3 dias. É uma marca sobre conversas `parcial` ou `nao_resolvida`, não um resultado à parte                                                                                                                                     |
+| `a_revisar`            | O JEV ficou com confiança abaixo de 0,6 em algum rótulo. Vale conferir à mão                                                                                                                                                                                                              |
+| `pedido_fora`          | A pessoa pediu algo que o app ainda não faz                                                                                                                                                                                                                                               |
+| `tema`                 | O pedido não atendido, agrupado. A situação pode ser `novo`, `acompanhando`, `planejado` ou `descartado`                                                                                                                                                                                  |
+| `periodo`              | 7, 30 ou 90 dias contando hoje. Os números de "anterior" são da janela de mesmo tamanho logo antes                                                                                                                                                                                        |
+| `incluir_gestores`     | Por padrão ficam de fora as contas de gestão, que são as conversas de teste do gestor. Use `true` para incluí-las                                                                                                                                                                         |
 
 ## Ferramentas, da mais geral para a mais específica
 
@@ -69,5 +70,6 @@ Você vê o que o gestor do projeto vê em `/gestao`. O objetivo é descobrir **
 
 - **Dados pessoais vêm mascarados** (nomes, telefones, e-mails, CPFs). Não tente reconstruí-los e não os repita fora do contexto da análise.
 - Ainda há **poucas paróquias e poucas conversas**. Diga o tamanho da amostra e evite porcentagens sobre poucos casos. "2 de 3" diz mais que "67%".
+- Conversas `aguardando` ainda podem ter desfecho. Não as conte como fracasso do assistente; veja se a pergunta que ele deixou era necessária.
 - Os números do período usam a **data da classificação**, não a da conversa. Uma conversa de ontem à noite pode entrar na rodada de hoje.
 - Se uma ferramenta voltar vazia, confira o `periodo` e o `incluir_gestores` antes de concluir que não há dados.

@@ -36,9 +36,9 @@ final class PerguntasDoJev
             ],
             'outcome' => [
                 'type' => 'choice',
-                'instructions' => 'By the end of `conversation`, did the secretary get what she asked for?',
+                'instructions' => 'By the end of `conversation`, did the secretary get what she asked for? Changes counted in `proposed_actions.confirmed` were done. Judge her main request: small follow-ups still pending at the end do not undo it.',
                 'criteria' => [
-                    'resolvida' => 'Got it fully',
+                    'resolvida' => 'Got it fully: her question was answered or the changes she asked for were confirmed',
                     'parcial' => 'Got part of it, or a workaround',
                     'nao_resolvida' => 'Did not get it',
                 ],

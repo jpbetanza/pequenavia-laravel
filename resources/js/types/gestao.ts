@@ -67,6 +67,8 @@ export type DiaDoPainel = {
     data: string;
     resolvidas: number;
     nao_resolvidas: number;
+    /** Pararam esperando a secretaria e ainda podem continuar. */
+    aguardando: number;
 };
 
 export type CasoDoPainel = {
@@ -147,6 +149,7 @@ export type ClienteProps = {
         resolvida: number;
         parcial: number;
         nao_resolvida: number;
+        aguardando: number;
     }[];
     trava: { tema: string; conversas: number } | null;
     linha_do_tempo: {
@@ -189,6 +192,7 @@ export type LinhaDaMatriz = {
     resolvida: number;
     parcial: number;
     nao_resolvida: number;
+    aguardando: number;
     abandonada: number;
     tendencia_pct: number | null;
 };

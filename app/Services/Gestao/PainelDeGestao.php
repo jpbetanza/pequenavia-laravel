@@ -48,6 +48,9 @@ final class PainelDeGestao
 
     public const CASO = "COALESCE(classificacoes_de_conversa.correcao->>'caso_de_uso', classificacoes_de_conversa.caso_de_uso)";
 
+    /** Resultados que contam como "sem resolver": aguardando fica de fora até a secretaria voltar ou o prazo passar. */
+    private const EM_ABERTO = ['parcial', 'nao_resolvida'];
+
     public const RESULTADO = "COALESCE(classificacoes_de_conversa.correcao->>'resultado', classificacoes_de_conversa.resultado)";
 
     /** Correção com tema nulo quer dizer "nenhum tema", por isso a chave é testada com IS NOT NULL no JSON. */
@@ -122,9 +125,9 @@ final class PainelDeGestao
     }
 
     /**
-     * Um dia por dia do período (inclusive os zerados). Parcial conta como não resolvida.
+     * Um dia por dia do período (inclusive os zerados). Parcial conta como não resolvida; aguardando fica à parte.
      *
-     * @return list<array{data: string, resolvidas: int, nao_resolvidas: int}>
+     * @return list<array{data: string, resolvidas: int, nao_resolvidas: int, aguardando: int}>
      */
     public function porDia(PeriodoDoPainel $periodo): array
     {
@@ -136,8 +139,10 @@ final class PainelDeGestao
             $periodo->fim,
         )
             ->selectRaw(
-                "to_char((classificacoes_de_conversa.classificada_em AT TIME ZONE 'UTC') AT TIME ZONE ?, 'YYYY-MM-DD') AS dia, count(*) AS total, sum(case when ".self::RESULTADO.' = ? then 1 else 0 end) AS resolvidas',
-                [$fuso, ResultadoDaConversa::Resolvida->value],
+                "to_char((classificacoes_de_conversa.classificada_em AT TIME ZONE 'UTC') AT TIME ZONE ?, 'YYYY-MM-DD') AS dia, count(*) AS total, "
+                .'sum(case when '.self::RESULTADO.' = ? then 1 else 0 end) AS resolvidas, '
+                .'sum(case when '.self::RESULTADO.' = ? then 1 else 0 end) AS aguardando',
+                [$fuso, ResultadoDaConversa::Resolvida->value, ResultadoDaConversa::Aguardando->value],
             )
             ->groupByRaw('dia')
             ->get()
@@ -150,8 +155,9 @@ final class PainelDeGestao
             $linha = $linhas->get($data);
             $total = $linha === null ? 0 : (int) $linha->total;
             $resolvidas = $linha === null ? 0 : (int) $linha->resolvidas;
+            $aguardando = $linha === null ? 0 : (int) $linha->aguardando;
 
-            $dias[] = ['data' => $data, 'resolvidas' => $resolvidas, 'nao_resolvidas' => $total - $resolvidas];
+            $dias[] = ['data' => $data, 'resolvidas' => $resolvidas, 'nao_resolvidas' => $total - $resolvidas - $aguardando, 'aguardando' => $aguardando];
         }
 
         return $dias;
@@ -401,7 +407,7 @@ final class PainelDeGestao
     /**
      * Casos de uso do cliente no período, com o resultado de cada um.
      *
-     * @return list<array{rotulo: string, total: int, resolvida: int, parcial: int, nao_resolvida: int}>
+     * @return list<array{rotulo: string, total: int, resolvida: int, parcial: int, nao_resolvida: int, aguardando: int}>
      */
     public function casosDoCliente(User $cliente, PeriodoDoPainel $periodo): array
     {
@@ -415,8 +421,9 @@ final class PainelDeGestao
                 self::CASO.' AS caso, count(*) AS total, '
                 .'sum(case when '.self::RESULTADO.' = ? then 1 else 0 end) AS resolvida, '
                 .'sum(case when '.self::RESULTADO.' = ? then 1 else 0 end) AS parcial, '
-                .'sum(case when '.self::RESULTADO.' = ? then 1 else 0 end) AS nao_resolvida',
-                [ResultadoDaConversa::Resolvida->value, ResultadoDaConversa::Parcial->value, ResultadoDaConversa::NaoResolvida->value],
+                .'sum(case when '.self::RESULTADO.' = ? then 1 else 0 end) AS nao_resolvida, '
+                .'sum(case when '.self::RESULTADO.' = ? then 1 else 0 end) AS aguardando',
+                [ResultadoDaConversa::Resolvida->value, ResultadoDaConversa::Parcial->value, ResultadoDaConversa::NaoResolvida->value, ResultadoDaConversa::Aguardando->value],
             )
             ->groupByRaw(self::CASO)
             ->orderByDesc('total')
@@ -429,6 +436,7 @@ final class PainelDeGestao
             'resolvida' => (int) $linha->resolvida,
             'parcial' => (int) $linha->parcial,
             'nao_resolvida' => (int) $linha->nao_resolvida,
+            'aguardando' => (int) $linha->aguardando,
         ])->all());
     }
 
@@ -442,7 +450,7 @@ final class PainelDeGestao
         $linha = DB::table('classificacoes_de_conversa')
             ->where('user_id', $cliente->id)
             ->whereRaw('('.self::TEMA.') IS NOT NULL')
-            ->whereRaw(self::RESULTADO.' <> ?', [ResultadoDaConversa::Resolvida->value])
+            ->whereIn(DB::raw(self::RESULTADO), self::EM_ABERTO)
             ->selectRaw(self::TEMA.' AS tema_id, count(*) AS conversas')
             ->groupByRaw(self::TEMA)
             ->orderByDesc('conversas')
@@ -502,7 +510,7 @@ final class PainelDeGestao
         $naoResolvidas = DB::table('classificacoes_de_conversa')
             ->join('conversas', 'conversas.id', '=', 'classificacoes_de_conversa.conversa_id')
             ->where('classificacoes_de_conversa.user_id', $cliente->id)
-            ->whereRaw(self::RESULTADO.' <> ?', [ResultadoDaConversa::Resolvida->value])
+            ->whereIn(DB::raw(self::RESULTADO), self::EM_ABERTO)
             ->orderByDesc('classificacoes_de_conversa.mensagens_ate')
             ->limit(5)
             ->get(['conversas.titulo', 'classificacoes_de_conversa.mensagens_ate']);
@@ -643,6 +651,8 @@ final class PainelDeGestao
         $classificadas = $this->entre(
             DB::table('classificacoes_de_conversa')
                 ->whereIn('user_id', $this->subconsultaDeClientes())
+                // As que aguardam a secretaria ainda não têm desfecho: ficam fora da taxa de resolvidas.
+                ->whereRaw(self::RESULTADO.' <> ?', [ResultadoDaConversa::Aguardando->value])
                 ->groupBy('user_id')
                 ->selectRaw('user_id, count(*) AS total, sum(case when '.self::RESULTADO.' = ? then 1 else 0 end) AS resolvidas', [ResultadoDaConversa::Resolvida->value]),
             'classificacoes_de_conversa.classificada_em',
@@ -754,7 +764,9 @@ final class PainelDeGestao
     private function contagemDeClassificacoes(string $userId, PeriodoDoPainel $periodo): array
     {
         $linha = $this->entre(
-            DB::table('classificacoes_de_conversa')->where('user_id', $userId),
+            DB::table('classificacoes_de_conversa')
+                ->where('user_id', $userId)
+                ->whereRaw(self::RESULTADO.' <> ?', [ResultadoDaConversa::Aguardando->value]),
             'classificacoes_de_conversa.classificada_em',
             $periodo->inicio,
             $periodo->fim,
@@ -820,7 +832,7 @@ final class PainelDeGestao
 
         $ids = DB::table('classificacoes_de_conversa')
             ->whereIn('user_id', $this->subconsultaDeClientes())
-            ->whereRaw(self::RESULTADO.' <> ?', [ResultadoDaConversa::Resolvida->value])
+            ->whereIn(DB::raw(self::RESULTADO), self::EM_ABERTO)
             ->where('classificacoes_de_conversa.mensagens_ate', '<', $corte->utc())
             ->distinct()
             ->pluck('user_id')

@@ -67,7 +67,7 @@ parameters:
 			path: app/Http/Controllers/Agendamentos/ReservaController.php
 
 		-
-			message: '#^Method App\\Http\\Controllers\\Agendamentos\\ReservaController\:\:espacosDoIntervalo\(\) should return list\<array\<string, mixed\>\> but returns array\<int, array\{id\: string, nome\: string, capacidade\: int\|null, ativo\: bool, cor\: ''azul''\|''bordo''\|''dourado''\|''roxo''\|''verde'', recursos_fixos\: array\<int, string\>, horarios\: array\<int, array\{dia_semana\: int, abre\: string, fecha\: string\}\>, bloqueios\: array\<int, array\{id\: string, inicio\: string, fim\: string, motivo\: string\}\>\}\>\.$#'
+			message: '#^Method App\\Http\\Controllers\\Agendamentos\\ReservaController\:\:espacosDoIntervalo\(\) should return list\<array\<string, mixed\>\> but returns array\<int, array\{id\: string, nome\: string, capacidade\: int\|null, ativo\: bool, cor\: ''azul''\|''bordo''\|''dourado''\|''grafite''\|''oliva''\|''petroleo''\|''rosa''\|''roxo''\|''terracota''\|''verde'', recursos_fixos\: array\<int, string\>, horarios\: array\<int, array\{dia_semana\: int, abre\: string, fecha\: string\}\>, bloqueios\: array\<int, array\{id\: string, inicio\: string, fim\: string, motivo\: string\}\>\}\>\.$#'
 			identifier: return.type
 			count: 1
 			path: app/Http/Controllers/Agendamentos/ReservaController.php
@@ -163,7 +163,7 @@ parameters:
 			path: app/Http/Controllers/InicioController.php
 
 		-
-			message: '#^Method App\\Http\\Controllers\\InicioController\:\:reservasDeHoje\(\) should return list\<array\<string, mixed\>\> but returns array\<int, array\{id\: string, titulo\: string, inicio\: string, fim\: string, espaco\: array\{nome\: string, cor\: ''azul''\|''bordo''\|''dourado''\|''roxo''\|''verde''\}, grupo_nome\: string\|null, equipamentos\: array\<int, array\{nome\: string, quantidade\: int\}\>, situacao\: ''em_andamento''\|''encerrada''\|''proxima''\}\>\.$#'
+			message: '#^Method App\\Http\\Controllers\\InicioController\:\:reservasDeHoje\(\) should return list\<array\<string, mixed\>\> but returns array\<int, array\{id\: string, titulo\: string, inicio\: string, fim\: string, espaco\: array\{nome\: string, cor\: ''azul''\|''bordo''\|''dourado''\|''grafite''\|''oliva''\|''petroleo''\|''rosa''\|''roxo''\|''terracota''\|''verde''\}, grupo_nome\: string\|null, equipamentos\: array\<int, array\{nome\: string, quantidade\: int\}\>, situacao\: ''em_andamento''\|''encerrada''\|''proxima''\}\>\.$#'
 			identifier: return.type
 			count: 1
 			path: app/Http/Controllers/InicioController.php

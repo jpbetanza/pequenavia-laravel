@@ -52,6 +52,9 @@ return [
     |--------------------------------------------------------------------------
     */
     'tema_novo_alerta_semana' => 5,
+
+    // Conversa que parou esperando a secretaria fica "aguardando" por estes dias; depois, conta como abandonada.
+    'dias_aguardando' => 3,
     'dias_sem_acesso_alerta' => 14,
 
     // Mesmo fuso da agenda (config/agendamentos.php), lido direto do ambiente para não depender da ordem de carga.
