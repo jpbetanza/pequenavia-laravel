@@ -56,4 +56,16 @@ return [
 
     // Mesmo fuso da agenda (config/agendamentos.php), lido direto do ambiente para não depender da ordem de carga.
     'fuso' => env('AGENDAMENTOS_FUSO', 'America/Sao_Paulo'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Chaves do OAuth do MCP
+    |--------------------------------------------------------------------------
+    |
+    | Sem PASSPORT_PRIVATE_KEY/PASSPORT_PUBLIC_KEY no ambiente, o comando
+    | gestao:chaves-oauth gera as chaves uma vez e guarda uma cópia
+    | criptografada (com a APP_KEY) neste disco, para sobreviver aos deploys.
+    |
+    */
+    'disco_das_chaves_oauth' => env('GESTAO_DISCO_CHAVES_OAUTH', 's3'),
 ];
