@@ -1,3 +1,4 @@
+import { AvisoDeNovaVersao } from '@/components/aviso-de-nova-versao';
 import { BannerDeInstalacao } from '@/components/banner-de-instalacao';
 import AppLayoutTemplate from '@/layouts/app/app-header-layout';
 import type { BreadcrumbItem } from '@/types';
@@ -13,6 +14,7 @@ export default function AppLayout({
         <AppLayoutTemplate breadcrumbs={breadcrumbs}>
             {children}
             <BannerDeInstalacao />
+            <AvisoDeNovaVersao />
         </AppLayoutTemplate>
     );
 }

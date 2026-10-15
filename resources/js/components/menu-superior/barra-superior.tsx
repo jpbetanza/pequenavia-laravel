@@ -3,6 +3,7 @@ import { CalendarDays, FileText, House, Menu, Sparkles, X } from 'lucide-react';
 import { useState } from 'react';
 import AppLogo from '@/components/app-logo';
 import { BotaoDoAssistente } from '@/components/assistente/botao-do-assistente';
+import { SeloDeNovaVersao } from '@/components/aviso-de-nova-versao';
 import { Button } from '@/components/ui/button';
 import { MenuDaConta } from '@/components/menu-superior/menu-da-conta';
 import { MenuDoCelular } from '@/components/menu-superior/menu-do-celular';
@@ -87,6 +88,7 @@ export function BarraSuperior() {
                 </NavigationMenu>
 
                 <div className="ml-auto flex items-center gap-3">
+                    <SeloDeNovaVersao />
                     {assistenteDisponivel && (
                         <>
                             <BotaoDoAssistente />

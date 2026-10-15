@@ -20,10 +20,13 @@ use App\Http\Controllers\HistoricoController;
 use App\Http\Controllers\InicioController;
 use App\Http\Controllers\ModeloCertificadoController;
 use App\Http\Controllers\PrimeirosPassosController;
+use App\Http\Controllers\VersaoController;
 use App\Http\Middleware\GarantirAssistenteConfigurado;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'welcome')->name('home');
+
+Route::get('versao', VersaoController::class)->name('versao');
 
 Route::get('fontes/{pasta}/{peso}.ttf', [FonteController::class, 'show'])
     ->where('pasta', '[a-z0-9-]+')

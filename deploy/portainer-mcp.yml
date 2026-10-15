@@ -1,0 +1,38 @@
+# Portainer MCP: deixa um assistente (Claude) consultar e operar o Portainer por https://mcp.aotomatika.com.br/mcp.
+#
+# Suba como uma stack separada no Portainer (Stacks > Add stack > Web editor), com a variável MCP_TOKEN definida
+# em "Environment variables" (32 caracteres ou mais). Gere com: openssl rand -hex 32
+#
+# O MCP não guarda a chave do Portainer: cada cliente manda a própria chave (ptr_...) no cabeçalho
+# X-Portainer-API-Key, junto com "Authorization: Bearer <MCP_TOKEN>".
+#
+# A versão da imagem acompanha a do Portainer (2.45.x). A Portainer não dá mais suporte a este MCP.
+services:
+    portainer-mcp:
+        image: portainer/portainer-mcp:2.45
+        environment:
+            PORTAINER_URL: https://painel.aotomatika.com.br
+            # Entre aspas: sem elas, um valor só de dígitos vira número no YAML.
+            PORTAINER_MCP_AUTH_TOKEN: '${MCP_TOKEN}'
+            PORTAINER_MCP_ALLOWED_HOSTS: mcp.aotomatika.com.br
+            # O TLS fica no Traefik; o container só aceita as requisições que vêm dele.
+            PORTAINER_MCP_TRUST_PROXY_TLS: '1'
+            PORTAINER_MCP_FORWARDED_ALLOW_IPS: 10.0.0.0/8
+        networks:
+            - network_swarm_public
+        deploy:
+            mode: replicated
+            replicas: 1
+            labels:
+                - 'traefik.enable=true'
+                - 'traefik.docker.network=network_swarm_public'
+                - 'traefik.http.routers.portainer-mcp.rule=Host(`mcp.aotomatika.com.br`)'
+                - 'traefik.http.routers.portainer-mcp.entrypoints=websecure'
+                - 'traefik.http.routers.portainer-mcp.tls=true'
+                - 'traefik.http.routers.portainer-mcp.tls.certresolver=letsencryptresolver'
+                - 'traefik.http.routers.portainer-mcp.service=portainer-mcp'
+                - 'traefik.http.services.portainer-mcp.loadbalancer.server.port=17717'
+
+networks:
+    network_swarm_public:
+        external: true
