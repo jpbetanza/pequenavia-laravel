@@ -2,6 +2,8 @@
 
 use App\Console\Commands\GestaoChavesOauth;
 use App\Enums\SituacaoDoTema;
+use App\Mcp\Prompts\AnalisarMelhorias;
+use App\Mcp\Resources\ManualDaGestao as RecursoDoManual;
 use App\Mcp\Servers\GestaoServer;
 use App\Mcp\Tools\Gestao\AtualizarTema;
 use App\Mcp\Tools\Gestao\CorrigirClassificacao;
@@ -9,6 +11,7 @@ use App\Mcp\Tools\Gestao\JuntarTemas;
 use App\Mcp\Tools\Gestao\ListarClientes;
 use App\Mcp\Tools\Gestao\ListarConversas;
 use App\Mcp\Tools\Gestao\ListarTemas;
+use App\Mcp\Tools\Gestao\ManualDaGestao;
 use App\Mcp\Tools\Gestao\ResumoDoPainel;
 use App\Mcp\Tools\Gestao\VerCliente;
 use App\Mcp\Tools\Gestao\VerConversa;
@@ -98,6 +101,25 @@ it('só mostra as ferramentas para gestores', function () {
     GestaoServer::actingAs(User::factory()->create(['admin' => false]))->tools()->assertNotRegistered([
         ResumoDoPainel::class, CorrigirClassificacao::class,
     ]);
+});
+
+it('entrega o manual como ferramenta e recurso, e o roteiro de análise', function () {
+    $gestor = gestorDoMcp();
+
+    GestaoServer::actingAs($gestor)->tool(ManualDaGestao::class)
+        ->assertOk()
+        ->assertSee(['Glossário dos campos', 'Receitas', 'frustracao']);
+
+    GestaoServer::actingAs($gestor)->resource(RecursoDoManual::class)
+        ->assertOk()
+        ->assertSee('Manual do MCP da gestão');
+
+    GestaoServer::actingAs($gestor)->prompt(AnalisarMelhorias::class, ['periodo' => '7', 'foco' => 'certificados'])
+        ->assertOk()
+        ->assertSee(['últimos 7 dias', 'Foco desta análise: certificados.']);
+
+    GestaoServer::actingAs(User::factory()->create(['admin' => false]))->resources()->assertNotRegistered(RecursoDoManual::class);
+    GestaoServer::actingAs(User::factory()->create(['admin' => false]))->prompts()->assertNotRegistered(AnalisarMelhorias::class);
 });
 
 it('resume o painel e deixa as contas de gestão de fora por padrão', function () {
