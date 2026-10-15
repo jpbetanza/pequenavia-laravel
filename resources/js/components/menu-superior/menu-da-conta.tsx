@@ -1,11 +1,16 @@
-import { usePage } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
+import { LayoutDashboard } from 'lucide-react';
 import {
     DropdownMenu,
     DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { UserMenuContent } from '@/components/user-menu-content';
 import { useInitials } from '@/hooks/use-initials';
+import { index as gestao } from '@/routes/gestao';
 
 export function MenuDaConta() {
     const { auth } = usePage().props;
@@ -28,7 +33,25 @@ export function MenuDaConta() {
                 </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-64 rounded-lg">
-                <UserMenuContent user={auth.user} />
+                <UserMenuContent user={auth.user}>
+                    {auth.user.admin && (
+                        <>
+                            <DropdownMenuGroup>
+                                <DropdownMenuItem asChild>
+                                    <Link
+                                        className="block w-full cursor-pointer"
+                                        href={gestao()}
+                                        prefetch
+                                    >
+                                        <LayoutDashboard className="mr-2" />
+                                        Gestão
+                                    </Link>
+                                </DropdownMenuItem>
+                            </DropdownMenuGroup>
+                            <DropdownMenuSeparator />
+                        </>
+                    )}
+                </UserMenuContent>
             </DropdownMenuContent>
         </DropdownMenu>
     );

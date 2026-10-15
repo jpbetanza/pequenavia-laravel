@@ -3,6 +3,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import AppLayout from '@/layouts/app-layout';
 import AuthLayout from '@/layouts/auth-layout';
+import GestaoLayout from '@/layouts/gestao-layout';
 import LayoutPublico from '@/layouts/reservar/layout-publico';
 import SettingsLayout from '@/layouts/settings/layout';
 import { prepararInstalacao } from '@/lib/pwa/instalacao';
@@ -26,6 +27,8 @@ void createInertiaApp({
                 return LayoutPublico;
             case name.startsWith('settings/'):
                 return [AppLayout, SettingsLayout];
+            case name.startsWith('gestao/'):
+                return GestaoLayout;
             default:
                 return AppLayout;
         }

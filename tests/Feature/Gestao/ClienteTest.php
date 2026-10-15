@@ -10,6 +10,7 @@ use App\Models\ClassificacaoDeConversa;
 use App\Models\Conversa;
 use App\Models\Equipamento;
 use App\Models\Espaco;
+use App\Models\Grupo;
 use App\Models\Mensagem;
 use App\Models\Reserva;
 use App\Models\Solicitacao;
@@ -20,9 +21,6 @@ use Illuminate\Support\Collection;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
-    // As páginas React ainda não existem nesta parte; o teste confere só o componente e as props.
-    config(['inertia.testing.ensure_pages_exist' => false]);
-
     // 17/10/2026 15h30 em São Paulo.
     $this->travelTo(CarbonImmutable::parse('2026-10-17 15:30', 'America/Sao_Paulo'));
 });
@@ -310,6 +308,25 @@ it('lista até dez conversas recentes, com o caso e o resultado efetivos', funct
             ->where('conversas.0.caso_rotulo', 'Certificados')
             ->where('conversas.0.resultado', 'resolvida')
             ->where('conversas.0.resultado_rotulo', ResultadoDaConversa::Resolvida->rotulo()));
+});
+
+it('mascara o título das conversas recentes e da linha do tempo, com o nome do cliente e dos grupos', function () {
+    $ana = User::factory()->create(['admin' => false, 'name' => 'Ana Souza']);
+    Grupo::factory()->for($ana)->create(['nome' => 'Pastoral Esperança']);
+    classificacaoDoCliente($ana, ['titulo' => 'Ana Souza da Pastoral Esperança, ana@paroquia.test', 'resultado' => ResultadoDaConversa::NaoResolvida->value]);
+
+    $this->actingAs(User::factory()->create(['admin' => true]))
+        ->get(route('gestao.clientes.show', $ana))
+        ->assertInertia(function (Assert $page) {
+            $props = $page->toArray()['props'];
+            $textos = [$props['conversas'][0]['titulo'], json_encode($props['linha_do_tempo'], JSON_UNESCAPED_UNICODE)];
+
+            foreach ($textos as $texto) {
+                expect($texto)->not->toContain('Souza')
+                    ->and($texto)->not->toContain('Esperança')
+                    ->and($texto)->not->toContain('ana@paroquia.test');
+            }
+        });
 });
 
 it('mostra o cliente sem atividade como parado, com configuração ainda não iniciada', function () {

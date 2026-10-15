@@ -57,7 +57,11 @@ final class PainelDeGestao
 
     private const SEM_ATIVIDADE = ['mensagens' => 0, 'reservas' => 0, 'conversas' => 0, 'classificadas' => 0, 'resolvidas' => 0];
 
-    public function __construct(private readonly PrimeirosPassos $primeirosPassos) {}
+    public function __construct(
+        private readonly PrimeirosPassos $primeirosPassos,
+        private readonly EstadoDaConversa $estado,
+        private readonly Mascarador $mascarador,
+    ) {}
 
     /**
      * Período pedido na URL. Qualquer valor fora de 7, 30 e 90 cai no padrão.
@@ -502,10 +506,14 @@ final class PainelDeGestao
             ->limit(5)
             ->get(['conversas.titulo', 'classificacoes_de_conversa.mensagens_ate']);
 
+        $nomes = $this->estado->nomesDoCliente((string) $cliente->id, $cliente->name);
+
         foreach ($naoResolvidas as $linha) {
+            $titulo = $this->mascarador->mascarar((string) $linha->titulo, $nomes);
+
             $itens[] = [
                 'quando' => CarbonImmutable::parse((string) $linha->mensagens_ate, 'UTC'),
-                'texto' => "Conversa sem resolver: {$linha->titulo}",
+                'texto' => "Conversa sem resolver: {$titulo}",
                 'tom' => 'ruim',
             ];
         }
@@ -535,9 +543,12 @@ final class PainelDeGestao
             ->limit(self::CONVERSAS_RECENTES)
             ->get();
 
+        // O título é escrito pela IA a partir da conversa e pode trazer nomes: passa pela máscara.
+        $nomes = $this->estado->nomesDoCliente((string) $cliente->id, $cliente->name);
+
         return array_values($linhas->map(fn (object $linha): array => [
             'id' => (string) $linha->id,
-            'titulo' => (string) $linha->titulo,
+            'titulo' => $this->mascarador->mascarar((string) $linha->titulo, $nomes),
             'caso' => (string) $linha->caso,
             'caso_rotulo' => CasoDeUso::from((string) $linha->caso)->rotulo(),
             'resultado' => (string) $linha->resultado,

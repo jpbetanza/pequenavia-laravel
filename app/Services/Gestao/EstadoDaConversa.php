@@ -119,11 +119,21 @@ class EstadoDaConversa
     {
         $conversa->loadMissing('user');
 
-        /** @var list<string> $nomes */
-        $nomes = array_values(Grupo::query()->where('user_id', $conversa->user_id)->pluck('nome')->all());
+        return $this->nomesDoCliente($conversa->user_id, $conversa->user?->name);
+    }
 
-        if ($conversa->user?->name) {
-            $nomes[] = $conversa->user->name;
+    /**
+     * Mesmos nomes, para quando o cliente já é conhecido e vale buscar uma vez só para várias conversas.
+     *
+     * @return list<string>
+     */
+    public function nomesDoCliente(string $clienteId, ?string $nome): array
+    {
+        /** @var list<string> $nomes */
+        $nomes = array_values(Grupo::query()->where('user_id', $clienteId)->pluck('nome')->all());
+
+        if ($nome) {
+            $nomes[] = $nome;
         }
 
         return $nomes;

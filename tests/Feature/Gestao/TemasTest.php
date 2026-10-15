@@ -10,9 +10,6 @@ use Carbon\CarbonImmutable;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
-    // As páginas React ainda não existem nesta parte; o teste confere só o componente e as props.
-    config(['inertia.testing.ensure_pages_exist' => false]);
-
     // 17/10/2026 15h30 em São Paulo.
     $this->travelTo(CarbonImmutable::parse('2026-10-17 15:30', 'America/Sao_Paulo'));
 });
