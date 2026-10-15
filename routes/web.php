@@ -19,6 +19,7 @@ use App\Http\Controllers\FonteController;
 use App\Http\Controllers\GeracaoCertificadoController;
 use App\Http\Controllers\Gestao\ClienteController;
 use App\Http\Controllers\Gestao\ConversaController as GestaoConversaController;
+use App\Http\Controllers\Gestao\EscopoController;
 use App\Http\Controllers\Gestao\TemaController;
 use App\Http\Controllers\Gestao\VisaoGeralController;
 use App\Http\Controllers\HistoricoController;
@@ -128,6 +129,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 Route::prefix('gestao')->name('gestao.')->middleware(['auth', 'can:gestao'])->group(function () {
     Route::get('/', VisaoGeralController::class)->name('index');
+    Route::put('escopo', EscopoController::class)->name('escopo');
 
     Route::get('conversas', [GestaoConversaController::class, 'index'])->name('conversas.index');
     Route::patch('conversas/{conversa}/classificacao', [GestaoConversaController::class, 'corrigir'])->name('conversas.corrigir');

@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Enums\SituacaoDoTema;
 use App\Enums\StatusSolicitacao;
 use App\Models\TemaDePedido;
+use App\Services\Gestao\EscopoDaGestao;
 use App\Services\Gestao\PainelDeGestao;
 use App\Services\PrimeirosPassos\PrimeirosPassos;
 use App\Support\VersaoDoSite;
@@ -62,6 +63,7 @@ class HandleInertiaRequests extends Middleware
             'gestao' => fn () => $request->user()?->admin ? [
                 'temas_novos' => TemaDePedido::query()->ativos()->where('situacao', SituacaoDoTema::Novo->value)->count(),
                 'classificacao' => app(PainelDeGestao::class)->classificacao(),
+                'incluir_gestores' => app(EscopoDaGestao::class)->incluiGestores(),
             ] : null,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];

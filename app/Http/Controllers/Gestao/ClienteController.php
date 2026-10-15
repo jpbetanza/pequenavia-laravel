@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Gestao;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\Gestao\EscopoDaGestao;
 use App\Services\Gestao\PainelDeGestao;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -14,7 +15,10 @@ use Inertia\Response;
  */
 class ClienteController extends Controller
 {
-    public function __construct(private readonly PainelDeGestao $painel) {}
+    public function __construct(
+        private readonly PainelDeGestao $painel,
+        private readonly EscopoDaGestao $escopo,
+    ) {}
 
     public function index(Request $request): Response
     {
@@ -30,8 +34,8 @@ class ClienteController extends Controller
 
     public function show(Request $request, User $user): Response
     {
-        // Gestores não são paróquias: o detalhe só existe para clientes.
-        abort_if($user->admin, 404);
+        // Gestores não são paróquias: o detalhe só existe para clientes, a não ser que o gestor peça para incluí-los.
+        abort_if($user->admin && ! $this->escopo->incluiGestores(), 404);
 
         $periodo = $this->painel->periodo($request->query('periodo'));
 

@@ -1,4 +1,4 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import {
     ArrowLeft,
     ChartColumn,
@@ -9,9 +9,10 @@ import {
 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import AppLogoIcon from '@/components/app-logo-icon';
+import { Switch } from '@/components/ui/switch';
 import { formatarInstante } from '@/lib/gestao/formatar';
 import { cn } from '@/lib/utils';
-import { index as visaoGeral } from '@/routes/gestao';
+import { escopo, index as visaoGeral } from '@/routes/gestao';
 import { index as clientes } from '@/routes/gestao/clientes';
 import { index as conversas } from '@/routes/gestao/conversas';
 import { index as temas } from '@/routes/gestao/temas';
@@ -34,6 +35,15 @@ export default function GestaoLayout({ children }: { children: ReactNode }) {
     const { url, props } = usePage();
     const caminho = caminhoDe(url);
     const gestao = props.gestao;
+    const incluirGestores = gestao?.incluir_gestores ?? false;
+
+    const alternarGestores = (incluir: boolean) => {
+        router.put(
+            escopo.url(),
+            { incluir_gestores: incluir },
+            { preserveScroll: true },
+        );
+    };
 
     const itens: Item[] = [
         {
@@ -129,9 +139,27 @@ export default function GestaoLayout({ children }: { children: ReactNode }) {
                         })}
                     </ul>
 
+                    {gestao && (
+                        <label className="flex min-h-11 cursor-pointer items-center gap-2.5 rounded-[10px] px-2.5 text-sm md:mt-auto">
+                            <Switch
+                                checked={incluirGestores}
+                                onCheckedChange={alternarGestores}
+                                className="data-[state=checked]:bg-dourado-claro data-[state=unchecked]:bg-[rgba(245,240,230,0.2)]"
+                            />
+                            <span className="flex flex-col leading-tight">
+                                <span className="text-[#F5F0E6]">
+                                    Incluir minhas conversas
+                                </span>
+                                <span className="text-xs">
+                                    Contas de gestão nos números
+                                </span>
+                            </span>
+                        </label>
+                    )}
+
                     <Link
                         href={inicio()}
-                        className="flex min-h-11 items-center gap-2.5 rounded-[10px] px-2.5 text-sm whitespace-nowrap outline-none hover:bg-[rgba(245,240,230,0.08)] focus-visible:ring-2 focus-visible:ring-dourado-claro md:mt-auto"
+                        className="flex min-h-11 items-center gap-2.5 rounded-[10px] px-2.5 text-sm whitespace-nowrap outline-none hover:bg-[rgba(245,240,230,0.08)] focus-visible:ring-2 focus-visible:ring-dourado-claro"
                     >
                         <ArrowLeft
                             aria-hidden
@@ -181,6 +209,18 @@ export default function GestaoLayout({ children }: { children: ReactNode }) {
             </nav>
 
             <main className="min-w-0 flex-1 p-4 sm:p-6 md:px-8 md:py-7">
+                {incluirGestores && (
+                    <p className="mb-4 rounded-[10px] border border-dourado-claro/50 bg-dourado-claro/10 px-3 py-2 text-sm">
+                        Os números e as listas incluem as contas de gestão.{' '}
+                        <button
+                            type="button"
+                            onClick={() => alternarGestores(false)}
+                            className="font-semibold underline underline-offset-2"
+                        >
+                            Mostrar só clientes
+                        </button>
+                    </p>
+                )}
                 {children}
             </main>
         </div>
