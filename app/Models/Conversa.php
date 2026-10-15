@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
@@ -61,6 +62,12 @@ class Conversa extends Model
     public function mensagens(): HasMany
     {
         return $this->hasMany(Mensagem::class, 'conversa_id');
+    }
+
+    /** @return HasOne<ClassificacaoDeConversa, $this> */
+    public function classificacao(): HasOne
+    {
+        return $this->hasOne(ClassificacaoDeConversa::class, 'conversa_id');
     }
 
     /** @return HasMany<AcaoProposta, $this> */
