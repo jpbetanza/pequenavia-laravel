@@ -17,6 +17,10 @@ use App\Http\Controllers\CampoCertificadoController;
 use App\Http\Controllers\CompartilhamentoController;
 use App\Http\Controllers\FonteController;
 use App\Http\Controllers\GeracaoCertificadoController;
+use App\Http\Controllers\Gestao\ClienteController;
+use App\Http\Controllers\Gestao\ConversaController as GestaoConversaController;
+use App\Http\Controllers\Gestao\TemaController;
+use App\Http\Controllers\Gestao\VisaoGeralController;
 use App\Http\Controllers\HistoricoController;
 use App\Http\Controllers\InicioController;
 use App\Http\Controllers\ModeloCertificadoController;
@@ -120,6 +124,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::get('modelos/{modelo}/imagem', [ModeloCertificadoController::class, 'imagem'])->name('modelos.imagem');
+});
+
+Route::prefix('gestao')->name('gestao.')->middleware(['auth', 'can:gestao'])->group(function () {
+    Route::get('/', VisaoGeralController::class)->name('index');
+
+    Route::get('conversas', [GestaoConversaController::class, 'index'])->name('conversas.index');
+    Route::patch('conversas/{conversa}/classificacao', [GestaoConversaController::class, 'corrigir'])->name('conversas.corrigir');
+
+    Route::get('clientes', [ClienteController::class, 'index'])->name('clientes.index');
+    Route::get('clientes/{user}', [ClienteController::class, 'show'])->name('clientes.show');
+
+    Route::get('temas', [TemaController::class, 'index'])->name('temas.index');
+    Route::patch('temas/{tema}', [TemaController::class, 'update'])->name('temas.update');
+    Route::post('temas/{tema}/juntar', [TemaController::class, 'juntar'])->name('temas.juntar');
 });
 
 require __DIR__.'/settings.php';
