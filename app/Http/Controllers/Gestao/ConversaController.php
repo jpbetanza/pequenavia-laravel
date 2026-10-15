@@ -9,6 +9,7 @@ use App\Http\Requests\Gestao\CorrigirClassificacaoRequest;
 use App\Models\Conversa;
 use App\Models\User;
 use App\Services\Gestao\ConversasDaGestao;
+use App\Services\Gestao\EscopoDaGestao;
 use App\Services\Gestao\PainelDeGestao;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -24,6 +25,7 @@ class ConversaController extends Controller
     public function __construct(
         private readonly PainelDeGestao $painel,
         private readonly ConversasDaGestao $conversas,
+        private readonly EscopoDaGestao $escopo,
     ) {}
 
     public function index(Request $request): Response
@@ -45,7 +47,7 @@ class ConversaController extends Controller
         if ($request->query('conversa') !== null) {
             $conversa = $conversaId === null ? null : Conversa::query()
                 ->whereKey($conversaId)
-                ->whereHas('user', fn ($consulta) => $consulta->where('admin', false))
+                ->whereIn('user_id', $this->escopo->ids())
                 ->first();
 
             abort_if($conversa === null, 404);

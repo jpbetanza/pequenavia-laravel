@@ -61,6 +61,7 @@ final class PainelDeGestao
         private readonly PrimeirosPassos $primeirosPassos,
         private readonly EstadoDaConversa $estado,
         private readonly Mascarador $mascarador,
+        private readonly EscopoDaGestao $escopo,
     ) {}
 
     /**
@@ -214,7 +215,7 @@ final class PainelDeGestao
         $indicadores = $this->indicadores($periodo);
         $acessos = $this->ultimosAcessos();
 
-        $consulta = User::query()->where('admin', false)->select(['id', 'name', 'email'])->orderBy('name');
+        $consulta = User::query()->whereIn('id', $this->subconsultaDeClientes())->select(['id', 'name', 'email'])->orderBy('name');
 
         if ($busca !== null && trim($busca) !== '') {
             $like = '%'.addcslashes(trim($busca), '%_\\').'%';
@@ -564,16 +565,17 @@ final class PainelDeGestao
     }
 
     /**
-     * Subconsulta com os ids dos clientes (admin = false). Usada como filtro em todas as consultas do painel.
+     * Subconsulta com os ids das contas do painel (só clientes, ou também gestores se ligado). Usada como
+     * filtro em todas as consultas do painel.
      */
     private function subconsultaDeClientes(): Builder
     {
-        return DB::table('users')->where('admin', false)->select('id');
+        return $this->escopo->ids();
     }
 
     private function consultaDeClientes(): Builder
     {
-        return DB::table('users')->where('admin', false);
+        return $this->escopo->usuarios();
     }
 
     private function acoesDeClientes(): Builder

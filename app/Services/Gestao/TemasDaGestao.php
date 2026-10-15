@@ -18,7 +18,10 @@ final class TemasDaGestao
 {
     private const DIAS_DA_SEMANA = 7;
 
-    public function __construct(private readonly PainelDeGestao $painel) {}
+    public function __construct(
+        private readonly PainelDeGestao $painel,
+        private readonly EscopoDaGestao $escopo,
+    ) {}
 
     /**
      * @return array{iniciada_em: string|null, terminada_em: string|null, conversas_lidas: int, resumidas: int, temas_novos: int, falhas: int, tokens_jev: int, custo_jev: float, custo_haiku: float, erro: string|null}|null
@@ -140,7 +143,7 @@ final class TemasDaGestao
     private function contagens(CarbonImmutable $de, ?CarbonImmutable $ate): Collection
     {
         $consulta = DB::table('classificacoes_de_conversa')
-            ->whereIn('user_id', DB::table('users')->where('admin', false)->select('id'))
+            ->whereIn('user_id', $this->escopo->ids())
             ->whereRaw('('.PainelDeGestao::TEMA.') IS NOT NULL')
             ->where('classificada_em', '>=', $de->utc());
 

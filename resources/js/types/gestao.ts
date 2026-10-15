@@ -312,4 +312,6 @@ export type TemasProps = {
 export type GestaoCompartilhado = {
     temas_novos: number;
     classificacao: ClassificacaoDaGestao;
+    /** Se as contas de gestão (as suas) entram nos números e listas do painel. */
+    incluir_gestores: boolean;
 };

@@ -37,6 +37,7 @@ final class ConversasDaGestao
         private readonly PainelDeGestao $painel,
         private readonly EstadoDaConversa $estado,
         private readonly Mascarador $mascarador,
+        private readonly EscopoDaGestao $escopo,
     ) {}
 
     /**
@@ -109,7 +110,7 @@ final class ConversasDaGestao
         return [
             'casos' => array_map(fn (CasoDeUso $caso): array => ['valor' => $caso->value, 'rotulo' => $caso->rotulo()], CasoDeUso::cases()),
             'resultados' => array_map(fn (ResultadoDaConversa $resultado): array => ['valor' => $resultado->value, 'rotulo' => $resultado->rotulo()], ResultadoDaConversa::cases()),
-            'clientes' => array_values(User::query()->where('admin', false)->orderBy('name')->get(['id', 'name'])
+            'clientes' => array_values(User::query()->whereIn('id', $this->clientes())->orderBy('name')->get(['id', 'name'])
                 ->map(fn (User $cliente): array => ['id' => $cliente->id, 'nome' => $cliente->name])->all()),
             'temas' => array_values(TemaDePedido::query()->ativos()->orderBy('nome')->get(['id', 'nome'])
                 ->map(fn (TemaDePedido $tema): array => ['id' => $tema->id, 'nome' => $tema->nome])->all()),
@@ -352,11 +353,11 @@ final class ConversasDaGestao
     }
 
     /**
-     * Subconsulta com os ids dos clientes (admin = false).
+     * Subconsulta com os ids das contas do painel.
      */
     private function clientes(): QueryBuilder
     {
-        return DB::table('users')->where('admin', false)->select('id');
+        return $this->escopo->ids();
     }
 
     /**
