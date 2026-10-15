@@ -103,6 +103,23 @@ services:
             labels:
                 - 'com.centurylinklabs.watchtower.enable=true'
 
+    scheduler:
+        image: jpbetanza/pequenavia-laravel:latest
+        command: ['scheduler']
+        environment: *app-env
+        networks:
+            - interna
+        # O scheduler não serve HTTP; o HEALTHCHECK herdado da imagem (/up) ficaria unhealthy.
+        healthcheck:
+            disable: true
+        deploy:
+            mode: replicated
+            replicas: 1
+            restart_policy:
+                condition: any
+            labels:
+                - 'com.centurylinklabs.watchtower.enable=true'
+
     postgres:
         image: postgres:17
         environment:
