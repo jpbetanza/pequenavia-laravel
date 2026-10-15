@@ -453,7 +453,7 @@ parameters:
 		-
 			message: '#^Cannot call method format\(\) on Carbon\\CarbonImmutable\|string\.$#'
 			identifier: method.nonObject
-			count: 2
+			count: 1
 			path: app/Services/Assistente/MontadorDeContexto.php
 
 		-

@@ -24,6 +24,8 @@ use Illuminate\Support\Carbon;
  * @property string|null $ferramenta_id
  * @property int|null $tokens_entrada
  * @property int|null $tokens_saida
+ * @property int|null $tokens_do_cache
+ * @property string|null $custo dólares, com seis casas (decimal)
  * @property bool $erro
  * @property list<array{id: string, nome: string, tipo: string, tamanho: int, caminho?: string|null, mime?: string|null, texto?: string|null, truncado?: bool}>|null $anexos
  * @property Carbon|null $created_at
@@ -39,6 +41,8 @@ use Illuminate\Support\Carbon;
     'ferramenta_id',
     'tokens_entrada',
     'tokens_saida',
+    'tokens_do_cache',
+    'custo',
     'erro',
     'anexos',
 ])]

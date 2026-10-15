@@ -95,7 +95,7 @@ final class PainelDeGestao
         $resolvidas = array_sum(array_column($indicadores, 'resolvidas'));
 
         $tokens = $this->tokensDoAssistente($periodo);
-        $assistente = $this->custoDoAssistente($tokens['entrada'], $tokens['saida']);
+        $assistente = $this->custoDoAssistente($tokens['entrada'], $tokens['saida'], $tokens['informado']);
         $jev = $this->custoDasRodadas($periodo, 'custo_jev');
         $haiku = $this->custoDasRodadas($periodo, 'custo_haiku');
 
@@ -400,7 +400,7 @@ final class PainelDeGestao
         return [
             'conversas' => $this->entre(DB::table('conversas')->where('user_id', $cliente->id), 'conversas.created_at', $periodo->inicio, $periodo->fim)->count(),
             'resolvidas_pct' => $this->porcento($contagem['resolvidas'], $contagem['classificadas']),
-            'custo' => $this->custoDoAssistente($tokens['entrada'], $tokens['saida']),
+            'custo' => $this->custoDoAssistente($tokens['entrada'], $tokens['saida'], $tokens['informado']),
         ];
     }
 
@@ -716,7 +716,7 @@ final class PainelDeGestao
     }
 
     /**
-     * @return array{entrada: int, saida: int}
+     * @return array{entrada: int, saida: int, informado: float|null}
      */
     private function tokensDoAssistente(PeriodoDoPainel $periodo, ?string $userId = null): array
     {
@@ -729,28 +729,42 @@ final class PainelDeGestao
             : $consulta->where('conversas.user_id', $userId);
 
         $linha = $this->entre($consulta, 'mensagens.created_at', $periodo->inicio, $periodo->fim)
-            ->selectRaw('coalesce(sum(mensagens.tokens_entrada), 0) AS entrada, coalesce(sum(mensagens.tokens_saida), 0) AS saida')
+            ->selectRaw(
+                'coalesce(sum(mensagens.tokens_entrada) filter (where mensagens.custo is null), 0) AS entrada, '
+                .'coalesce(sum(mensagens.tokens_saida) filter (where mensagens.custo is null), 0) AS saida, '
+                .'sum(mensagens.custo) AS informado'
+            )
             ->first();
 
         return [
             'entrada' => $linha === null ? 0 : (int) $linha->entrada,
             'saida' => $linha === null ? 0 : (int) $linha->saida,
+            'informado' => $linha === null || $linha->informado === null ? null : (float) $linha->informado,
         ];
     }
 
     /**
-     * Custo estimado do assistente. Sem os dois preços configurados, não há valor (null).
+     * Custo do assistente: o que o OpenRouter informou em cada resposta, mais uma estimativa pelos preços configurados
+     * para as respostas sem custo informado (as mais antigas). `$entrada` e `$saida` são os tokens dessas respostas.
+     * Sem custo informado nem preços configurados, não há valor (null).
      */
-    public function custoDoAssistente(int $entrada, int $saida): ?float
+    public function custoDoAssistente(int $entrada, int $saida, ?float $informado = null): ?float
     {
         $precoEntrada = config('gestao.preco_assistente_entrada_por_milhao');
         $precoSaida = config('gestao.preco_assistente_saida_por_milhao');
+        $temPrecos = filled($precoEntrada) && filled($precoSaida);
 
-        if (blank($precoEntrada) || blank($precoSaida)) {
-            return null;
+        $estimado = match (true) {
+            $entrada + $saida === 0 => $informado === null && ! $temPrecos ? null : 0.0,
+            $temPrecos => ($entrada * (float) $precoEntrada + $saida * (float) $precoSaida) / 1_000_000,
+            default => null,
+        };
+
+        if ($estimado === null) {
+            return $informado === null ? null : round($informado, 6);
         }
 
-        return round(($entrada * (float) $precoEntrada + $saida * (float) $precoSaida) / 1_000_000, 6);
+        return round(($informado ?? 0.0) + $estimado, 6);
     }
 
     private function custoDasRodadas(PeriodoDoPainel $periodo, string $coluna): float

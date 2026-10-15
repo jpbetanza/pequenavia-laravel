@@ -194,3 +194,22 @@ test('ciclo com proposta de cadastro: cartão de ação proposta e nenhum grupo 
 
     Http::assertSentCount(2);
 });
+
+test('grava na resposta o custo e os tokens do cache somados de todas as rodadas', function () {
+    $uso = fn (int $entrada, int $cache, float $custo) => ['choices' => [], 'usage' => [
+        'prompt_tokens' => $entrada, 'completion_tokens' => 10, 'prompt_tokens_details' => ['cached_tokens' => $cache], 'cost' => $custo,
+    ]];
+
+    Http::fake(['openrouter.ai/*' => Http::sequence()
+        ->push(sseDoOpenRouter([chunkDeFerramenta(0, 'c1', 'listar_cadastros', '{}'), $uso(3000, 0, 0.0004)]))
+        ->push(sseDoOpenRouter([chunkDeTexto('Pronto.'), $uso(3200, 2900, 0.0001)]))]);
+    $conversa = Conversa::factory()->create();
+
+    eventos($conversa->user, $conversa, 'Quais espaços tenho?');
+
+    $resposta = $conversa->mensagens()->where('papel', PapelDaMensagem::Assistente)->whereNotNull('conteudo')->sole();
+
+    expect($resposta->tokens_entrada)->toBe(6200)
+        ->and($resposta->tokens_do_cache)->toBe(2900)
+        ->and($resposta->custo)->toBe('0.000500');
+});

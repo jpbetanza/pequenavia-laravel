@@ -182,7 +182,7 @@ final class ConversasDaGestao
                 'confirmadas' => $conversa->acoes->filter(fn (AcaoProposta $acao): bool => $acao->status === StatusDaAcao::Confirmada)->count(),
             ],
             'tokens' => $tokens,
-            'custo_assistente' => $this->painel->custoDoAssistente((int) $tokens['entrada'], (int) $tokens['saida']),
+            'custo_assistente' => $this->custoDasMensagens($conversa),
             'corrigida' => $classificacao?->correcao !== null,
             'a_revisar' => $classificacao !== null && $classificacao->a_revisar,
             'modelo_jev' => $classificacao?->modelo_jev,
@@ -337,6 +337,22 @@ final class ConversasDaGestao
             'entrada' => (int) $assistente->sum('tokens_entrada'),
             'saida' => (int) $assistente->sum('tokens_saida'),
         ];
+    }
+
+    /**
+     * Custo do assistente na conversa: o informado pelo OpenRouter mais a estimativa para as respostas sem custo.
+     */
+    private function custoDasMensagens(Conversa $conversa): ?float
+    {
+        $assistente = $conversa->mensagens->filter(fn (Mensagem $mensagem): bool => $mensagem->papel === PapelDaMensagem::Assistente);
+        $semCusto = $assistente->whereNull('custo');
+        $comCusto = $assistente->whereNotNull('custo');
+
+        return $this->painel->custoDoAssistente(
+            (int) $semCusto->sum('tokens_entrada'),
+            (int) $semCusto->sum('tokens_saida'),
+            $comCusto->isEmpty() ? null : (float) $comCusto->sum(fn (Mensagem $mensagem): float => (float) $mensagem->custo),
+        );
     }
 
     /**

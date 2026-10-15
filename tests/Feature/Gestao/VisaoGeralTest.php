@@ -68,7 +68,7 @@ it('mostra os números do período com clientes, conversas e resolvidas', functi
             ->where('resumo.resolvidas_pct', 50)
             ->where('resumo.a_revisar', 0)
             ->where('resumo.custo.jev', 0)
-            ->where('resumo.custo.assistente', null)
+            ->where('resumo.custo.assistente', 0)
             ->has('por_dia', 7)
             ->where('clientes.0.nome', 'Ana')
             ->where('clientes.0.reservas', 1)
@@ -300,4 +300,24 @@ it('alerta sobre a fila de revisão aberta', function () {
             ->where('resumo.a_revisar', 1)
             ->where('alertas.0.tipo', 'a_revisar')
             ->where('alertas.0.titulo', '1 conversa para revisar'));
+});
+
+it('soma o custo que o OpenRouter informou e estima pelos preços só as respostas antigas, sem custo', function () {
+    config(['gestao.preco_assistente_entrada_por_milhao' => 1.0, 'gestao.preco_assistente_saida_por_milhao' => 2.0]);
+    $ana = User::factory()->create(['admin' => false]);
+    $conversa = Conversa::factory()->for($ana)->create();
+    Mensagem::factory()->for($conversa)->create(['papel' => PapelDaMensagem::Assistente, 'tokens_entrada' => 100_000, 'tokens_saida' => 5_000, 'custo' => '0.012345', 'created_at' => now()]);
+    // Antiga, sem custo informado: 1 milhão de entrada a US$ 1 e 500 mil de saída a US$ 2.
+    Mensagem::factory()->for($conversa)->create(['papel' => PapelDaMensagem::Assistente, 'tokens_entrada' => 1_000_000, 'tokens_saida' => 500_000, 'custo' => null, 'created_at' => now()]);
+
+    $this->actingAs(gestorDoPainel())
+        ->get(route('gestao.index'))
+        ->assertInertia(fn (Assert $page) => $page->where('resumo.custo.assistente', 2.012345));
+
+    config(['gestao.preco_assistente_entrada_por_milhao' => null]);
+
+    // Sem preços, fica só o informado.
+    $this->actingAs(gestorDoPainel())
+        ->get(route('gestao.index'))
+        ->assertInertia(fn (Assert $page) => $page->where('resumo.custo.assistente', 0.012345));
 });

@@ -57,7 +57,8 @@ test('a planilha convertida vai ao modelo como bloco de anexo e fica gravada na 
     expect($pedido->conteudo)->toBe('Cadastre as salas da planilha')
         ->and($pedido->anexos)->toHaveCount(1)
         ->and($pedido->anexos[0])->toMatchArray(['nome' => 'salas.xlsx', 'tipo' => 'planilha', 'texto' => CSV_DE_ESPACOS, 'truncado' => false])
-        ->and($conteudo[0])->toBe(['type' => 'text', 'text' => 'Cadastre as salas da planilha'])
+        ->and($conteudo[0]['type'])->toBe('text')
+        ->and($conteudo[0]['text'])->toMatch('/^\[\d{2}\/\d{2} \d{2}:\d{2}\] Cadastre as salas da planilha$/')
         ->and($conteudo[1]['text'])->toBe("<anexo nome=\"salas.xlsx\" tipo=\"planilha\">\n".CSV_DE_ESPACOS."\n</anexo>");
 });
 
@@ -76,7 +77,7 @@ test('a mensagem pode ir só com anexos, e o título da conversa vem do arquivo'
         ->streamedContent();
 
     expect($conversa->fresh()->titulo)->toBe('salas.csv e mais 1')
-        ->and(ultimoPedidoEnviado()[0]['text'])->toBe('(Mensagem sem texto, só com anexos.)');
+        ->and(ultimoPedidoEnviado()[0]['text'])->toEndWith('] (Mensagem sem texto, só com anexos.)');
 });
 
 test('planilha cortada no navegador avisa o modelo', function () {
