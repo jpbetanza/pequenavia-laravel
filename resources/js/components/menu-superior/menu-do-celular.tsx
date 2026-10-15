@@ -2,6 +2,7 @@ import { Link, router, usePage } from '@inertiajs/react';
 import {
     CalendarDays,
     FileText,
+    LayoutDashboard,
     LogOut,
     Settings,
     Sparkles,
@@ -22,6 +23,7 @@ import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
 import type { IdDaAba, SecaoDoMenu } from '@/lib/menu/secoes';
 import { cn } from '@/lib/utils';
 import { inicio, logout } from '@/routes';
+import { index as gestao } from '@/routes/gestao';
 import { edit } from '@/routes/profile';
 
 type Props = {
@@ -204,6 +206,28 @@ export function MenuDoCelular({
                                 {auth.user.name}
                             </span>
                             <div className="flex flex-wrap items-center text-sm text-muted-foreground">
+                                {auth.user.admin && (
+                                    <>
+                                        <Link
+                                            href={gestao()}
+                                            prefetch
+                                            onClick={navegou}
+                                            className="inline-flex min-h-11 items-center gap-1.5 rounded-sm outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                                        >
+                                            <LayoutDashboard
+                                                aria-hidden="true"
+                                                className="size-4"
+                                            />
+                                            Gestão
+                                        </Link>
+                                        <span
+                                            aria-hidden="true"
+                                            className="px-1.5"
+                                        >
+                                            ·
+                                        </span>
+                                    </>
+                                )}
                                 <Link
                                     href={edit()}
                                     prefetch
