@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\PapelDaMensagem;
+use App\Enums\ResultadoDaConversa;
 use App\Enums\SituacaoDoTema;
 use App\Enums\StatusDaAcao;
 use App\Models\AcaoProposta;
@@ -405,4 +406,72 @@ test('agenda a classificação às 05:00 e às 17:00, em Brasília, sem sobrepos
     expect($eventos)->toHaveCount(2)
         ->and($eventos->map(fn (Event $evento) => $evento->getExpression())->sort()->values()->all())->toBe(['0 17 * * *', '0 5 * * *'])
         ->and($eventos->every(fn (Event $evento) => $evento->timezone === 'America/Sao_Paulo' && $evento->withoutOverlapping))->toBeTrue();
+});
+
+test('conversa recente que parou esperando a secretaria fica aguardando, sem resumo nem revisão', function () {
+    $conversa = conversaDaRodada(now()->subHours(2), 'Quero cadastrar os espaços.');
+
+    Http::fake([
+        'jev.test/*' => Http::response(jevDaRodada([
+            'outcome' => ['type' => 'choice', 'choice' => 'nao_resolvida', 'probabilities' => ['nao_resolvida' => 0.5], 'confidence' => 0.45],
+            'ended_waiting' => ['type' => 'noul', 'noul' => 0.9],
+        ])),
+        'or.test/*' => Http::response(haikuDaRodada()),
+    ]);
+
+    app(ClassificadorDeConversas::class)->rodar();
+
+    $classificacao = $conversa->classificacao()->first();
+
+    expect($classificacao->resultado)->toBe(ResultadoDaConversa::Aguardando->value)
+        ->and($classificacao->resultado_confianca)->toBe(0.9)
+        ->and($classificacao->abandonada)->toBeFalse()
+        ->and($classificacao->a_revisar)->toBeFalse()
+        ->and($classificacao->resumo)->toBeNull()
+        ->and(requisicoesDaRodada('or.test'))->toHaveCount(0);
+});
+
+test('passado o prazo, a conversa que aguardava volta a ser lida e fecha como abandonada', function () {
+    $conversa = conversaDaRodada(now()->subHours(2), 'Quero cadastrar os espaços.');
+    $esperando = [
+        'outcome' => ['type' => 'choice', 'choice' => 'nao_resolvida', 'probabilities' => ['nao_resolvida' => 0.8], 'confidence' => 0.8],
+        'ended_waiting' => ['type' => 'noul', 'noul' => 0.9],
+    ];
+
+    Http::fake(['jev.test/*' => Http::response(jevDaRodada($esperando)), 'or.test/*' => Http::response(haikuDaRodada(resumo: 'Parou no meio.'))]);
+
+    app(ClassificadorDeConversas::class)->rodar();
+    expect($conversa->classificacao()->first()->resultado)->toBe(ResultadoDaConversa::Aguardando->value);
+
+    // Antes do prazo, nada muda e a conversa não é relida.
+    $this->travel(2)->days();
+    expect(app(ClassificadorDeConversas::class)->rodar()->conversas_lidas)->toBe(0);
+
+    $this->travel(2)->days();
+    $rodada = app(ClassificadorDeConversas::class)->rodar();
+
+    $classificacao = $conversa->classificacao()->first();
+
+    expect($rodada->conversas_lidas)->toBe(1)
+        ->and($classificacao->resultado)->toBe(ResultadoDaConversa::NaoResolvida->value)
+        ->and($classificacao->abandonada)->toBeTrue()
+        ->and($classificacao->resumo)->toBe('Parou no meio.');
+
+    // Fechada, não é relida de novo.
+    $this->travel(1)->days();
+    expect(app(ClassificadorDeConversas::class)->rodar()->conversas_lidas)->toBe(0);
+});
+
+test('a pergunta do resultado conta as ações confirmadas como feitas', function () {
+    conversaDaRodada(now()->subHours(2));
+
+    Http::fake(['jev.test/*' => Http::response(jevDaRodada()), 'or.test/*' => Http::response(haikuDaRodada())]);
+
+    app(ClassificadorDeConversas::class)->rodar();
+
+    $pergunta = requisicoesDaRodada('jev.test')->first()->data()['questions']['outcome'];
+
+    expect($pergunta['instructions'])->toContain('proposed_actions.confirmed')
+        ->and($pergunta['criteria'])->toHaveKeys(['resolvida', 'parcial', 'nao_resolvida'])
+        ->and($pergunta['criteria'])->not->toHaveKey('aguardando');
 });

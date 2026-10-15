@@ -26,13 +26,16 @@ return [
     | Custos (dólares por milhão de tokens)
     |--------------------------------------------------------------------------
     |
-    | O preço do assistente não é fixo: sem valor configurado, o painel não
-    | mostra o custo do assistente.
+    | O custo do assistente vem do OpenRouter em cada resposta (já com o
+    | desconto do cache de prompt). Os preços abaixo só estimam as respostas
+    | antigas, gravadas antes disso; o padrão é o do modelo padrão do
+    | assistente (Haiku 5.5, até 100 mil tokens de entrada). Troque se mudar
+    | ASSISTENTE_MODELO.
     |
     */
     'preco_jev_por_milhao' => 0.042,
-    'preco_assistente_entrada_por_milhao' => env('GESTAO_PRECO_ASSISTENTE_ENTRADA'),
-    'preco_assistente_saida_por_milhao' => env('GESTAO_PRECO_ASSISTENTE_SAIDA'),
+    'preco_assistente_entrada_por_milhao' => env('GESTAO_PRECO_ASSISTENTE_ENTRADA', 0.10),
+    'preco_assistente_saida_por_milhao' => env('GESTAO_PRECO_ASSISTENTE_SAIDA', 0.50),
 
     /*
     |--------------------------------------------------------------------------
@@ -52,6 +55,9 @@ return [
     |--------------------------------------------------------------------------
     */
     'tema_novo_alerta_semana' => 5,
+
+    // Conversa que parou esperando a secretaria fica "aguardando" por estes dias; depois, conta como abandonada.
+    'dias_aguardando' => 3,
     'dias_sem_acesso_alerta' => 14,
 
     // Mesmo fuso da agenda (config/agendamentos.php), lido direto do ambiente para não depender da ordem de carga.

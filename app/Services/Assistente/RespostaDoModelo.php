@@ -3,7 +3,8 @@
 namespace App\Services\Assistente;
 
 /**
- * Resposta final de uma rodada: texto completo, chamadas de ferramenta e uso de tokens (quando o provedor informa).
+ * Resposta final de uma rodada: texto completo, chamadas de ferramenta, uso de tokens (com os lidos do cache) e o custo
+ * em dólares, quando o provedor informa.
  */
 readonly class RespostaDoModelo
 {
@@ -15,5 +16,7 @@ readonly class RespostaDoModelo
         public array $chamadas,
         public ?int $tokensEntrada,
         public ?int $tokensSaida,
+        public ?int $tokensDoCache = null,
+        public ?float $custo = null,
     ) {}
 }

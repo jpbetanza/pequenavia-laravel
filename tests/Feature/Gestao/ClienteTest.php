@@ -128,7 +128,7 @@ it('mostra o detalhe do cliente com reservas pelo assistente, pelo formulário e
             ->where('cadastros.equipamentos', 0)
             ->where('cadastros.grupos', 0)
             ->where('assistente.conversas', 1)
-            ->where('assistente.custo', null)
+            ->where('assistente.custo', 0)
             ->has('conversas', 0)
             ->has('linha_do_tempo')
             ->has('configuracao'));

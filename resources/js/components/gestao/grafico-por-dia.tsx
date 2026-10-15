@@ -11,21 +11,22 @@ const ALTURA_DAS_BARRAS = 180;
 const INTERVALO_DOS_ROTULOS = 7;
 const COR_RESOLVIDAS = '#6E1F24';
 const COR_NAO_RESOLVIDAS = '#D9B97A';
+const COR_AGUARDANDO = '#CDBFAC';
+
+function totalDoDia(dia: DiaDoPainel): number {
+    return dia.resolvidas + dia.nao_resolvidas + dia.aguardando;
+}
 
 /**
- * Conversas por dia, em barras empilhadas (resolvidas embaixo, não resolvidas em cima). Sem biblioteca:
+ * Conversas por dia, em barras empilhadas (resolvidas embaixo, não resolvidas no meio e, em cima, as que aguardam a
+ * secretaria). Sem biblioteca:
  * é um SVG com a escala calculada aqui. O rótulo do eixo x aparece a cada 7 dias, contando do último.
  */
 export function GraficoPorDia({ dias }: Props) {
-    const total = dias.reduce(
-        (soma, dia) => soma + dia.resolvidas + dia.nao_resolvidas,
-        0,
-    );
+    const total = dias.reduce((soma, dia) => soma + totalDoDia(dia), 0);
     const resolvidas = dias.reduce((soma, dia) => soma + dia.resolvidas, 0);
-    const maior = Math.max(
-        1,
-        ...dias.map((dia) => dia.resolvidas + dia.nao_resolvidas),
-    );
+    const aguardando = dias.reduce((soma, dia) => soma + dia.aguardando, 0);
+    const maior = Math.max(1, ...dias.map(totalDoDia));
     const passo = dias.length > 0 ? LARGURA / dias.length : LARGURA;
     const larguraDaBarra = Math.max(2, passo * 0.7);
 
@@ -37,18 +38,14 @@ export function GraficoPorDia({ dias }: Props) {
 
     const pico = dias.reduce<DiaDoPainel | null>(
         (atual, dia) =>
-            atual === null ||
-            dia.resolvidas + dia.nao_resolvidas >
-                atual.resolvidas + atual.nao_resolvidas
-                ? dia
-                : atual,
+            atual === null || totalDoDia(dia) > totalDoDia(atual) ? dia : atual,
         null,
     );
 
     const resumo =
         total === 0 || pico === null
             ? 'Nenhuma conversa classificada no período.'
-            : `Conversas por dia no período: ${formatarNumero(total)} no total, ${formatarNumero(resolvidas)} resolvidas e ${formatarNumero(total - resolvidas)} não resolvidas. O pico foi de ${formatarNumero(pico.resolvidas + pico.nao_resolvidas)} conversas em ${formatarData(pico.data)}.`;
+            : `Conversas por dia no período: ${formatarNumero(total)} no total, ${formatarNumero(resolvidas)} resolvidas, ${formatarNumero(total - resolvidas - aguardando)} não resolvidas e ${formatarNumero(aguardando)} aguardando a secretaria. O pico foi de ${formatarNumero(totalDoDia(pico))} conversas em ${formatarData(pico.data)}.`;
 
     return (
         <div className="flex flex-col gap-3">
@@ -66,6 +63,13 @@ export function GraficoPorDia({ dias }: Props) {
                         className="size-2.5 rounded-[3px] bg-dourado-claro"
                     />
                     Não resolvidas
+                </span>
+                <span className="flex items-center gap-1.5">
+                    <span
+                        aria-hidden="true"
+                        className="size-2.5 rounded-[3px] bg-[#CDBFAC]"
+                    />
+                    Aguardando
                 </span>
             </div>
 
@@ -97,16 +101,18 @@ export function GraficoPorDia({ dias }: Props) {
                         (dia.resolvidas / maior) * ALTURA_DAS_BARRAS;
                     const alturaNaoResolvidas =
                         (dia.nao_resolvidas / maior) * ALTURA_DAS_BARRAS;
-                    const totalDoDia = dia.resolvidas + dia.nao_resolvidas;
+                    const alturaAguardando =
+                        (dia.aguardando / maior) * ALTURA_DAS_BARRAS;
+                    const conversasDoDia = totalDoDia(dia);
 
-                    if (totalDoDia === 0) {
+                    if (conversasDoDia === 0) {
                         return null;
                     }
 
                     return (
                         <g key={dia.data}>
                             <title>
-                                {`${formatarData(dia.data)}: ${formatarNumero(totalDoDia)} conversas, ${formatarNumero(dia.resolvidas)} resolvidas`}
+                                {`${formatarData(dia.data)}: ${formatarNumero(conversasDoDia)} conversas, ${formatarNumero(dia.resolvidas)} resolvidas, ${formatarNumero(dia.aguardando)} aguardando`}
                             </title>
                             <rect
                                 x={x}
@@ -127,6 +133,19 @@ export function GraficoPorDia({ dias }: Props) {
                                 height={alturaNaoResolvidas}
                                 rx="2"
                                 fill={COR_NAO_RESOLVIDAS}
+                            />
+                            <rect
+                                x={x}
+                                y={
+                                    ALTURA_DAS_BARRAS -
+                                    alturaResolvidas -
+                                    alturaNaoResolvidas -
+                                    alturaAguardando
+                                }
+                                width={larguraDaBarra}
+                                height={alturaAguardando}
+                                rx="2"
+                                fill={COR_AGUARDANDO}
                             />
                         </g>
                     );

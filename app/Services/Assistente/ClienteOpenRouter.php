@@ -28,7 +28,7 @@ class ClienteOpenRouter
     {
         $corpo = array_filter([
             'model' => config('assistente.modelo'),
-            'messages' => $mensagens,
+            'messages' => $this->comCache($mensagens),
             'tools' => $ferramentas === [] ? null : $ferramentas,
             'stream' => true,
             'usage' => ['include' => true],
@@ -59,6 +59,8 @@ class ClienteOpenRouter
         $chamadas = [];
         $tokensEntrada = null;
         $tokensSaida = null;
+        $tokensDoCache = null;
+        $custo = null;
 
         try {
             foreach ($this->linhasDeDados($resposta->toPsrResponse()->getBody()) as $dados) {
@@ -79,6 +81,8 @@ class ClienteOpenRouter
                 if (isset($chunk['usage'])) {
                     $tokensEntrada = $chunk['usage']['prompt_tokens'] ?? null;
                     $tokensSaida = $chunk['usage']['completion_tokens'] ?? null;
+                    $tokensDoCache = $chunk['usage']['prompt_tokens_details']['cached_tokens'] ?? null;
+                    $custo = isset($chunk['usage']['cost']) ? (float) $chunk['usage']['cost'] : null;
                 }
 
                 $delta = $chunk['choices'][0]['delta'] ?? [];
@@ -111,7 +115,56 @@ class ClienteOpenRouter
             array_values(array_map(fn (array $c) => new ChamadaDeFerramenta($c['id'], $c['nome'], $c['argumentos']), $chamadas)),
             $tokensEntrada,
             $tokensSaida,
+            $tokensDoCache,
+            $custo,
         );
+    }
+
+    /**
+     * Marca o cache de prompt nos modelos da Anthropic: um ponto no fim das instruções (que cobre as ferramentas e as
+     * instruções) e outro na última mensagem, para a próxima rodada ler do cache tudo o que já foi enviado.
+     *
+     * @param  list<array<string, mixed>>  $mensagens
+     * @return list<array<string, mixed>>
+     */
+    private function comCache(array $mensagens): array
+    {
+        if (! config('assistente.cache_de_prompt') || ! str_starts_with((string) config('assistente.modelo'), 'anthropic/') || $mensagens === []) {
+            return $mensagens;
+        }
+
+        if (($mensagens[0]['role'] ?? null) === 'system') {
+            $mensagens[0] = $this->marcar($mensagens[0]);
+        }
+
+        // A última mensagem com conteúdo (a do assistente que só chama ferramentas não tem texto para marcar).
+        for ($i = count($mensagens) - 1; $i > 0; $i--) {
+            $conteudo = $mensagens[$i]['content'] ?? null;
+
+            if ((is_string($conteudo) && $conteudo !== '') || (is_array($conteudo) && $conteudo !== [])) {
+                $mensagens[$i] = $this->marcar($mensagens[$i]);
+
+                break;
+            }
+        }
+
+        return $mensagens;
+    }
+
+    /**
+     * @param  array<string, mixed>  $mensagem
+     * @return array<string, mixed>
+     */
+    private function marcar(array $mensagem): array
+    {
+        $partes = is_string($mensagem['content'])
+            ? [['type' => 'text', 'text' => $mensagem['content']]]
+            : $mensagem['content'];
+
+        $partes[array_key_last($partes)]['cache_control'] = ['type' => 'ephemeral'];
+        $mensagem['content'] = $partes;
+
+        return $mensagem;
     }
 
     /**

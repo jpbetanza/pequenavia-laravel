@@ -33,6 +33,7 @@ const COR_DO_RESULTADO: Record<string, string> = {
     resolvida: 'text-sucesso',
     parcial: 'text-aviso',
     nao_resolvida: 'text-[#A33A2A]',
+    aguardando: 'text-muted-foreground',
 };
 
 const COR_DO_TOM: Record<'bom' | 'ruim' | 'neutro', string> = {
@@ -123,12 +124,19 @@ function ListaDeCasos({ casos }: { casos: ClienteProps['casos'] }) {
                                     background: '#A33A2A',
                                 }}
                             />
+                            <span
+                                className="h-full"
+                                style={{
+                                    width: `${proporcao(caso.aguardando)}%`,
+                                    background: '#CDBFAC',
+                                }}
+                            />
                         </span>
                         <span className="text-right font-semibold tabular-nums">
                             {formatarNumero(caso.total)}
                         </span>
                         <span className="sr-only">
-                            {`${formatarNumero(caso.resolvida)} resolvidas, ${formatarNumero(caso.parcial)} parciais e ${formatarNumero(caso.nao_resolvida)} não resolvidas`}
+                            {`${formatarNumero(caso.resolvida)} resolvidas, ${formatarNumero(caso.parcial)} parciais, ${formatarNumero(caso.nao_resolvida)} não resolvidas e ${formatarNumero(caso.aguardando)} aguardando`}
                         </span>
                     </li>
                 );

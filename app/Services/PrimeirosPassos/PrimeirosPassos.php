@@ -139,6 +139,19 @@ final class PrimeirosPassos
     }
 
     /**
+     * Anota que a pessoa recebeu um lembrete de continuar o roteiro (ver LembreteDosPrimeirosPassos).
+     */
+    public function registrarLembrete(User $usuario): void
+    {
+        $guardado = $usuario->primeiros_passos ?? [];
+
+        $this->guardar($usuario, [
+            'lembrado_em' => now()->toIso8601String(),
+            'lembretes' => (int) ($guardado['lembretes'] ?? 0) + 1,
+        ]);
+    }
+
+    /**
      * Chaves dos passos que valem neste servidor. Sem as chaves VAPID não há como ativar avisos: o passo sai.
      *
      * @return list<string>

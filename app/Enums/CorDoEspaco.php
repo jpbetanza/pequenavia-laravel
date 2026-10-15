@@ -12,4 +12,9 @@ enum CorDoEspaco: string
     case Verde = 'verde';
     case Roxo = 'roxo';
     case Dourado = 'dourado';
+    case Terracota = 'terracota';
+    case Petroleo = 'petroleo';
+    case Oliva = 'oliva';
+    case Rosa = 'rosa';
+    case Grafite = 'grafite';
 }

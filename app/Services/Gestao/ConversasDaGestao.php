@@ -75,7 +75,7 @@ final class ConversasDaGestao
      * Casos de uso do período com o resultado de cada um, e a tendência contra o período anterior de mesmo
      * tamanho. Respeita o filtro de cliente; os demais filtros não se aplicam a uma matriz.
      *
-     * @return list<array{caso: string, rotulo: string, total: int, resolvida: int, parcial: int, nao_resolvida: int, abandonada: int, tendencia_pct: float|null}>
+     * @return list<array{caso: string, rotulo: string, total: int, resolvida: int, parcial: int, nao_resolvida: int, aguardando: int, abandonada: int, tendencia_pct: float|null}>
      */
     public function matriz(PeriodoDoPainel $periodo, ?string $cliente): array
     {
@@ -94,6 +94,7 @@ final class ConversasDaGestao
                 'resolvida' => (int) $linha->resolvida,
                 'parcial' => (int) $linha->parcial,
                 'nao_resolvida' => (int) $linha->nao_resolvida,
+                'aguardando' => (int) $linha->aguardando,
                 'abandonada' => (int) $linha->abandonada,
                 'tendencia_pct' => $totalAnterior === 0 ? null : round(($total - $totalAnterior) * 100 / $totalAnterior, 1),
             ];
@@ -181,7 +182,7 @@ final class ConversasDaGestao
                 'confirmadas' => $conversa->acoes->filter(fn (AcaoProposta $acao): bool => $acao->status === StatusDaAcao::Confirmada)->count(),
             ],
             'tokens' => $tokens,
-            'custo_assistente' => $this->painel->custoDoAssistente((int) $tokens['entrada'], (int) $tokens['saida']),
+            'custo_assistente' => $this->custoDasMensagens($conversa),
             'corrigida' => $classificacao?->correcao !== null,
             'a_revisar' => $classificacao !== null && $classificacao->a_revisar,
             'modelo_jev' => $classificacao?->modelo_jev,
@@ -247,8 +248,9 @@ final class ConversasDaGestao
                 .'sum(case when '.PainelDeGestao::RESULTADO.' = ? then 1 else 0 end) AS resolvida, '
                 .'sum(case when '.PainelDeGestao::RESULTADO.' = ? then 1 else 0 end) AS parcial, '
                 .'sum(case when '.PainelDeGestao::RESULTADO.' = ? then 1 else 0 end) AS nao_resolvida, '
+                .'sum(case when '.PainelDeGestao::RESULTADO.' = ? then 1 else 0 end) AS aguardando, '
                 .'sum(case when abandonada then 1 else 0 end) AS abandonada',
-                [ResultadoDaConversa::Resolvida->value, ResultadoDaConversa::Parcial->value, ResultadoDaConversa::NaoResolvida->value],
+                [ResultadoDaConversa::Resolvida->value, ResultadoDaConversa::Parcial->value, ResultadoDaConversa::NaoResolvida->value, ResultadoDaConversa::Aguardando->value],
             )
             ->groupByRaw(PainelDeGestao::CASO)
             ->get();
@@ -335,6 +337,22 @@ final class ConversasDaGestao
             'entrada' => (int) $assistente->sum('tokens_entrada'),
             'saida' => (int) $assistente->sum('tokens_saida'),
         ];
+    }
+
+    /**
+     * Custo do assistente na conversa: o informado pelo OpenRouter mais a estimativa para as respostas sem custo.
+     */
+    private function custoDasMensagens(Conversa $conversa): ?float
+    {
+        $assistente = $conversa->mensagens->filter(fn (Mensagem $mensagem): bool => $mensagem->papel === PapelDaMensagem::Assistente);
+        $semCusto = $assistente->whereNull('custo');
+        $comCusto = $assistente->whereNotNull('custo');
+
+        return $this->painel->custoDoAssistente(
+            (int) $semCusto->sum('tokens_entrada'),
+            (int) $semCusto->sum('tokens_saida'),
+            $comCusto->isEmpty() ? null : (float) $comCusto->sum(fn (Mensagem $mensagem): float => (float) $mensagem->custo),
+        );
     }
 
     /**

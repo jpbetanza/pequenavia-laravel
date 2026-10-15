@@ -121,3 +121,59 @@ test('queda do stream no meio da leitura vira FalhaDoModelo', function () {
 
     expect(fn () => rodar())->toThrow(FalhaDoModelo::class);
 });
+
+test('lê os tokens do cache e o custo que o OpenRouter informa', function () {
+    Http::fake(['openrouter.ai/*' => Http::response(sseDoOpenRouter([
+        chunkDeTexto('Ok'),
+        ['choices' => [], 'usage' => ['prompt_tokens' => 5000, 'completion_tokens' => 20, 'prompt_tokens_details' => ['cached_tokens' => 4200], 'cost' => 0.000123]],
+    ]))]);
+
+    [, $resposta] = rodar();
+
+    expect($resposta->tokensDoCache)->toBe(4200)
+        ->and($resposta->custo)->toBe(0.000123);
+});
+
+test('marca o cache de prompt nas instruções e na última mensagem com conteúdo', function () {
+    Http::fake(['openrouter.ai/*' => Http::response(sseDoOpenRouter([chunkDeTexto('Ok')]))]);
+
+    rodar([
+        ['role' => 'system', 'content' => 'Instruções'],
+        ['role' => 'user', 'content' => 'Oi'],
+        ['role' => 'assistant', 'content' => null, 'tool_calls' => [['id' => 'c1', 'type' => 'function', 'function' => ['name' => 'x', 'arguments' => '{}']]]],
+        ['role' => 'tool', 'tool_call_id' => 'c1', 'content' => '{"dados":[]}'],
+    ]);
+
+    Http::assertSent(function (Request $r) {
+        $mensagens = $r['messages'];
+
+        return $mensagens[0]['content'] === [['type' => 'text', 'text' => 'Instruções', 'cache_control' => ['type' => 'ephemeral']]]
+            && $mensagens[1]['content'] === 'Oi'
+            && $mensagens[3]['content'] === [['type' => 'text', 'text' => '{"dados":[]}', 'cache_control' => ['type' => 'ephemeral']]];
+    });
+});
+
+test('com anexos, a marca vai na última parte da mensagem', function () {
+    Http::fake(['openrouter.ai/*' => Http::response(sseDoOpenRouter([chunkDeTexto('Ok')]))]);
+
+    rodar([
+        ['role' => 'system', 'content' => 'Instruções'],
+        ['role' => 'user', 'content' => [['type' => 'text', 'text' => 'Veja'], ['type' => 'text', 'text' => '<anexo>…</anexo>']]],
+    ]);
+
+    Http::assertSent(fn (Request $r) => ! isset($r['messages'][1]['content'][0]['cache_control'])
+        && $r['messages'][1]['content'][1]['cache_control'] === ['type' => 'ephemeral']);
+});
+
+test('não marca cache em modelos que não são da Anthropic, nem quando desligado', function () {
+    Http::fake(['openrouter.ai/*' => Http::response(sseDoOpenRouter([chunkDeTexto('Ok')]))]);
+
+    config(['assistente.modelo' => 'outro/modelo']);
+    rodar([['role' => 'system', 'content' => 'Instruções'], ['role' => 'user', 'content' => 'Oi']]);
+
+    config(['assistente.modelo' => 'anthropic/claude-haiku-5.5', 'assistente.cache_de_prompt' => false]);
+    rodar([['role' => 'system', 'content' => 'Instruções'], ['role' => 'user', 'content' => 'Oi']]);
+
+    Http::assertSentCount(2);
+    Http::assertNotSent(fn (Request $r) => is_array($r['messages'][0]['content']));
+});

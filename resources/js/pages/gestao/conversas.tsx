@@ -259,8 +259,8 @@ export default function Conversas({
                                                         nao_resolvida={
                                                             linha.nao_resolvida
                                                         }
-                                                        abandonada={
-                                                            linha.abandonada
+                                                        aguardando={
+                                                            linha.aguardando
                                                         }
                                                     />
                                                 </td>

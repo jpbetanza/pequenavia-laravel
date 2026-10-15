@@ -1,7 +1,7 @@
 import { formatarNumero } from '@/lib/gestao/formatar';
 import { cn } from '@/lib/utils';
 
-export type Desfecho = 'resolvida' | 'parcial' | 'nao_resolvida' | 'abandonada';
+export type Desfecho = 'resolvida' | 'parcial' | 'nao_resolvida' | 'aguardando';
 
 export type Contagens = Record<Desfecho, number>;
 
@@ -9,28 +9,31 @@ const DESFECHOS: Desfecho[] = [
     'resolvida',
     'parcial',
     'nao_resolvida',
-    'abandonada',
+    'aguardando',
 ];
 
 const ROTULOS: Record<Desfecho, string> = {
     resolvida: 'Resolvida',
     parcial: 'Parcial',
     nao_resolvida: 'Não resolvida',
-    abandonada: 'Abandonada',
+    aguardando: 'Aguardando',
 };
 
 const CORES: Record<Desfecho, string> = {
     resolvida: 'bg-[#24513F]',
     parcial: 'bg-[#D9B97A]',
     nao_resolvida: 'bg-[#A33A2A]',
-    abandonada: 'bg-[#CDBFAC]',
+    aguardando: 'bg-[#CDBFAC]',
 };
 
 type Props = Contagens & {
     className?: string;
 };
 
-/** Barra segmentada com a divisão de um caso de uso entre os desfechos. Os números vão para leitores de tela. */
+/**
+ * Barra segmentada com a divisão de um caso de uso entre os desfechos, que não se sobrepõem (aguardando é a conversa
+ * que parou esperando a secretaria). Os números vão para leitores de tela.
+ */
 export function BarraDeResultado({ className, ...contagens }: Props) {
     const total = DESFECHOS.reduce(
         (soma, desfecho) => soma + contagens[desfecho],

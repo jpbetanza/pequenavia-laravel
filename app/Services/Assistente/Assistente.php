@@ -18,6 +18,8 @@ use Throwable;
  * O cliente pode fechar a conexão no meio do stream. O Laravel então destrói o gerador num `yield`, e o `finally` grava
  * o texto já recebido. Cada rodada grava todos os resultados das ferramentas antes de emitir qualquer evento, para que
  * nunca fique uma chamada sem resultado no histórico.
+ *
+ * @phpstan-type Uso array{entrada: int, saida: int, cache: int, custo: float|null}
  */
 final class Assistente
 {
@@ -50,8 +52,7 @@ final class Assistente
 
         $textoVisivel = '';
         $cartoes = [];
-        $tokensEntrada = 0;
-        $tokensSaida = 0;
+        $uso = ['entrada' => 0, 'saida' => 0, 'cache' => 0, 'custo' => null];
         $concluido = false;
 
         try {
@@ -64,13 +65,12 @@ final class Assistente
                 }
 
                 $resposta = $gerador->getReturn();
-                $tokensEntrada += $resposta->tokensEntrada ?? 0;
-                $tokensSaida += $resposta->tokensSaida ?? 0;
+                $uso = $this->somar($uso, $resposta);
 
                 if ($resposta->chamadas === []) {
                     $concluido = true;
 
-                    return yield from $this->concluir($conversa, $textoVisivel, $cartoes, $tokensEntrada, $tokensSaida);
+                    return yield from $this->concluir($conversa, $textoVisivel, $cartoes, $uso);
                 }
 
                 $conversa->mensagens()->create([
@@ -86,23 +86,23 @@ final class Assistente
 
             $concluido = true;
 
-            return yield from $this->concluir($conversa, $this->juntar($textoVisivel, 'Não consegui concluir essa consulta. Pode reformular?'), $cartoes, $tokensEntrada, $tokensSaida);
+            return yield from $this->concluir($conversa, $this->juntar($textoVisivel, 'Não consegui concluir essa consulta. Pode reformular?'), $cartoes, $uso);
         } catch (FalhaDoModelo $falha) {
             $concluido = true;
             Log::warning('assistente.falha', ['conversa' => $conversa->id, 'motivo' => $falha->motivo]);
 
-            yield from $this->gravarFalha($conversa, $textoVisivel, $cartoes, $tokensEntrada, $tokensSaida, $falha->getMessage());
+            yield from $this->gravarFalha($conversa, $textoVisivel, $cartoes, $uso, $falha->getMessage());
         } catch (Throwable $erro) {
             report($erro);
 
             if (! $concluido) {
                 $concluido = true;
 
-                yield from $this->gravarFalha($conversa, $textoVisivel, $cartoes, $tokensEntrada, $tokensSaida, 'Não consegui responder agora. Tente de novo.');
+                yield from $this->gravarFalha($conversa, $textoVisivel, $cartoes, $uso, 'Não consegui responder agora. Tente de novo.');
             }
         } finally {
             if (! $concluido && $textoVisivel !== '') {
-                $this->gravarResposta($conversa, $textoVisivel, $cartoes, $tokensEntrada, $tokensSaida);
+                $this->gravarResposta($conversa, $textoVisivel, $cartoes, $uso);
             }
         }
     }
@@ -140,11 +140,12 @@ final class Assistente
 
     /**
      * @param  list<array<string, mixed>>  $cartoes
+     * @param  Uso  $uso
      * @return Generator<int, EventoDoAssistente, mixed, void>
      */
-    private function concluir(Conversa $conversa, string $texto, array $cartoes, int $tokensEntrada, int $tokensSaida): Generator
+    private function concluir(Conversa $conversa, string $texto, array $cartoes, array $uso): Generator
     {
-        $mensagem = $this->gravarResposta($conversa, $texto, $cartoes, $tokensEntrada, $tokensSaida);
+        $mensagem = $this->gravarResposta($conversa, $texto, $cartoes, $uso);
 
         yield new EventoDoAssistente('fim', [
             'mensagem_id' => $mensagem->id,
@@ -156,12 +157,13 @@ final class Assistente
      * Falha no meio do ciclo: grava o texto já transmitido como resposta comum (se houver) e depois a mensagem de erro.
      *
      * @param  list<array<string, mixed>>  $cartoes
+     * @param  Uso  $uso
      * @return Generator<int, EventoDoAssistente, mixed, void>
      */
-    private function gravarFalha(Conversa $conversa, string $textoVisivel, array $cartoes, int $tokensEntrada, int $tokensSaida, string $mensagem): Generator
+    private function gravarFalha(Conversa $conversa, string $textoVisivel, array $cartoes, array $uso, string $mensagem): Generator
     {
         if ($textoVisivel !== '') {
-            $this->gravarResposta($conversa, $textoVisivel, $cartoes, $tokensEntrada, $tokensSaida);
+            $this->gravarResposta($conversa, $textoVisivel, $cartoes, $uso);
         }
 
         $conversa->mensagens()->create([
@@ -175,21 +177,40 @@ final class Assistente
 
     /**
      * @param  list<array<string, mixed>>  $cartoes
+     * @param  Uso  $uso
      */
-    private function gravarResposta(Conversa $conversa, string $texto, array $cartoes, int $tokensEntrada, int $tokensSaida): Mensagem
+    private function gravarResposta(Conversa $conversa, string $texto, array $cartoes, array $uso): Mensagem
     {
         $mensagem = $conversa->mensagens()->create([
             'papel' => PapelDaMensagem::Assistente,
             'conteudo' => $texto,
             'cartoes' => $cartoes,
-            'tokens_entrada' => $tokensEntrada,
-            'tokens_saida' => $tokensSaida,
+            'tokens_entrada' => $uso['entrada'],
+            'tokens_saida' => $uso['saida'],
+            'tokens_do_cache' => $uso['cache'],
+            'custo' => $uso['custo'] === null ? null : number_format($uso['custo'], 6, '.', ''),
         ]);
 
         $conversa->ultima_mensagem_em = now();
         $conversa->save();
 
         return $mensagem;
+    }
+
+    /**
+     * Soma o uso de uma rodada ao do pedido. O custo fica nulo enquanto o provedor não informar nenhum.
+     *
+     * @param  Uso  $uso
+     * @return Uso
+     */
+    private function somar(array $uso, RespostaDoModelo $resposta): array
+    {
+        return [
+            'entrada' => $uso['entrada'] + ($resposta->tokensEntrada ?? 0),
+            'saida' => $uso['saida'] + ($resposta->tokensSaida ?? 0),
+            'cache' => $uso['cache'] + ($resposta->tokensDoCache ?? 0),
+            'custo' => $resposta->custo === null ? $uso['custo'] : ($uso['custo'] ?? 0.0) + $resposta->custo,
+        ];
     }
 
     private function juntar(string $textoVisivel, string $fixo): string

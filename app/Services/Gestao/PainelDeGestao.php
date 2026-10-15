@@ -48,6 +48,9 @@ final class PainelDeGestao
 
     public const CASO = "COALESCE(classificacoes_de_conversa.correcao->>'caso_de_uso', classificacoes_de_conversa.caso_de_uso)";
 
+    /** Resultados que contam como "sem resolver": aguardando fica de fora até a secretaria voltar ou o prazo passar. */
+    private const EM_ABERTO = ['parcial', 'nao_resolvida'];
+
     public const RESULTADO = "COALESCE(classificacoes_de_conversa.correcao->>'resultado', classificacoes_de_conversa.resultado)";
 
     /** Correção com tema nulo quer dizer "nenhum tema", por isso a chave é testada com IS NOT NULL no JSON. */
@@ -92,7 +95,7 @@ final class PainelDeGestao
         $resolvidas = array_sum(array_column($indicadores, 'resolvidas'));
 
         $tokens = $this->tokensDoAssistente($periodo);
-        $assistente = $this->custoDoAssistente($tokens['entrada'], $tokens['saida']);
+        $assistente = $this->custoDoAssistente($tokens['entrada'], $tokens['saida'], $tokens['informado']);
         $jev = $this->custoDasRodadas($periodo, 'custo_jev');
         $haiku = $this->custoDasRodadas($periodo, 'custo_haiku');
 
@@ -122,9 +125,9 @@ final class PainelDeGestao
     }
 
     /**
-     * Um dia por dia do período (inclusive os zerados). Parcial conta como não resolvida.
+     * Um dia por dia do período (inclusive os zerados). Parcial conta como não resolvida; aguardando fica à parte.
      *
-     * @return list<array{data: string, resolvidas: int, nao_resolvidas: int}>
+     * @return list<array{data: string, resolvidas: int, nao_resolvidas: int, aguardando: int}>
      */
     public function porDia(PeriodoDoPainel $periodo): array
     {
@@ -136,8 +139,10 @@ final class PainelDeGestao
             $periodo->fim,
         )
             ->selectRaw(
-                "to_char((classificacoes_de_conversa.classificada_em AT TIME ZONE 'UTC') AT TIME ZONE ?, 'YYYY-MM-DD') AS dia, count(*) AS total, sum(case when ".self::RESULTADO.' = ? then 1 else 0 end) AS resolvidas',
-                [$fuso, ResultadoDaConversa::Resolvida->value],
+                "to_char((classificacoes_de_conversa.classificada_em AT TIME ZONE 'UTC') AT TIME ZONE ?, 'YYYY-MM-DD') AS dia, count(*) AS total, "
+                .'sum(case when '.self::RESULTADO.' = ? then 1 else 0 end) AS resolvidas, '
+                .'sum(case when '.self::RESULTADO.' = ? then 1 else 0 end) AS aguardando',
+                [$fuso, ResultadoDaConversa::Resolvida->value, ResultadoDaConversa::Aguardando->value],
             )
             ->groupByRaw('dia')
             ->get()
@@ -150,8 +155,9 @@ final class PainelDeGestao
             $linha = $linhas->get($data);
             $total = $linha === null ? 0 : (int) $linha->total;
             $resolvidas = $linha === null ? 0 : (int) $linha->resolvidas;
+            $aguardando = $linha === null ? 0 : (int) $linha->aguardando;
 
-            $dias[] = ['data' => $data, 'resolvidas' => $resolvidas, 'nao_resolvidas' => $total - $resolvidas];
+            $dias[] = ['data' => $data, 'resolvidas' => $resolvidas, 'nao_resolvidas' => $total - $resolvidas - $aguardando, 'aguardando' => $aguardando];
         }
 
         return $dias;
@@ -394,14 +400,14 @@ final class PainelDeGestao
         return [
             'conversas' => $this->entre(DB::table('conversas')->where('user_id', $cliente->id), 'conversas.created_at', $periodo->inicio, $periodo->fim)->count(),
             'resolvidas_pct' => $this->porcento($contagem['resolvidas'], $contagem['classificadas']),
-            'custo' => $this->custoDoAssistente($tokens['entrada'], $tokens['saida']),
+            'custo' => $this->custoDoAssistente($tokens['entrada'], $tokens['saida'], $tokens['informado']),
         ];
     }
 
     /**
      * Casos de uso do cliente no período, com o resultado de cada um.
      *
-     * @return list<array{rotulo: string, total: int, resolvida: int, parcial: int, nao_resolvida: int}>
+     * @return list<array{rotulo: string, total: int, resolvida: int, parcial: int, nao_resolvida: int, aguardando: int}>
      */
     public function casosDoCliente(User $cliente, PeriodoDoPainel $periodo): array
     {
@@ -415,8 +421,9 @@ final class PainelDeGestao
                 self::CASO.' AS caso, count(*) AS total, '
                 .'sum(case when '.self::RESULTADO.' = ? then 1 else 0 end) AS resolvida, '
                 .'sum(case when '.self::RESULTADO.' = ? then 1 else 0 end) AS parcial, '
-                .'sum(case when '.self::RESULTADO.' = ? then 1 else 0 end) AS nao_resolvida',
-                [ResultadoDaConversa::Resolvida->value, ResultadoDaConversa::Parcial->value, ResultadoDaConversa::NaoResolvida->value],
+                .'sum(case when '.self::RESULTADO.' = ? then 1 else 0 end) AS nao_resolvida, '
+                .'sum(case when '.self::RESULTADO.' = ? then 1 else 0 end) AS aguardando',
+                [ResultadoDaConversa::Resolvida->value, ResultadoDaConversa::Parcial->value, ResultadoDaConversa::NaoResolvida->value, ResultadoDaConversa::Aguardando->value],
             )
             ->groupByRaw(self::CASO)
             ->orderByDesc('total')
@@ -429,6 +436,7 @@ final class PainelDeGestao
             'resolvida' => (int) $linha->resolvida,
             'parcial' => (int) $linha->parcial,
             'nao_resolvida' => (int) $linha->nao_resolvida,
+            'aguardando' => (int) $linha->aguardando,
         ])->all());
     }
 
@@ -442,7 +450,7 @@ final class PainelDeGestao
         $linha = DB::table('classificacoes_de_conversa')
             ->where('user_id', $cliente->id)
             ->whereRaw('('.self::TEMA.') IS NOT NULL')
-            ->whereRaw(self::RESULTADO.' <> ?', [ResultadoDaConversa::Resolvida->value])
+            ->whereIn(DB::raw(self::RESULTADO), self::EM_ABERTO)
             ->selectRaw(self::TEMA.' AS tema_id, count(*) AS conversas')
             ->groupByRaw(self::TEMA)
             ->orderByDesc('conversas')
@@ -502,7 +510,7 @@ final class PainelDeGestao
         $naoResolvidas = DB::table('classificacoes_de_conversa')
             ->join('conversas', 'conversas.id', '=', 'classificacoes_de_conversa.conversa_id')
             ->where('classificacoes_de_conversa.user_id', $cliente->id)
-            ->whereRaw(self::RESULTADO.' <> ?', [ResultadoDaConversa::Resolvida->value])
+            ->whereIn(DB::raw(self::RESULTADO), self::EM_ABERTO)
             ->orderByDesc('classificacoes_de_conversa.mensagens_ate')
             ->limit(5)
             ->get(['conversas.titulo', 'classificacoes_de_conversa.mensagens_ate']);
@@ -643,6 +651,8 @@ final class PainelDeGestao
         $classificadas = $this->entre(
             DB::table('classificacoes_de_conversa')
                 ->whereIn('user_id', $this->subconsultaDeClientes())
+                // As que aguardam a secretaria ainda não têm desfecho: ficam fora da taxa de resolvidas.
+                ->whereRaw(self::RESULTADO.' <> ?', [ResultadoDaConversa::Aguardando->value])
                 ->groupBy('user_id')
                 ->selectRaw('user_id, count(*) AS total, sum(case when '.self::RESULTADO.' = ? then 1 else 0 end) AS resolvidas', [ResultadoDaConversa::Resolvida->value]),
             'classificacoes_de_conversa.classificada_em',
@@ -706,7 +716,7 @@ final class PainelDeGestao
     }
 
     /**
-     * @return array{entrada: int, saida: int}
+     * @return array{entrada: int, saida: int, informado: float|null}
      */
     private function tokensDoAssistente(PeriodoDoPainel $periodo, ?string $userId = null): array
     {
@@ -719,28 +729,42 @@ final class PainelDeGestao
             : $consulta->where('conversas.user_id', $userId);
 
         $linha = $this->entre($consulta, 'mensagens.created_at', $periodo->inicio, $periodo->fim)
-            ->selectRaw('coalesce(sum(mensagens.tokens_entrada), 0) AS entrada, coalesce(sum(mensagens.tokens_saida), 0) AS saida')
+            ->selectRaw(
+                'coalesce(sum(mensagens.tokens_entrada) filter (where mensagens.custo is null), 0) AS entrada, '
+                .'coalesce(sum(mensagens.tokens_saida) filter (where mensagens.custo is null), 0) AS saida, '
+                .'sum(mensagens.custo) AS informado'
+            )
             ->first();
 
         return [
             'entrada' => $linha === null ? 0 : (int) $linha->entrada,
             'saida' => $linha === null ? 0 : (int) $linha->saida,
+            'informado' => $linha === null || $linha->informado === null ? null : (float) $linha->informado,
         ];
     }
 
     /**
-     * Custo estimado do assistente. Sem os dois preços configurados, não há valor (null).
+     * Custo do assistente: o que o OpenRouter informou em cada resposta, mais uma estimativa pelos preços configurados
+     * para as respostas sem custo informado (as mais antigas). `$entrada` e `$saida` são os tokens dessas respostas.
+     * Sem custo informado nem preços configurados, não há valor (null).
      */
-    public function custoDoAssistente(int $entrada, int $saida): ?float
+    public function custoDoAssistente(int $entrada, int $saida, ?float $informado = null): ?float
     {
         $precoEntrada = config('gestao.preco_assistente_entrada_por_milhao');
         $precoSaida = config('gestao.preco_assistente_saida_por_milhao');
+        $temPrecos = filled($precoEntrada) && filled($precoSaida);
 
-        if (blank($precoEntrada) || blank($precoSaida)) {
-            return null;
+        $estimado = match (true) {
+            $entrada + $saida === 0 => $informado === null && ! $temPrecos ? null : 0.0,
+            $temPrecos => ($entrada * (float) $precoEntrada + $saida * (float) $precoSaida) / 1_000_000,
+            default => null,
+        };
+
+        if ($estimado === null) {
+            return $informado === null ? null : round($informado, 6);
         }
 
-        return round(($entrada * (float) $precoEntrada + $saida * (float) $precoSaida) / 1_000_000, 6);
+        return round(($informado ?? 0.0) + $estimado, 6);
     }
 
     private function custoDasRodadas(PeriodoDoPainel $periodo, string $coluna): float
@@ -754,7 +778,9 @@ final class PainelDeGestao
     private function contagemDeClassificacoes(string $userId, PeriodoDoPainel $periodo): array
     {
         $linha = $this->entre(
-            DB::table('classificacoes_de_conversa')->where('user_id', $userId),
+            DB::table('classificacoes_de_conversa')
+                ->where('user_id', $userId)
+                ->whereRaw(self::RESULTADO.' <> ?', [ResultadoDaConversa::Aguardando->value]),
             'classificacoes_de_conversa.classificada_em',
             $periodo->inicio,
             $periodo->fim,
@@ -820,7 +846,7 @@ final class PainelDeGestao
 
         $ids = DB::table('classificacoes_de_conversa')
             ->whereIn('user_id', $this->subconsultaDeClientes())
-            ->whereRaw(self::RESULTADO.' <> ?', [ResultadoDaConversa::Resolvida->value])
+            ->whereIn(DB::raw(self::RESULTADO), self::EM_ABERTO)
             ->where('classificacoes_de_conversa.mensagens_ate', '<', $corte->utc())
             ->distinct()
             ->pluck('user_id')

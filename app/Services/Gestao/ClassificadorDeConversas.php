@@ -106,18 +106,26 @@ class ClassificadorDeConversas
     }
 
     /**
-     * Conversas ociosas há tempo suficiente que ainda não foram lidas ou receberam mensagens depois da última leitura.
+     * Conversas ociosas há tempo suficiente que ainda não foram lidas, receberam mensagens depois da última leitura,
+     * ou ficaram aguardando a secretaria além do prazo (para fechar como abandonadas).
      *
      * @return Collection<int, Conversa>
      */
     private function candidatas(): Collection
     {
+        $prazo = now()->subDays((int) config('gestao.dias_aguardando'));
+
         return Conversa::query()
             ->where('ultima_mensagem_em', '<=', now()->subMinutes((int) config('gestao.ociosidade_minutos')))
             ->where(fn (Builder $consulta) => $consulta
                 ->whereDoesntHave('classificacao')
                 ->orWhereHas('classificacao', fn (Builder $classificacao) => $classificacao
-                    ->whereColumn('classificacoes_de_conversa.mensagens_ate', '<', 'conversas.ultima_mensagem_em')))
+                    ->whereColumn('classificacoes_de_conversa.mensagens_ate', '<', 'conversas.ultima_mensagem_em'))
+                ->orWhere(fn (Builder $vencida) => $vencida
+                    ->where('ultima_mensagem_em', '<', $prazo)
+                    ->whereHas('classificacao', fn (Builder $classificacao) => $classificacao
+                        ->where('resultado', ResultadoDaConversa::Aguardando->value)
+                        ->whereNull('correcao->resultado'))))
             ->whereHas('mensagens', fn (Builder $mensagens) => $mensagens->where('papel', PapelDaMensagem::Usuario))
             ->orderBy('ultima_mensagem_em')
             ->limit((int) config('gestao.max_conversas_por_rodada'))
@@ -154,13 +162,24 @@ class ClassificadorDeConversas
 
         $confianca = PerguntasDoJev::confiancaMinima();
         $aRevisar = $caso['confianca'] < $confianca || $resultado['confianca'] < $confianca;
-        $abandonada = $esperando >= PerguntasDoJev::SIM && $resultado['valor'] !== ResultadoDaConversa::Resolvida->value;
+        $parouEsperando = $esperando >= PerguntasDoJev::SIM && $resultado['valor'] !== ResultadoDaConversa::Resolvida->value;
+
+        // Parou esperando a secretaria: enquanto é recente, só aguarda (ela pode voltar); passado o prazo, abandonou.
+        $recente = $conversa->ultima_mensagem_em?->greaterThan(now()->subDays((int) config('gestao.dias_aguardando'))) ?? false;
+        $abandonada = $parouEsperando && ! $recente;
+
+        if ($parouEsperando && $recente) {
+            $resultado = ['valor' => ResultadoDaConversa::Aguardando->value, 'confianca' => $esperando];
+            $aRevisar = $caso['confianca'] < $confianca;
+        }
 
         [$temaId, $temaOrigem, $temaConfianca] = $this->temaDoJev($resposta->escolha('unmet_theme'), $pedidoFora);
 
         $resumo = null;
 
-        if (($resultado['valor'] !== ResultadoDaConversa::Resolvida->value || $pedidoFora >= PerguntasDoJev::SIM || $aRevisar)
+        $emAberto = in_array($resultado['valor'], [ResultadoDaConversa::Parcial->value, ResultadoDaConversa::NaoResolvida->value], true);
+
+        if (($emAberto || $pedidoFora >= PerguntasDoJev::SIM || $aRevisar)
             && $rodada->resumidas < (int) config('gestao.max_resumos_por_rodada')) {
             try {
                 $pedido = $this->haiku->resumir(
