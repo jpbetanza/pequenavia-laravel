@@ -2,7 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\SituacaoDoTema;
 use App\Enums\StatusSolicitacao;
+use App\Models\TemaDePedido;
+use App\Services\Gestao\PainelDeGestao;
 use App\Services\PrimeirosPassos\PrimeirosPassos;
 use App\Support\VersaoDoSite;
 use Illuminate\Http\Request;
@@ -55,6 +58,11 @@ class HandleInertiaRequests extends Middleware
             'assistente' => fn () => $request->user() === null ? null : [
                 'disponivel' => filled(config('assistente.chave')),
             ],
+            // Só para gestores: o menu de gestão e o contador de pedidos não atendidos.
+            'gestao' => fn () => $request->user()?->admin ? [
+                'temas_novos' => TemaDePedido::query()->ativos()->where('situacao', SituacaoDoTema::Novo->value)->count(),
+                'classificacao' => app(PainelDeGestao::class)->classificacao(),
+            ] : null,
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
         ];
     }

@@ -1,4 +1,5 @@
 import type { Auth } from '@/types/auth';
+import type { GestaoCompartilhado } from '@/types/gestao';
 import type { PrimeirosPassos } from '@/types/primeiros-passos';
 
 declare module 'react' {
@@ -18,6 +19,7 @@ declare module '@inertiajs/core' {
             agenda: { solicitacoes_pendentes: number } | null;
             assistente: { disponivel: boolean } | null;
             primeiros_passos: PrimeirosPassos | null;
+            gestao: GestaoCompartilhado | null;
             [key: string]: unknown;
         };
     }

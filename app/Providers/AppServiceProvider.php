@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\User;
 use App\Services\Assistente\CaixaDeFerramentas;
 use App\Services\Assistente\Ferramentas\ConsultarAgenda;
 use App\Services\Assistente\Ferramentas\ListarCadastros;
@@ -22,6 +23,7 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
@@ -60,6 +62,15 @@ class AppServiceProvider extends ServiceProvider
         $this->configureRateLimiting();
         $this->configureSolicitacoesRateLimiting();
         $this->configureAssistenteRateLimiting();
+        $this->configureGestao();
+    }
+
+    /**
+     * O painel de gestão é só para o gestor do projeto (users.admin).
+     */
+    protected function configureGestao(): void
+    {
+        Gate::define('gestao', fn (User $usuario): bool => $usuario->admin);
     }
 
     /**

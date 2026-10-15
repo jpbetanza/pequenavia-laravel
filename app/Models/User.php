@@ -28,6 +28,7 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property string|null $google_id
  * @property string|null $avatar_url
  * @property string|null $agenda_slug
+ * @property bool $admin Gestor do projeto: vê o painel de gestão.
  * @property bool $tem_senha
  * @property string|null $two_factor_secret
  * @property string|null $two_factor_recovery_codes
@@ -57,6 +58,7 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
             'primeiros_passos' => 'array',
+            'admin' => 'boolean',
         ];
     }
 
