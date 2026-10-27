@@ -101,7 +101,8 @@ it('mostra até duas reuniões fixas por grupo, uma por série e só das futuras
 });
 
 it('carrega as reuniões fixas em uma consulta só, sem repetir a busca por grupo', function () {
-    $user = User::factory()->create();
+    // Com o último acesso já gravado, a primeira requisição não ganha a consulta extra do registro de acesso.
+    $user = User::factory()->create(['ultimo_acesso_em' => now()]);
     $primeiro = Grupo::factory()->for($user)->create();
     $espaco = Espaco::factory()->for($user)->create();
 
