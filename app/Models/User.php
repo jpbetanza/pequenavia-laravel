@@ -37,6 +37,7 @@ use Laravel\Passport\HasApiTokens;
  * @property Carbon|null $two_factor_confirmed_at
  * @property string|null $remember_token
  * @property array{iniciado_em?: string, pulados?: list<string>, link_enviado_em?: string, adiado_ate?: string, dispensado_em?: string, modal_visto_em?: string, lembrado_em?: string, lembretes?: int}|null $primeiros_passos
+ * @property Carbon|null $ultimo_acesso_em Última vez que abriu o app logado (no máximo uma gravação por hora).
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -61,6 +62,7 @@ class User extends Authenticatable implements MustVerifyEmail, OAuthenticatable,
             'two_factor_confirmed_at' => 'datetime',
             'primeiros_passos' => 'array',
             'admin' => 'boolean',
+            'ultimo_acesso_em' => 'datetime',
         ];
     }
 
