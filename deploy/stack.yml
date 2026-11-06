@@ -21,6 +21,8 @@ x-app-env: &app-env
     DB_USERNAME: pequenavia
     DB_PASSWORD: ${DB_PASSWORD}
     SESSION_DRIVER: database
+    # 30 dias sem uso, em minutos.
+    SESSION_LIFETIME: '43200'
     SESSION_SECURE_COOKIE: 'true'
     QUEUE_CONNECTION: database
     CACHE_STORE: database
